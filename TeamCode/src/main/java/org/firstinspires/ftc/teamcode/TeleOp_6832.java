@@ -107,28 +107,46 @@ public class TeleOp_6832 extends LinearOpMode {
         }
     }
     public void joystickDrive(){
+
+        powerBackRight = 0;
+        powerFrontRight = 0;
+        powerBackLeft = 0;
+        powerFrontLeft = 0;
+
         if(Math.abs(gamepad1.left_stick_y) >= .10) {
             powerFrontLeft = gamepad1.left_stick_y;
             powerBackLeft = gamepad1.left_stick_y;
             powerFrontRight = gamepad1.left_stick_y;
             powerBackRight = gamepad1.left_stick_y;
         }
-        else if(Math.abs(gamepad1.left_stick_x) >= .10){
-            powerFrontLeft = gamepad1.left_stick_x;
-            powerFrontRight = -gamepad1.left_stick_x;
-            powerBackLeft = -gamepad1.left_stick_x;
-            powerBackRight = gamepad1.left_stick_x;
-        }
-        else{
-            powerBackRight = 0;
-            powerFrontRight = 0;
-            powerBackLeft = 0;
-            powerFrontLeft = 0;
+        if(Math.abs(gamepad1.left_stick_x) >= .10){
+            powerFrontLeft += gamepad1.left_stick_x;
+            powerFrontRight += -gamepad1.left_stick_x;
+            powerBackLeft += -gamepad1.left_stick_x;
+            powerBackRight += gamepad1.left_stick_x;
         }
 
-        motorFrontLeft.setPower(powerFrontLeft);
-        motorBackLeft.setPower(powerBackLeft);
-        motorFrontRight.setPower(powerFrontRight);
-        motorBackRight.setPower(powerBackRight);
+
+        if(Math.abs(gamepad1.right_stick_x) >= .10){
+
+        }
+
+        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
+        motorBackLeft.setPower(clampMotor(powerBackLeft));
+        motorFrontRight.setPower(clampMotor(powerFrontRight));
+        motorBackRight.setPower(clampMotor(powerBackRight));
+
+    }
+
+    public double clampMotor(double power){
+        return clampDouble(-1, 1, power);
+    }
+    public double clampDouble(double min, double max, double value){
+        double result = value;
+        if(value > max)
+            result = max;
+        if(value < min)
+            result = min;
+        return result;
     }
 }
