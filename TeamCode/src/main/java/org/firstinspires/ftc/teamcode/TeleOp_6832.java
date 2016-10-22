@@ -120,16 +120,20 @@ public class TeleOp_6832 extends LinearOpMode {
             powerBackRight = gamepad1.left_stick_y;
         }
         if(Math.abs(gamepad1.left_stick_x) >= .10){
-            powerFrontLeft += gamepad1.left_stick_x;
-            powerFrontRight += -gamepad1.left_stick_x;
-            powerBackLeft += -gamepad1.left_stick_x;
-            powerBackRight += gamepad1.left_stick_x;
+            powerFrontLeft += -gamepad1.left_stick_x;
+            powerFrontRight += gamepad1.left_stick_x;
+            powerBackLeft += gamepad1.left_stick_x;
+            powerBackRight += -gamepad1.left_stick_x;
         }
 
 
         if(Math.abs(gamepad1.right_stick_x) >= .10){
-
+            powerFrontLeft += gamepad1.right_stick_x;
+            powerBackLeft += gamepad1.right_stick_x;
+            powerFrontRight -= gamepad1.right_stick_x;
+            powerBackRight -= gamepad1.right_stick_x;
         }
+
 
         motorFrontLeft.setPower(clampMotor(powerFrontLeft));
         motorBackLeft.setPower(clampMotor(powerBackLeft));
