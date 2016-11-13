@@ -64,10 +64,16 @@ public class TeleOp_6832 extends LinearOpMode {
     DcMotor motorFrontRight = null;
     DcMotor motorBackLeft = null;
     DcMotor motorBackRight = null;
+    DcMotor motorConveyor = null;
+    DcMotor motorFlinger = null;
     private double powerFrontLeft = 0;
     private double powerFrontRight = 0;
     private double powerBackLeft = 0;
     private double powerBackRight = 0;
+    private double powerConveyor = 0;
+    static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
+    private long toggleOKTime = 0; //when should next toggle be allowed
+
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry.addData("Status", "Initialized");
@@ -81,10 +87,12 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorFrontRight = this.hardwareMap.dcMotor.get("motorFrontRight");
         this.motorBackLeft = this.hardwareMap.dcMotor.get("motorBackLeft");
         this.motorBackRight = this.hardwareMap.dcMotor.get("motorBackRight");
+        this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
 
 
         this.motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
@@ -108,7 +116,7 @@ public class TeleOp_6832 extends LinearOpMode {
     }
     public void joystickDrive(){
 
-        powerBackRight = 0;
+        /*powerBackRight = 0;
         powerFrontRight = 0;
         powerBackLeft = 0;
         powerFrontLeft = 0;
@@ -134,23 +142,90 @@ public class TeleOp_6832 extends LinearOpMode {
             powerBackRight += gamepad1.right_stick_x;
         }
 
+        */
+        driveMixer(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
-        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
-        motorBackLeft.setPower(clampMotor(powerBackLeft));
-        motorFrontRight.setPower(clampMotor(powerFrontRight));
-        motorBackRight.setPower(clampMotor(powerBackRight));
+        motorFrontLeft.setPower(powerFrontLeft);
+        motorBackLeft.setPower(powerBackLeft);
+        motorFrontRight.setPower(powerFrontRight);
+        motorBackRight.setPower(powerBackRight);
 
+        //toggle the particle conveyor on and off - quick and dirty
+        if (gamepad1.a)
+        {
+            if(toggleAllowed())
+            {
+                if (powerConveyor > 0)
+                    powerConveyor = 0;
+                else
+            powerConveyor = 1;
+            }
+        }
+        if (gamepad1.b)
+        {
+            if(toggleAllowed())
+            {
+                if (powerConveyor < 0)
+                    powerConveyor = 0;
+                else
+                    powerConveyor = -1;
+            }
+        }
+
+        motorConveyor.setPower(clampMotor(powerConveyor));
     }
 
-    public double clampMotor(double power){
-        return clampDouble(-1, 1, power);
-    }
-    public double clampDouble(double min, double max, double value){
+    public double clampMotor(double power) { return clampDouble(-1, 1, power); }
+
+    public double clampDouble(double min, double max, double value)
+    {
         double result = value;
         if(value > max)
             result = max;
         if(value < min)
             result = min;
         return result;
+    }
+
+    boolean toggleAllowed()
+    {
+        if (System.nanoTime()> toggleOKTime)
+        {
+            toggleOKTime= System.nanoTime()+toggleLockout;
+            return true;
+        }
+        else
+            return false;
+    }
+    public void driveMixer(double forward,double crab ,double rotate){
+        powerBackRight = 0;
+        powerFrontRight = 0;
+        powerBackLeft = 0;
+        powerFrontLeft = 0;
+
+
+        powerFrontLeft = forward;
+        powerBackLeft = forward;
+        powerFrontRight = forward;
+        powerBackRight = forward;
+
+
+        powerFrontLeft += -crab;
+        powerFrontRight += crab;
+        powerBackLeft += crab;
+        powerBackRight += -crab;
+
+
+        powerFrontLeft -= rotate;
+        powerBackLeft -= rotate;
+        powerFrontRight += rotate;
+        powerBackRight += rotate;
+
+
+        clampMotor(powerFrontLeft);
+        clampMotor(powerBackLeft);
+        clampMotor(powerFrontRight);
+        clampMotor(powerBackRight);
+
     }
 }
