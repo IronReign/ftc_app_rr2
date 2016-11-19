@@ -71,6 +71,8 @@ public class TeleOp_6832 extends LinearOpMode {
     private double powerBackLeft = 0;
     private double powerBackRight = 0;
     private double powerConveyor = 0;
+    private Flinger upChuck = null;
+    private int flingSpeed = 5000; //ticks per second
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
 
@@ -88,11 +90,18 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorBackLeft = this.hardwareMap.dcMotor.get("motorBackLeft");
         this.motorBackRight = this.hardwareMap.dcMotor.get("motorBackRight");
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
+        this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
 
 
         this.motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorFlinger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        this.upChuck = new Flinger(flingSpeed, motorFlinger);
+
+        upChuck.pullBack();
 
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
@@ -169,6 +178,20 @@ public class TeleOp_6832 extends LinearOpMode {
                     powerConveyor = 0;
                 else
                     powerConveyor = -1;
+            }
+        }
+        if(toggleAllowed()) {
+            if (gamepad1.x) {
+                upChuck.fling();
+            }
+        }
+        if(gamepad1.y){
+            if(toggleAllowed()) {
+                if (upChuck.isStopped()) {
+                    upChuck.restart();
+                } else {
+                    upChuck.emergencyStop();
+                }
             }
         }
 
