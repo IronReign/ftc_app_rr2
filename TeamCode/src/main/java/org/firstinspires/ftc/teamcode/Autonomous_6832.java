@@ -32,7 +32,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -52,9 +52,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="TeleOp_6832", group="Linear Opmode")  // @Autonomous(...) is the other common choice
-//@Disabled
-public class TeleOp_6832 extends LinearOpMode {
+@TeleOp(name="Autonomous_6832", group="Linear Opmode")  // @Autonomous(...) is the other common choice
+//  @Autonomous
+
+public class Autonomous_6832 extends LinearOpMode {
 
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
@@ -71,6 +72,7 @@ public class TeleOp_6832 extends LinearOpMode {
     private double powerBackLeft = 0;
     private double powerBackRight = 0;
     private double powerConveyor = 0;
+    private boolean shouldRun = true;
     private Flinger upChuck = null;
     private long flingTimer = 0;
     private int flingSpeed = 5000; //ticks per second
@@ -94,13 +96,23 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
 
 
+        this.motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        this.motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        this.motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorFlinger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
         this.motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.motorFlinger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
 
         this.upChuck = new Flinger(flingSpeed, motorFlinger);
+
+        upChuck.pullBack();
 
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
@@ -117,89 +129,18 @@ public class TeleOp_6832 extends LinearOpMode {
         while (opModeIsActive()) {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.update();
-            joystickDrive();
+            if(shouldRun) {
+                autonomous();
+            }
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
     }
-    public void joystickDrive(){
-
-        /*powerBackRight = 0;
-        powerFrontRight = 0;
-        powerBackLeft = 0;
-        powerFrontLeft = 0;
-
-        if(Math.abs(gamepad1.left_stick_y) >= .10) {
-            powerFrontLeft = gamepad1.left_stick_y;
-            powerBackLeft = gamepad1.left_stick_y;
-            powerFrontRight = gamepad1.left_stick_y;
-            powerBackRight = gamepad1.left_stick_y;
-        }
-        if(Math.abs(gamepad1.left_stick_x) >= .10){
-            powerFrontLeft += -gamepad1.left_stick_x;
-            powerFrontRight += gamepad1.left_stick_x;
-            powerBackLeft += gamepad1.left_stick_x;
-            powerBackRight += -gamepad1.left_stick_x;
-        }
-
-
-        if(Math.abs(gamepad1.right_stick_x) >= .10){
-            powerFrontLeft -= gamepad1.right_stick_x;
-            powerBackLeft -= gamepad1.right_stick_x;
-            powerFrontRight += gamepad1.right_stick_x;
-            powerBackRight += gamepad1.right_stick_x;
-        }
-
-        */
-        driveMixer(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-
-        motorFrontLeft.setPower(powerFrontLeft);
-        motorBackLeft.setPower(powerBackLeft);
-        motorFrontRight.setPower(powerFrontRight);
-        motorBackRight.setPower(powerBackRight);
-
-        //toggle the particle conveyor on and off - quick and dirty
-        if (gamepad1.a)
-        {
-            if(toggleAllowed())
-            {
-                if (powerConveyor == 0)
-                    powerConveyor = 1;
-                else
-                    powerConveyor = 0;
-            }
-        }
-        if (gamepad1.b)
-        {
-            if(toggleAllowed())
-            {
-                if (powerConveyor == 0)
-                    powerConveyor = -1;
-                else
-                    powerConveyor = 0;
-            }
-        }
-        if(toggleAllowed()) {
-            if (gamepad1.x) {
-                motorConveyor.setPower(-1);
-                flingTimer = System.nanoTime() + 200000000;
-                while(flingTimer > System.nanoTime()){ powerConveyor = -1; }
-                powerConveyor = 0;
-                upChuck.fling();
-
-            }
-        }
-        if(gamepad1.y){
-            if(toggleAllowed()) {
-                if (upChuck.isStopped()) {
-                    upChuck.restart();
-                } else {
-                    upChuck.emergencyStop();
-                }
-            }
-        }
-
-        motorConveyor.setPower(clampMotor(powerConveyor));
+    public void autonomous(){
+        moveTicksRelativeToFrontLeft( -1, 0, 0, -1175);
+        upChuck.fling();
+        driveMixer(0,0,0);
+        shouldRun =  false;
     }
 
     public double clampMotor(double power) { return clampDouble(-1, 1, power); }
@@ -230,29 +171,31 @@ public class TeleOp_6832 extends LinearOpMode {
         powerBackLeft = 0;
         powerFrontLeft = 0;
 
-
         powerFrontLeft = forward;
         powerBackLeft = forward;
         powerFrontRight = forward;
         powerBackRight = forward;
-
 
         powerFrontLeft += -crab;
         powerFrontRight += crab;
         powerBackLeft += crab;
         powerBackRight += -crab;
 
-
         powerFrontLeft -= rotate;
         powerBackLeft -= rotate;
         powerFrontRight += rotate;
         powerBackRight += rotate;
 
+        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
+        motorBackLeft.setPower(clampMotor(powerBackLeft));
+        motorFrontRight.setPower(clampMotor(powerFrontRight));
+        motorBackRight.setPower(clampMotor(powerBackRight));
 
-        clampMotor(powerFrontLeft);
-        clampMotor(powerBackLeft);
-        clampMotor(powerFrontRight);
-        clampMotor(powerBackRight);
-
+    }
+    public void moveTicksRelativeToFrontLeft(double forward, double crab, double rotate, long ticks){
+        ticks += motorFrontLeft.getCurrentPosition();
+        while(motorFrontLeft.getCurrentPosition() > ticks && opModeIsActive()){
+            driveMixer(forward, crab, rotate);
+        }
     }
 }
