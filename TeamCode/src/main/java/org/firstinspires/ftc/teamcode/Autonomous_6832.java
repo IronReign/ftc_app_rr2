@@ -32,7 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -73,11 +72,14 @@ public class Autonomous_6832 extends LinearOpMode {
     private double powerBackRight = 0;
     private double powerConveyor = 0;
     private boolean shouldRun = true;
-    private Flinger upChuck = null;
+    private scoringSystem kobe = null;
     private long flingTimer = 0;
     private int flingSpeed = 5000; //ticks per second
+    private int TPM_Forward = 1772; //set this value
+    private int TPM_Crab = 3386; //set this value
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
+    private int state = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -105,14 +107,14 @@ public class Autonomous_6832 extends LinearOpMode {
         this.motorFlinger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
-        this.motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        this.upChuck = new Flinger(flingSpeed, motorFlinger);
+        this.kobe = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
 
-        upChuck.pullBack();
+        kobe.pullBack();
 
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
@@ -128,6 +130,8 @@ public class Autonomous_6832 extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
+            telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
             telemetry.update();
             if(shouldRun) {
                 autonomous();
@@ -137,10 +141,23 @@ public class Autonomous_6832 extends LinearOpMode {
         }
     }
     public void autonomous(){
-        moveTicksRelativeToFrontLeft( -1, 0, 0, -1175);
-        upChuck.fling();
-        driveMixer(0,0,0);
-        shouldRun =  false;
+        switch(state){
+            case 0:
+                resetMotors();
+                state++;
+                break;
+            case 1:
+                if(driveForward(true, .5, 1))
+                    state++;
+                break;
+            case 2:
+                kobe.fling();
+                state++;
+                break;
+            default:
+                break;
+        }
+        kobe.updateCollection();
     }
 
     public double clampMotor(double power) { return clampDouble(-1, 1, power); }
@@ -192,10 +209,45 @@ public class Autonomous_6832 extends LinearOpMode {
         motorBackRight.setPower(clampMotor(powerBackRight));
 
     }
-    public void moveTicksRelativeToFrontLeft(double forward, double crab, double rotate, long ticks){
-        ticks += motorFrontLeft.getCurrentPosition();
-        while(motorFrontLeft.getCurrentPosition() > ticks && opModeIsActive()){
-            driveMixer(forward, crab, rotate);
+//    public void moveTicks(double forward, double crab, double rotate, long ticks){
+//        ticks += motorFrontLeft.getCurrentPosition();
+//        while(motorFrontLeft.getCurrentPosition() < ticks && opModeIsActive()){
+//            telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
+//            telemetry.update();
+//            driveMixer(forward, crab, rotate);
+//        }
+//    }
+    public boolean driveForward(boolean forward, double targetMeters, double power){
+        if(forward){
+            targetMeters = 0 - targetMeters;
         }
+        long targetPos = (long)(targetMeters * TPM_Forward);
+        if(Math.abs(targetPos) > Math.abs(getAverageTicks())){
+            driveMixer(power, 0, 0);
+            return false;
+        }
+        else {
+            driveMixer(0, 0, 0);
+            return true;
+        }
+    }
+    public void resetMotors(){
+        motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    public long getAverageTicks(){
+        long averageTicks = (motorFrontLeft.getCurrentPosition() + motorBackLeft.getCurrentPosition() + motorFrontRight.getCurrentPosition() + motorBackRight.getCurrentPosition())/4;
+        return averageTicks;
+    }
+    public long getAverageAbsTicks(){
+        long averageTicks = (motorFrontLeft.getCurrentPosition() + motorBackLeft.getCurrentPosition() + motorFrontRight.getCurrentPosition() + motorBackRight.getCurrentPosition())/4;
+        return averageTicks;
     }
 }

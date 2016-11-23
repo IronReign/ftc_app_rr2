@@ -32,7 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -71,7 +70,7 @@ public class TeleOp_6832 extends LinearOpMode {
     private double powerBackLeft = 0;
     private double powerBackRight = 0;
     private double powerConveyor = 0;
-    private Flinger upChuck = null;
+    private scoringSystem kobe = null;
     private long flingTimer = 0;
     private int flingSpeed = 5000; //ticks per second
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
@@ -94,13 +93,13 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
 
 
-        this.motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorFlinger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        this.upChuck = new Flinger(flingSpeed, motorFlinger);
+        this.kobe = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
 
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
@@ -116,6 +115,8 @@ public class TeleOp_6832 extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Status", "Left Joystick Y: " + Float.toString(gamepad1.left_stick_y));
+            telemetry.addData("Status", "Right Joystick X: " + Float.toString(gamepad1.right_stick_x));
             telemetry.update();
             joystickDrive();
 
@@ -151,7 +152,7 @@ public class TeleOp_6832 extends LinearOpMode {
         }
 
         */
-        driveMixer(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
         motorFrontLeft.setPower(powerFrontLeft);
         motorBackLeft.setPower(powerBackLeft);
@@ -163,43 +164,33 @@ public class TeleOp_6832 extends LinearOpMode {
         {
             if(toggleAllowed())
             {
-                if (powerConveyor == 0)
-                    powerConveyor = 1;
-                else
-                    powerConveyor = 0;
+                kobe.collect();
             }
         }
         if (gamepad1.b)
         {
             if(toggleAllowed())
             {
-                if (powerConveyor == 0)
-                    powerConveyor = -1;
-                else
-                    powerConveyor = 0;
+                kobe.eject();
             }
         }
         if(toggleAllowed()) {
             if (gamepad1.x) {
-                motorConveyor.setPower(-1);
-                flingTimer = System.nanoTime() + 200000000;
-                while(flingTimer > System.nanoTime()){ powerConveyor = -1; }
-                powerConveyor = 0;
-                upChuck.fling();
 
+                kobe.fling();
             }
         }
         if(gamepad1.y){
             if(toggleAllowed()) {
-                if (upChuck.isStopped()) {
-                    upChuck.restart();
+                if (kobe.isStopped()) {
+                    kobe.restart();
                 } else {
-                    upChuck.emergencyStop();
+                    kobe.emergencyStop();
                 }
             }
         }
 
-        motorConveyor.setPower(clampMotor(powerConveyor));
+        kobe.updateCollection();
     }
 
     public double clampMotor(double power) { return clampDouble(-1, 1, power); }
