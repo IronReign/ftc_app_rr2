@@ -82,6 +82,13 @@ public class scoringSystem {
             position += ticksPerRot;
             runToPosition();
         }
+        motorConveyor.setPower(0);
+        flingTimer = System.nanoTime() + 500000000;
+        while(flingTimer > System.nanoTime()){ powerConveyor = 0; }
+        motorConveyor.setPower(1);
+        flingTimer = System.nanoTime() + 1000000000;
+        while(flingTimer > System.nanoTime()){ powerConveyor = 1; }
+        powerConveyor = 0;
     }
 
     public void collect(){

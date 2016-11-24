@@ -80,6 +80,10 @@ public class Autonomous_6832 extends LinearOpMode {
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
     private int state = 0;
+    private boolean initiallized = false;
+    private int flingNumber = 0;
+    private boolean isBlue = true;
+    private  boolean targetBeacon = true;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -116,6 +120,33 @@ public class Autonomous_6832 extends LinearOpMode {
 
         kobe.pullBack();
 
+        while(!initiallized){
+            telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
+            telemetry.addData("Status", "Side: " + getAlliance());
+            telemetry.update();
+            if(gamepad1.a){
+                flingNumber = 1;
+            }
+            if(gamepad1.b){
+                flingNumber = 2;
+            }
+            if(gamepad1.y){
+                flingNumber = 3;
+            }
+            if(toggleAllowed()) {
+                if (gamepad1.x) {
+                    isBlue = !isBlue;
+                }
+            }
+            if(gamepad1.start){
+                telemetry.addData("Status", "Initialized");
+                telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
+                telemetry.addData("Status", "Side: " + getAlliance());
+                telemetry.update();
+                initiallized = true;
+            }
+        }
+
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
         // leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
@@ -142,18 +173,60 @@ public class Autonomous_6832 extends LinearOpMode {
     }
     public void autonomous(){
         switch(state){
-            case 0:
+            case 0: //reset all the motors before starting autonomous
                 resetMotors();
                 state++;
                 break;
-            case 1:
-                if(driveForward(true, .5, 1))
+            case 1: //drive forward and shoot in the goal
+                if(driveForward(true, 1, 1)) {
+                    resetMotors();
+                    for(int n = 0; n < flingNumber; n++)
+                        kobe.fling();
                     state++;
+                }
                 break;
-            case 2:
-                kobe.fling();
-                state++;
+            case 2: //drive towards the corner vortex
+                if(driveCrab(!isBlue, 1.5, 1)) {
+                    resetMotors();
+                    state++;
+                }
                 break;
+            case 3: //drive up next to the first beacon
+                if(driveForward(true, .25, 1)){
+                    resetMotors();
+                    state++;
+                }
+                break;
+            case 4: //press the first beacon by driving into it
+                if(driveCrab(!isBlue, .20, .5)){
+                    resetMotors();
+                    state++;
+                }
+                break;
+            case 5: //drive away from the first beacon
+                if(driveCrab(isBlue, .20, .5)) {
+                    resetMotors();
+                    state++;
+                }
+                break;
+            case 6: //drive up next to the second beacon
+                if(driveForward(true, 2.5, 1)){
+                    resetMotors();
+                    state++;
+                }
+                break;
+            case 7: //press the second beacon by driving into it
+                if(driveCrab(!isBlue, .20, .5)){
+                    resetMotors();
+                    state++;
+                }
+                break;
+            case 8: //drive away from the second beacon
+                if(driveCrab(isBlue, .20, .5)) {
+                    resetMotors();
+                    state++;
+                }
+
             default:
                 break;
         }
@@ -218,12 +291,35 @@ public class Autonomous_6832 extends LinearOpMode {
 //        }
 //    }
     public boolean driveForward(boolean forward, double targetMeters, double power){
-        if(forward){
+        if(!forward){
             targetMeters = 0 - targetMeters;
+            power = -power;
         }
         long targetPos = (long)(targetMeters * TPM_Forward);
         if(Math.abs(targetPos) > Math.abs(getAverageTicks())){
             driveMixer(power, 0, 0);
+            return false;
+        }
+        else {
+            driveMixer(0, 0, 0);
+            return true;
+        }
+    }
+    public String getAlliance(){
+        if(isBlue)
+            return "Blue";
+        else
+            return "Red";
+    }
+
+    public boolean driveCrab(boolean left, double targetMeters, double power){
+        if(!left){
+            targetMeters = -targetMeters;
+            power = -power;
+        }
+        long targetPos = (long)(targetMeters * TPM_Crab);
+        if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){
+            driveMixer(0, power, 0);
             return false;
         }
         else {
@@ -247,7 +343,7 @@ public class Autonomous_6832 extends LinearOpMode {
         return averageTicks;
     }
     public long getAverageAbsTicks(){
-        long averageTicks = (motorFrontLeft.getCurrentPosition() + motorBackLeft.getCurrentPosition() + motorFrontRight.getCurrentPosition() + motorBackRight.getCurrentPosition())/4;
+        long averageTicks = (Math.abs(motorFrontLeft.getCurrentPosition()) + Math.abs(motorBackLeft.getCurrentPosition()) + Math.abs(motorFrontRight.getCurrentPosition()) + Math.abs(motorBackRight.getCurrentPosition()))/4;
         return averageTicks;
     }
 }
