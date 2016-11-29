@@ -38,12 +38,20 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Func;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+
+import java.util.Locale;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -77,6 +85,17 @@ public class Autonomous_6832 extends LinearOpMode {
     I2cDevice beaconSensor = null;
     BNO055IMU imu;
     Orientation angles;
+
+    OpticalDistanceSensor beaconPresentRear;
+    OpticalDistanceSensor beaconPresentFore;
+
+    byte[] colorForeCache = new byte[100];
+    byte[] colorRearCache = new byte[100];
+
+    I2cDevice beaconColorFore;
+    I2cDevice beaconColorRear;
+    I2cDeviceSynch colorForeReader;
+    I2cDeviceSynch colorRearReader;
 
     private double powerFrontLeft = 0;
     private double powerFrontRight = 0;
@@ -115,9 +134,20 @@ public class Autonomous_6832 extends LinearOpMode {
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
         this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
 
-        floorSensor = hardwareMap.i2cDevice.get("floorSensor");
-        beaconSensor = hardwareMap.i2cDevice.get("beaconSensor");
+        // get a reference to our distance sensors
+        beaconPresentRear = hardwareMap.opticalDistanceSensor.get("beaconPresentRear");
 
+        // color sensors init
+        beaconColorFore = hardwareMap.i2cDevice.get("beaconColorFore");
+        beaconColorRear = hardwareMap.i2cDevice.get("beaconColorRear");
+
+        colorForeReader = new I2cDeviceSynchImpl(beaconColorFore, I2cAddr.create8bit(0x60), false);
+        colorRearReader = new I2cDeviceSynchImpl(beaconColorRear, I2cAddr.create8bit(0x64), false);
+
+        colorForeReader.engage();
+        colorRearReader.engage();
+
+        //motor configurations
 
         this.motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -141,8 +171,10 @@ public class Autonomous_6832 extends LinearOpMode {
         parametersIMU.loggingEnabled      = true;
         parametersIMU.loggingTag          = "IMU";
 
-//        imu = hardwareMap.get(BNO055IMU.class, "imu");
-//        imu.initialize(parametersIMU);
+        //imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = (BNO055IMU)hardwareMap.get("imu");
+        imu.initialize(parametersIMU);
+        configureDashboard();
 
         kobe.pullBack();
 
@@ -164,7 +196,16 @@ public class Autonomous_6832 extends LinearOpMode {
                     isBlue = !isBlue;
                 }
             }
+            if (gamepad1.dpad_down){state = -1;} //sit and do nothing but read sensors
+
             if(gamepad1.start){
+
+                //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
+                colorForeReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+                colorRearReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+                //Active - For measuring reflected light. Cancels out ambient light
+                //Passive - For measuring ambient light, eg. the FTC Color Beacon
+
                 telemetry.addData("Status", "Initialized");
                 telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
                 telemetry.addData("Status", "Side: " + getAlliance());
@@ -177,6 +218,9 @@ public class Autonomous_6832 extends LinearOpMode {
         // "Reverse" the motor that runs backwards when connected directly to the battery
         // leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         // rightMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+
+
+
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -196,6 +240,8 @@ public class Autonomous_6832 extends LinearOpMode {
     }
     public void autonomous(){
         switch(state){
+            case -1: //sit and spin - do nothing
+                break;
             case 0: //reset all the motors before starting autonomous
                 resetMotors();
                 state++;
@@ -265,6 +311,9 @@ public class Autonomous_6832 extends LinearOpMode {
                 break;
         }
         kobe.updateCollection();
+        // read color sensors
+        colorForeCache = colorForeReader.read(0x04, 1);
+        colorRearCache = colorRearReader.read(0x04, 1);
     }
 
     public double clampMotor(double power) { return clampDouble(-1, 1, power); }
@@ -406,13 +455,85 @@ public class Autonomous_6832 extends LinearOpMode {
                 // Acquiring the angles is relatively expensive; we don't want
                 // to do that in each of the three items that need that info, as that's
                 // three times the necessary expense.
-//                angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
             }
         });
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Status", "State: " + state);
-        telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
-        telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
 
+        telemetry.addLine()
+                .addData("status", new Func<String>() {
+                    @Override public String value() {
+                        return imu.getSystemStatus().toShortString();
+                    }
+                })
+                .addData("calib", new Func<String>() {
+                    @Override public String value() {
+                        return imu.getCalibrationStatus().toString();
+                    }
+                });
+
+        telemetry.addLine()
+                .addData("heading", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles.angleUnit, angles.firstAngle);
+                    }
+                })
+                .addData("roll", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles.angleUnit, angles.secondAngle);
+                    }
+                })
+                .addData("pitch", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles.angleUnit, angles.thirdAngle);
+                    }
+                });
+        telemetry.addLine()
+                .addData("State", new Func<String>() {
+                    @Override public String value() {
+                        return String.valueOf(state);
+                    }
+                })
+                .addData("TicksFL", new Func<String>() {
+                    @Override public String value() {
+                        return Long.toString(motorFrontLeft.getCurrentPosition());
+                    }
+                })
+                .addData("TicksAvg", new Func<String>() {
+                    @Override public String value() {
+                        return Long.toString(getAverageTicks());
+                    }
+                });
+        telemetry.addLine()
+                .addData("Distance", new Func<String>() {
+                    @Override public String value() {
+                        return String.valueOf(beaconPresentRear.getLightDetected());
+                    }
+                })
+                .addData("ForeColor", new Func<String>() {
+                    @Override public String value() {
+                        return Long.toString(colorForeCache[0] & 0xFF);
+                    }
+                })
+                .addData("RearColor", new Func<String>() {
+                    @Override public String value() {
+                        return Long.toString(colorRearCache[0] & 0xFF);
+                    }
+                });
+//        telemetry.addData("Status", "Run Time: " + runtime.toString());
+//        //telemetry.addData("Status", "State: " + state);
+//        //telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
+//        //telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
+//        telemetry.addLine().addData("Normal", beaconPresentRear.getLightDetected());
+//
+//        telemetry.addLine().addData("ColorFore", colorForeCache[0] & 0xFF);
+//        telemetry.addData("ColorRear", colorRearCache[0] & 0xFF);
+
+    }
+    String formatAngle(AngleUnit angleUnit, double angle) {
+        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
+    }
+
+    String formatDegrees(double degrees){
+        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
     }
 }
