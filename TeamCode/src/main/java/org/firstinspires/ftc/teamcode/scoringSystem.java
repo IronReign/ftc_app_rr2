@@ -18,7 +18,7 @@ public class scoringSystem {
     DcMotor motorFlinger = null;
     DcMotor motorConveyor = null;
     private double power = 0;
-    static int ticksPerRot = 1120;
+    static int ticksPerRot = 1680;
     private double powerConveyor = 0;
     private long flingTimer = 0;
 
@@ -76,11 +76,16 @@ public class scoringSystem {
         motorConveyor.setPower(-1);
         flingTimer = System.nanoTime() + 200000000;
         while(flingTimer > System.nanoTime()){ powerConveyor = -1; }
-        powerConveyor = 0;
+        motorConveyor.setPower(0);
+        motorFlinger.setMaxSpeed(ticksPerRot);
         if(Math.abs(position) > Math.abs(motorFlinger.getCurrentPosition()) - 15            //prevents incrementing target pos
            && Math.abs(position) < Math.abs((motorFlinger.getCurrentPosition()) + 15)){     //if the flinger is stuck
-            position += ticksPerRot;
+            position += ticksPerRot * 1;
             runToPosition();
+            while(Math.abs(position) > Math.abs(motorFlinger.getCurrentPosition()) - 10            //prevents overshooting
+                    && Math.abs(position) < Math.abs((motorFlinger.getCurrentPosition()) + 10)){}
+            flingTimer = System.nanoTime() + 500000000;
+            while(flingTimer > System.nanoTime()){}
         }
         motorConveyor.setPower(0);
         flingTimer = System.nanoTime() + 500000000;

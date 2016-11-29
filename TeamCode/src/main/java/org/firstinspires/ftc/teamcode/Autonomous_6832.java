@@ -32,11 +32,18 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -66,6 +73,11 @@ public class Autonomous_6832 extends LinearOpMode {
     DcMotor motorBackRight = null;
     DcMotor motorConveyor = null;
     DcMotor motorFlinger = null;
+    I2cDevice floorSensor = null;
+    I2cDevice beaconSensor = null;
+    BNO055IMU imu;
+    Orientation angles;
+
     private double powerFrontLeft = 0;
     private double powerFrontRight = 0;
     private double powerBackLeft = 0;
@@ -83,7 +95,9 @@ public class Autonomous_6832 extends LinearOpMode {
     private boolean initiallized = false;
     private int flingNumber = 0;
     private boolean isBlue = true;
-    private  boolean targetBeacon = true;
+    private boolean targetBeacon = true;
+    private double IMUTargetHeading = 0;
+    private boolean targetAngleInitialized = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -101,6 +115,9 @@ public class Autonomous_6832 extends LinearOpMode {
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
         this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
 
+        floorSensor = hardwareMap.i2cDevice.get("floorSensor");
+        beaconSensor = hardwareMap.i2cDevice.get("beaconSensor");
+
 
         this.motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -117,6 +134,15 @@ public class Autonomous_6832 extends LinearOpMode {
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
 
         this.kobe = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
+
+        BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+        parametersIMU.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled      = true;
+        parametersIMU.loggingTag          = "IMU";
+
+//        imu = hardwareMap.get(BNO055IMU.class, "imu");
+//        imu.initialize(parametersIMU);
 
         kobe.pullBack();
 
@@ -160,9 +186,6 @@ public class Autonomous_6832 extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
-            telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
             telemetry.update();
             if(shouldRun) {
                 autonomous();
@@ -178,51 +201,62 @@ public class Autonomous_6832 extends LinearOpMode {
                 state++;
                 break;
             case 1: //drive forward and shoot in the goal
-                if(driveForward(true, 1, 1)) {
+                if(driveForward(true, .94, 1)) {
                     resetMotors();
                     for(int n = 0; n < flingNumber; n++)
                         kobe.fling();
                     state++;
                 }
                 break;
-            case 2: //drive towards the corner vortex
-                if(driveCrab(!isBlue, 1.5, 1)) {
+            case 2:
+                if(isBlue) {
+                    if (rotateRelative(true, 180, .30)) {
+                        targetAngleInitialized = false;
+                        resetMotors();
+                        state++;
+                    }
+                }
+                else
+                    state++;
+                break;
+            case 3: //drive towards the corner vortex
+                if(driveCrab(!isBlue, 1, 1)) {
                     resetMotors();
                     state++;
                 }
                 break;
-            case 3: //drive up next to the first beacon
-                if(driveForward(true, .25, 1)){
+            case 4: //drive up next to the first beacon
+                if(driveForward(!isBlue, .35, 1)){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 4: //press the first beacon by driving into it
-                if(driveCrab(!isBlue, .20, .5)){
+            case 5: //press the first beacon by driving into it
+                if(driveCrab(!isBlue, .8, .5)){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 5: //drive away from the first beacon
-                if(driveCrab(isBlue, .20, .5)) {
+            case 6: //drive away from the first beacon
+                if(driveCrab(false, 0, .5)) {
                     resetMotors();
                     state++;
                 }
                 break;
-            case 6: //drive up next to the second beacon
-                if(driveForward(true, 2.5, 1)){
+            case 7: //drive up next to the second beacon
+                if(driveForward(!isBlue, 1.27, 1)){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 7: //press the second beacon by driving into it
-                if(driveCrab(!isBlue, .20, .5)){
+            case 8: //press the second beacon by driving into it
+                if(driveCrab(true, 0, .5)){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 8: //drive away from the second beacon
-                if(driveCrab(isBlue, .20, .5)) {
+            case 9: //drive away from the second beacon
+                if(driveCrab(false, 0, .5)) {
                     resetMotors();
                     state++;
                 }
@@ -305,6 +339,21 @@ public class Autonomous_6832 extends LinearOpMode {
             return true;
         }
     }
+    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
+        if(!clockwise){
+            targetAngle = -targetAngle;
+            power = -power;
+        }
+        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
+        if(Math.abs(targetAngle) > Math.abs(getAverageTicks())){
+            driveMixer(0, 0, power);
+            return false;
+        }
+        else {
+            driveMixer(0, 0, 0);
+            return true;
+        }
+    }
     public String getAlliance(){
         if(isBlue)
             return "Blue";
@@ -345,5 +394,25 @@ public class Autonomous_6832 extends LinearOpMode {
     public long getAverageAbsTicks(){
         long averageTicks = (Math.abs(motorFrontLeft.getCurrentPosition()) + Math.abs(motorBackLeft.getCurrentPosition()) + Math.abs(motorFrontRight.getCurrentPosition()) + Math.abs(motorBackRight.getCurrentPosition()))/4;
         return averageTicks;
+    }
+    void configureDashboard() {
+        // Configure the dashboard.
+
+        // At the beginning of each telemetry update, grab a bunch of data
+        // from the IMU that we will then display in separate lines.
+        telemetry.addAction(new Runnable() {
+            @Override
+            public void run() {
+                // Acquiring the angles is relatively expensive; we don't want
+                // to do that in each of the three items that need that info, as that's
+                // three times the necessary expense.
+//                angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            }
+        });
+        telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addData("Status", "State: " + state);
+        telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
+        telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
+
     }
 }

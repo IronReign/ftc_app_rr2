@@ -32,11 +32,18 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -65,6 +72,11 @@ public class TeleOp_6832 extends LinearOpMode {
     DcMotor motorBackRight = null;
     DcMotor motorConveyor = null;
     DcMotor motorFlinger = null;
+    I2cDevice floorSensor = null;
+    I2cDevice beaconSensor = null;
+    BNO055IMU imu;
+    Orientation angles;
+
     private double powerFrontLeft = 0;
     private double powerFrontRight = 0;
     private double powerBackLeft = 0;
@@ -92,6 +104,9 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
         this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
 
+        floorSensor = hardwareMap.i2cDevice.get("floorSensor");
+        beaconSensor = hardwareMap.i2cDevice.get("beaconSensor");
+
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -100,6 +115,15 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
 
         this.kobe = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
+
+        BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+        parametersIMU.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled      = true;
+        parametersIMU.loggingTag          = "IMU";
+
+//        imu = hardwareMap.get(BNO055IMU.class, "imu");
+//        imu.initialize(parametersIMU);
 
         // eg: Set the drive motor directions:
         // "Reverse" the motor that runs backwards when connected directly to the battery
@@ -114,9 +138,7 @@ public class TeleOp_6832 extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Status", "Left Joystick Y: " + Float.toString(gamepad1.left_stick_y));
-            telemetry.addData("Status", "Right Joystick X: " + Float.toString(gamepad1.right_stick_x));
+            configureDashboard();
             telemetry.update();
             joystickDrive();
 
@@ -245,5 +267,25 @@ public class TeleOp_6832 extends LinearOpMode {
         clampMotor(powerFrontRight);
         clampMotor(powerBackRight);
 
+    }
+    void configureDashboard() {
+        // Configure the dashboard.
+
+//        // At the beginning of each telemetry update, grab a bunch of data
+//        // from the IMU that we will then display in separate lines.
+//        telemetry.addAction(new Runnable() {
+//            @Override
+//            public void run() {
+//                // Acquiring the angles is relatively expensive; we don't want
+//                // to do that in each of the three items that need that info, as that's
+//                // three times the necessary expense.
+//                angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+//            }
+//        });
+        telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addData("Status", "Left Joystick Y: " + Float.toString(gamepad1.left_stick_y));
+        telemetry.addData("Status", "Right Joystick X: " + Float.toString(gamepad1.right_stick_x));
+        telemetry.addData("Status", "Flinger Target:" + Long.toString(motorFlinger.getTargetPosition()));
+        telemetry.addData("Status", "Flinger Actual:" + Long.toString(motorFlinger.getCurrentPosition()));
     }
 }
