@@ -360,6 +360,7 @@ public class Autonomous_6832 extends LinearOpMode {
             return false;
         }
         else{
+            driveMixer(0, 0, 0);
             return true;
         }
     }
