@@ -92,6 +92,9 @@ public class TeleOp_6832 extends LinearOpMode {
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
 
+    private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
+    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
+
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry.addData("Status", "Initialized");
@@ -274,6 +277,12 @@ public class TeleOp_6832 extends LinearOpMode {
         clampMotor(powerBackRight);
 
     }
+
+    public double ServoNormalize(int pulse){
+        double normalized = (double)pulse;
+        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on 0 - 1 scale
+    }
+
     void configureDashboard() {
         // Configure the dashboard.
 

@@ -35,7 +35,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.I2cAddr;
@@ -43,6 +42,7 @@ import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Func;
@@ -81,8 +81,8 @@ public class Autonomous_6832 extends LinearOpMode {
     DcMotor motorBackRight = null;
     DcMotor motorConveyor = null;
     DcMotor motorFlinger = null;
-    I2cDevice floorSensor = null;
-    I2cDevice beaconSensor = null;
+    Servo   pushButton = null;
+
     BNO055IMU imu;
     Orientation angles;
 
@@ -96,6 +96,10 @@ public class Autonomous_6832 extends LinearOpMode {
     I2cDevice beaconColorRear;
     I2cDeviceSynch colorForeReader;
     I2cDeviceSynch colorRearReader;
+    long colorFore;
+    long colorAft;
+    double beaconDistAft; //holds most recent linearized distance reading from ODS sensor
+    double beaconDistFore;
 
     private double powerFrontLeft = 0;
     private double powerFrontRight = 0;
@@ -111,12 +115,17 @@ public class Autonomous_6832 extends LinearOpMode {
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
     private int state = 0;
+    private int beaconState = 0;
     private boolean initiallized = false;
     private int flingNumber = 0;
-    private boolean isBlue = true;
+    private boolean isBlue = false;
     private boolean targetBeacon = true;
     private double IMUTargetHeading = 0;
     private boolean targetAngleInitialized = false;
+    private long presserTimer = 0;
+
+    private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
+    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -133,9 +142,11 @@ public class Autonomous_6832 extends LinearOpMode {
         this.motorBackRight = this.hardwareMap.dcMotor.get("motorBackRight");
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
         this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
+        this.pushButton = this.hardwareMap.servo.get("mjolnir");
 
         // get a reference to our distance sensors
         beaconPresentRear = hardwareMap.opticalDistanceSensor.get("beaconPresentRear");
+        beaconPresentFore = hardwareMap.opticalDistanceSensor.get("beaconPresentFore");
 
         // color sensors init
         beaconColorFore = hardwareMap.i2cDevice.get("beaconColorFore");
@@ -256,67 +267,154 @@ public class Autonomous_6832 extends LinearOpMode {
                 break;
             case 2:
                 if(isBlue) {
-                    if (rotateRelative(true, 180, .30)) {
+                    if (rotateRelative(true, 90, .30)) {
                         targetAngleInitialized = false;
                         resetMotors();
                         state++;
                     }
+                    else state++;
                 }
                 else
                     state++;
                 break;
             case 3: //drive towards the corner vortex
-                if(driveCrab(!isBlue, 1, 1)) {
+                if(driveCrab(true, 1, 1)) {
                     resetMotors();
                     state++;
                 }
                 break;
-            case 4: //drive up next to the first beacon
+            case 4: //drive up near the first beacon
                 if(driveForward(!isBlue, .35, 1)){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 5: //press the first beacon by driving into it
-                if(driveCrab(!isBlue, .8, .5)){
+            case 5: //drive towards the wall in order to press the first beacon
+                if(driveCrab(true, .65, .5)){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 6: //drive away from the first beacon
-                if(driveCrab(false, 0, .5)) {
+            case 6: //press the first beacon
+                if(pressTeamBeacon()) {
                     resetMotors();
                     state++;
                 }
                 break;
             case 7: //drive up next to the second beacon
-                if(driveForward(!isBlue, 1.27, 1)){
+                if(driveForward(!isBlue, 1.0, 1)){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 8: //press the second beacon by driving into it
-                if(driveCrab(true, 0, .5)){
+            case 8: //press the second beacon
+                if(pressTeamBeacon()){
                     resetMotors();
                     state++;
                 }
                 break;
-            case 9: //drive away from the second beacon
-                if(driveCrab(false, 0, .5)) {
-                    resetMotors();
-                    state++;
-                }
+//            case 9: //drive away from the second beacon
+//                if(driveCrab(false, 0, .5)) {
+//                    resetMotors();
+//                    state++;
+//                }
 
             default:
                 break;
         }
         kobe.updateCollection();
+
         // read color sensors
         colorForeCache = colorForeReader.read(0x04, 1);
         colorRearCache = colorRearReader.read(0x04, 1);
+        colorAft  = (colorRearCache[0] & 0xFF);
+        colorFore = (colorForeCache[0] & 0xFF);
+
+        //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
+        beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
+        beaconDistFore = Math.pow(beaconPresentFore.getLightDetected(), 0.5); //calculate linear value
+
     }
 
     public double clampMotor(double power) { return clampDouble(-1, 1, power); }
+
+
+
+    public boolean foundBeacon() {
+        if(isBlue){
+            return beaconDistAft > 0.05;
+        }
+        return beaconDistFore > .05;
+    }
+
+    public boolean findBeaconPressRange() {
+        double dist;
+        if(isBlue){ dist = beaconDistAft; }
+        else { dist = beaconDistFore; }
+        if(dist > .35){
+            driveMixer(0, -.10, 0);
+            return false;
+        }
+        else if(dist < .2){
+            driveMixer(0, .10, 0);
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+
+    public boolean onTeamColor(){
+        if(isBlue){
+            return colorAft == 3;
+        }
+        return (colorFore > 9 && colorFore < 12);
+    }
+
+    public boolean pressTeamBeacon(){
+        switch(beaconState){
+            case 0:
+                if(isBlue){ driveMixer(-.25, 0, 0); }
+                else { driveMixer(.25, 0, 0); }
+                if(foundBeacon()) {
+                    driveMixer(0, 0, 0);
+                    resetMotors();
+                    beaconState++;
+                }
+                break;
+            case 1:
+                if(findBeaconPressRange()) beaconState++;
+                break;
+            case 2:
+                if(isBlue){ driveMixer(-.10, 0, 0); }
+                else { driveMixer(.10, 0, 0); }
+                if(onTeamColor()) beaconState++;
+                break;
+            case 3:
+                if(findBeaconPressRange()) beaconState++;
+                break;
+            case 4:
+                pushButton.setPosition(ServoNormalize(pressedPosition));
+                presserTimer = System.nanoTime();
+                beaconState++;
+                break;
+            case 5:
+                if(presserTimer < System.nanoTime())
+                    beaconState++;
+                break;
+            case 6:
+                pushButton.setPosition(ServoNormalize(relaxedPosition));
+                beaconState++;
+                break;
+            case 7:
+                if(driveCrab(false, .10, .30)) beaconState++;
+                break;
+            default:
+                beaconState = 0;
+                return true;
+        }
+        return false;
+    }
 
     public double clampDouble(double min, double max, double value)
     {
@@ -394,7 +492,7 @@ public class Autonomous_6832 extends LinearOpMode {
             power = -power;
         }
         if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
-        if(Math.abs(targetAngle) > Math.abs(getAverageTicks())){
+        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
             driveMixer(0, 0, power);
             return false;
         }
@@ -408,6 +506,11 @@ public class Autonomous_6832 extends LinearOpMode {
             return "Blue";
         else
             return "Red";
+    }
+
+    public double ServoNormalize(int pulse){
+        double normalized = (double)pulse;
+        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on 0 - 1 scale
     }
 
     public boolean driveCrab(boolean left, double targetMeters, double power){
@@ -504,21 +607,27 @@ public class Autonomous_6832 extends LinearOpMode {
                     }
                 });
         telemetry.addLine()
-                .addData("Distance", new Func<String>() {
+                .addData("DistRear", new Func<String>() {
                     @Override public String value() {
-                        return String.valueOf(beaconPresentRear.getLightDetected());
-                    }
-                })
-                .addData("ForeColor", new Func<String>() {
-                    @Override public String value() {
-                        return Long.toString(colorForeCache[0] & 0xFF);
+                        return String.valueOf(beaconDistAft);
                     }
                 })
                 .addData("RearColor", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(colorRearCache[0] & 0xFF);
+                        return Long.toString(colorAft);
+                    }
+                })
+                .addData("DistFore", new Func<String>() {
+                    @Override public String value() {
+                        return String.valueOf(beaconDistFore);
+                    }
+                })
+                .addData("ForeColor", new Func<String>() {
+                    @Override public String value() {
+                        return Long.toString(colorFore);
                     }
                 });
+
 //        telemetry.addData("Status", "Run Time: " + runtime.toString());
 //        //telemetry.addData("Status", "State: " + state);
 //        //telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
