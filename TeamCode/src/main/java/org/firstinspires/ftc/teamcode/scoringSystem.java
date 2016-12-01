@@ -59,7 +59,7 @@ public class scoringSystem {
         this.motorFlinger.setTargetPosition(position);
     }
 
-    public void pullBack(){
+    public void halfCycle(){
         resetFlinger();
         setPosition(ticksPerRot/2);
     }
@@ -117,6 +117,8 @@ public class scoringSystem {
     public void emergencyStop(){
         backupSpeed = speed;
         motorFlinger.setPower(0);
+        powerConveyor = 0;
+        motorConveyor.setPower(0);
         setSpeed(0);
     }
 

@@ -111,8 +111,8 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
         this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
 
-        floorSensor = hardwareMap.i2cDevice.get("floorSensor");
-        beaconSensor = hardwareMap.i2cDevice.get("beaconSensor");
+       // floorSensor = hardwareMap.i2cDevice.get("floorSensor");
+       // beaconSensor = hardwareMap.i2cDevice.get("beaconSensor");
 
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -156,33 +156,6 @@ public class TeleOp_6832 extends LinearOpMode {
     }
     public void joystickDrive(){
 
-        /*powerBackRight = 0;
-        powerFrontRight = 0;
-        powerBackLeft = 0;
-        powerFrontLeft = 0;
-
-        if(Math.abs(gamepad1.left_stick_y) >= .10) {
-            powerFrontLeft = gamepad1.left_stick_y;
-            powerBackLeft = gamepad1.left_stick_y;
-            powerFrontRight = gamepad1.left_stick_y;
-            powerBackRight = gamepad1.left_stick_y;
-        }
-        if(Math.abs(gamepad1.left_stick_x) >= .10){
-            powerFrontLeft += -gamepad1.left_stick_x;
-            powerFrontRight += gamepad1.left_stick_x;
-            powerBackLeft += gamepad1.left_stick_x;
-            powerBackRight += -gamepad1.left_stick_x;
-        }
-
-
-        if(Math.abs(gamepad1.right_stick_x) >= .10){
-            powerFrontLeft -= gamepad1.right_stick_x;
-            powerBackLeft -= gamepad1.right_stick_x;
-            powerFrontRight += gamepad1.right_stick_x;
-            powerBackRight += gamepad1.right_stick_x;
-        }
-
-        */
         driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
         motorFrontLeft.setPower(powerFrontLeft);

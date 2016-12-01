@@ -33,6 +33,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.adafruit.BNO055IMU;
+import com.qualcomm.hardware.ams.AMSColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -51,6 +52,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+import com.qualcomm.ftccommon.SoundPlayer;
+
 import java.util.Locale;
 
 /**
@@ -66,13 +69,16 @@ import java.util.Locale;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Autonomous_6832", group="Linear Opmode")  // @Autonomous(...) is the other common choice
+@TeleOp(name="Game_6832", group="Linear Opmode")  // @Autonomous(...) is the other common choice
 //  @Autonomous
 
-public class Autonomous_6832 extends LinearOpMode {
+public class Game_6832 extends LinearOpMode {
 
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
+
+    SoundPlayer deadShotSays = SoundPlayer.getInstance();
+
     //Pele test motors
 
     DcMotor motorFrontLeft = null;
@@ -106,7 +112,7 @@ public class Autonomous_6832 extends LinearOpMode {
     private double powerBackLeft = 0;
     private double powerBackRight = 0;
     private double powerConveyor = 0;
-    private boolean shouldRun = true;
+    private boolean active = true;
     private scoringSystem kobe = null;
     private long flingTimer = 0;
     private int flingSpeed = 5000; //ticks per second
@@ -114,7 +120,7 @@ public class Autonomous_6832 extends LinearOpMode {
     private int TPM_Crab = 3386; //set this value
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
-    private int state = 0;
+    private int autoState = 0;
     private int beaconState = 0;
     private boolean initiallized = false;
     private int flingNumber = 0;
@@ -123,6 +129,9 @@ public class Autonomous_6832 extends LinearOpMode {
     private double IMUTargetHeading = 0;
     private boolean targetAngleInitialized = false;
     private long presserTimer = 0;
+    private int state = 0;
+    private boolean runAutonomous = true;
+    private long autoTimer = 0;
 
     private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
     private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
@@ -187,12 +196,24 @@ public class Autonomous_6832 extends LinearOpMode {
         imu.initialize(parametersIMU);
         configureDashboard();
 
-        kobe.pullBack();
+        kobe.halfCycle();
 
-        while(!initiallized){
-            telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
-            telemetry.addData("Status", "Side: " + getAlliance());
-            telemetry.update();
+        //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
+        colorForeReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+        colorRearReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+
+        while(!isStarted()){
+            synchronized (this) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+
+            stateSwitch();
+
             if(gamepad1.a){
                 flingNumber = 1;
             }
@@ -207,22 +228,13 @@ public class Autonomous_6832 extends LinearOpMode {
                     isBlue = !isBlue;
                 }
             }
-            if (gamepad1.dpad_down){state = -1;} //sit and do nothing but read sensors
 
-            if(gamepad1.start){
+            telemetry.addData("Status", "Initialized");
+            telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
+            telemetry.addData("Status", "Side: " + getAlliance());
+            telemetry.update();
 
-                //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
-                colorForeReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
-                colorRearReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
-                //Active - For measuring reflected light. Cancels out ambient light
-                //Passive - For measuring ambient light, eg. the FTC Color Beacon
-
-                telemetry.addData("Status", "Initialized");
-                telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
-                telemetry.addData("Status", "Side: " + getAlliance());
-                telemetry.update();
-                initiallized = true;
-            }
+            idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
         // eg: Set the drive motor directions:
@@ -234,96 +246,152 @@ public class Autonomous_6832 extends LinearOpMode {
 
 
         // Wait for the game to start (driver presses PLAY)
-        waitForStart();
+//        waitForStart();
         runtime.reset();
+
+        if(runAutonomous){
+            state = 1;
+        }
 
 
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetry.update();
-            if(shouldRun) {
-                autonomous();
+            stateSwitch();
+            if(active) {
+                switch(state){
+                    case 0:
+                        autonomous();
+                        break;
+                    case 1:
+                        joystickDrive();
+                        break;
+                    case 2:
+                        kobe.halfCycle();
+                        active = false;
+                        break;
+                }
+                updateSensors();
             }
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
     }
     public void autonomous(){
-        switch(state){
-            case -1: //sit and spin - do nothing
-                break;
-            case 0: //reset all the motors before starting autonomous
-                resetMotors();
-                state++;
-                break;
-            case 1: //drive forward and shoot in the goal
-                if(driveForward(true, .94, 1)) {
+        if(autoTimer > System.nanoTime()) {
+            switch (autoState) {
+                case -1: //sit and spin - do nothing
+                    break;
+                case 0: //reset all the motors before starting autonomous
+                    autoTimer = System.nanoTime() + (long) 30e9;
                     resetMotors();
-                    for(int n = 0; n < flingNumber; n++)
-                        kobe.fling();
-                    state++;
-                }
-                break;
-            case 2:
-                if(isBlue) {
-                    if (rotateRelative(true, 90, .30)) {
-                        targetAngleInitialized = false;
+                    autoState++;
+                    deadShotSays.play(hardwareMap.appContext, R.raw.a01);
+                    break;
+                case 1: //drive forward and shoot in the goal
+
+                    if (driveForward(true, .94, 1)) {
                         resetMotors();
-                        state++;
+                        for (int n = 0; n < flingNumber; n++)
+                            kobe.fling();
+                        autoState++;
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a02);
                     }
-                    else state++;
-                }
-                else
-                    state++;
-                break;
-            case 3: //drive towards the corner vortex
-                if(driveCrab(true, 1, 1)) {
-                    resetMotors();
-                    state++;
-                }
-                break;
-            case 4: //drive up near the first beacon
-                if(driveForward(!isBlue, .35, 1)){
-                    resetMotors();
-                    state++;
-                }
-                break;
-            case 5: //drive towards the wall in order to press the first beacon
-                if(driveCrab(true, .65, .5)){
-                    resetMotors();
-                    state++;
-                }
-                break;
-            case 6: //press the first beacon
-                if(pressTeamBeacon()) {
-                    resetMotors();
-                    state++;
-                }
-                break;
-            case 7: //drive up next to the second beacon
-                if(driveForward(!isBlue, 1.0, 1)){
-                    resetMotors();
-                    state++;
-                }
-                break;
-            case 8: //press the second beacon
-                if(pressTeamBeacon()){
-                    resetMotors();
-                    state++;
-                }
-                break;
+                    break;
+                case 2:  // 180 degree turn if alternate alliance, then moves are inverted
+                    if (isBlue) {
+
+                        if (rotateRelative(true, 90, .30)) {
+                            targetAngleInitialized = false;
+                            resetMotors();
+                            autoState++;
+                        } else autoState++; deadShotSays.play(hardwareMap.appContext, R.raw.a03);
+                    } else {
+                        autoState++;
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a03);
+                        active = false;
+                    }
+                    break;
+                case 3: //drive towards the corner vortex
+
+                    if (driveCrab(true, 1, 1)) {
+                        resetMotors();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a04);
+                        autoState++;
+                    }
+                    break;
+                case 4: //drive up near the first beacon
+
+                    if (driveForward(!isBlue, .35, 1)) {
+                        resetMotors();
+                        autoState++;
+                    }
+                    break;
+                case 5: //drive towards the wall in order to press the first beacon
+                    if (driveCrab(true, .65, .5)) {
+                        resetMotors();
+                        autoState++;
+                    }
+                    break;
+                case 6: //press the first beacon
+                    if (pressTeamBeacon()) {
+                        resetMotors();
+                        autoState++;
+                    }
+                    break;
+                case 7: //drive up next to the second beacon
+                    if (driveForward(!isBlue, 1.0, 1)) {
+                        resetMotors();
+                        autoState++;
+                    }
+                    break;
+                case 8: //press the second beacon
+                    if (pressTeamBeacon()) {
+                        resetMotors();
+                        autoState++;
+                    }
+                    break;
 //            case 9: //drive away from the second beacon
 //                if(driveCrab(false, 0, .5)) {
 //                    resetMotors();
-//                    state++;
+//                    autoState++;
 //                }
 
-            default:
-                break;
+                default:
+                    break;
+            }
+            kobe.updateCollection();
         }
-        kobe.updateCollection();
+        else{
+            kobe.emergencyStop();
+            driveMixer(0, 0, 0);
+        }
+    }
 
+    public void stateSwitch(){
+        if(toggleAllowed()) {
+            if (gamepad1.left_bumper) {
+                state--;
+                if (state < 0) {
+                    state = 2;
+                }
+                active = false;
+            } else if (gamepad1.right_bumper) {
+                state++;
+                if (state > 2) {
+                    state = 0;
+                }
+                active = false;
+            }
+            if (gamepad1.start) {
+                active = !active;
+                autoTimer = System.nanoTime() + (long)30e9;
+            }
+        }
+    }
+
+    public void updateSensors(){
         // read color sensors
         colorForeCache = colorForeReader.read(0x04, 1);
         colorRearCache = colorRearReader.read(0x04, 1);
@@ -333,7 +401,54 @@ public class Autonomous_6832 extends LinearOpMode {
         //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
         beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
         beaconDistFore = Math.pow(beaconPresentFore.getLightDetected(), 0.5); //calculate linear value
+    }
 
+    public void joystickDrive(){
+
+        driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
+
+        motorFrontLeft.setPower(powerFrontLeft);
+        motorBackLeft.setPower(powerBackLeft);
+        motorFrontRight.setPower(powerFrontRight);
+        motorBackRight.setPower(powerBackRight);
+
+        //toggle the particle conveyor on and off - quick and dirty
+        if (gamepad1.a)
+        {
+            if(toggleAllowed())
+            {
+                kobe.collect();
+            }
+        }
+        if (gamepad1.b)
+        {
+            if(toggleAllowed())
+            {
+                kobe.eject();
+            }
+        }
+        if(toggleAllowed()) {
+            if (gamepad1.x) {
+
+                kobe.fling();
+            }
+        }
+        if(gamepad1.y){
+            if(toggleAllowed()) {
+                if (kobe.isStopped()) {
+                    kobe.restart();
+                } else {
+                    kobe.emergencyStop();
+                }
+            }
+        }
+        if(gamepad1.dpad_down){
+            if(toggleAllowed()){
+                kobe.halfCycle();
+            }
+        }
+
+        kobe.updateCollection();
     }
 
     public double clampMotor(double power) { return clampDouble(-1, 1, power); }
@@ -502,11 +617,17 @@ public class Autonomous_6832 extends LinearOpMode {
             return true;
         }
     }
+
     public String getAlliance(){
         if(isBlue)
             return "Blue";
-        else
-            return "Red";
+        return "Red";
+    }
+
+    public String autoRun(){
+        if(runAutonomous)
+            return "Auto will run";
+        return "Auto will not run";
     }
 
     public double ServoNormalize(int pulse){
@@ -563,6 +684,19 @@ public class Autonomous_6832 extends LinearOpMode {
             }
         });
 
+
+        telemetry.addLine()
+                .addData("active", new Func<String>() {
+                    @Override public String value() {
+                        return Boolean.toString(active);
+                    }
+                })
+                .addData("state", new Func<String>() {
+                    @Override public String value() {
+                        return Integer.toString(state);
+                    }
+                });
+
         telemetry.addLine()
                 .addData("status", new Func<String>() {
                     @Override public String value() {
@@ -594,7 +728,7 @@ public class Autonomous_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("State", new Func<String>() {
                     @Override public String value() {
-                        return String.valueOf(state);
+                        return String.valueOf(autoState);
                     }
                 })
                 .addData("TicksFL", new Func<String>() {
@@ -630,7 +764,7 @@ public class Autonomous_6832 extends LinearOpMode {
                 });
 
 //        telemetry.addData("Status", "Run Time: " + runtime.toString());
-//        //telemetry.addData("Status", "State: " + state);
+//        //telemetry.addData("Status", "State: " + autoState);
 //        //telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
 //        //telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
 //        telemetry.addLine().addData("Normal", beaconPresentRear.getLightDetected());
