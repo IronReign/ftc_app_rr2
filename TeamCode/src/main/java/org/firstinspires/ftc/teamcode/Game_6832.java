@@ -172,9 +172,9 @@ public class Game_6832 extends LinearOpMode {
         this.motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         this.motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        this.motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        this.motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        this.motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        this.motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        this.motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.motorFlinger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
@@ -195,8 +195,6 @@ public class Game_6832 extends LinearOpMode {
         imu = (BNO055IMU)hardwareMap.get("imu");
         imu.initialize(parametersIMU);
         configureDashboard();
-
-        kobe.halfCycle();
 
         //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
         colorForeReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
@@ -228,6 +226,11 @@ public class Game_6832 extends LinearOpMode {
                     isBlue = !isBlue;
                 }
             }
+            if(gamepad1.dpad_down){
+                if(toggleAllowed()){
+                    kobe.halfCycle();
+                }
+            }
 
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
@@ -249,7 +252,7 @@ public class Game_6832 extends LinearOpMode {
 //        waitForStart();
         runtime.reset();
 
-        if(runAutonomous){
+        if(!runAutonomous){
             state = 1;
         }
 
@@ -283,6 +286,7 @@ public class Game_6832 extends LinearOpMode {
             switch (autoState) {
                 case -1: //sit and spin - do nothing
                     break;
+
                 case 0: //reset all the motors before starting autonomous
                     autoTimer = System.nanoTime() + (long) 30e9;
                     resetMotors();
@@ -306,11 +310,12 @@ public class Game_6832 extends LinearOpMode {
                             targetAngleInitialized = false;
                             resetMotors();
                             autoState++;
-                        } else autoState++; deadShotSays.play(hardwareMap.appContext, R.raw.a03);
+                        }
+                        else autoState++; deadShotSays.play(hardwareMap.appContext, R.raw.a03);
                     } else {
                         autoState++;
                         deadShotSays.play(hardwareMap.appContext, R.raw.a03);
-                        active = false;
+//                        active = false;
                     }
                     break;
                 case 3: //drive towards the corner vortex
@@ -323,13 +328,13 @@ public class Game_6832 extends LinearOpMode {
                     break;
                 case 4: //drive up near the first beacon
 
-                    if (driveForward(!isBlue, .35, 1)) {
+                    if (driveForward(!isBlue, .6, 1)) {
                         resetMotors();
                         autoState++;
                     }
                     break;
                 case 5: //drive towards the wall in order to press the first beacon
-                    if (driveCrab(true, .65, .5)) {
+                    if (driveCrab(true, .5, 1)) {
                         resetMotors();
                         autoState++;
                     }
@@ -466,11 +471,11 @@ public class Game_6832 extends LinearOpMode {
         double dist;
         if(isBlue){ dist = beaconDistAft; }
         else { dist = beaconDistFore; }
-        if(dist > .35){
+        if(dist > .25){
             driveMixer(0, -.10, 0);
             return false;
         }
-        else if(dist < .2){
+        else if(dist < .15){
             driveMixer(0, .10, 0);
             return false;
         }
@@ -490,8 +495,8 @@ public class Game_6832 extends LinearOpMode {
     public boolean pressTeamBeacon(){
         switch(beaconState){
             case 0:
-                if(isBlue){ driveMixer(-.25, 0, 0); }
-                else { driveMixer(.25, 0, 0); }
+                if(isBlue){ driveMixer(-1, 0, 0); }
+                else { driveMixer(1, 0, 0); }
                 if(foundBeacon()) {
                     driveMixer(0, 0, 0);
                     resetMotors();
@@ -499,31 +504,42 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 1:
-                if(findBeaconPressRange()) beaconState++;
-                break;
+                if(driveForward(!isBlue, .05, 0)){
+                    resetMotors();
+                    beaconState++;
+                }
             case 2:
-                if(isBlue){ driveMixer(-.10, 0, 0); }
-                else { driveMixer(.10, 0, 0); }
-                if(onTeamColor()) beaconState++;
+                if(findBeaconPressRange()) beaconState++;
                 break;
             case 3:
                 if(findBeaconPressRange()) beaconState++;
                 break;
             case 4:
-                pushButton.setPosition(ServoNormalize(pressedPosition));
-                presserTimer = System.nanoTime();
-                beaconState++;
+                if(isBlue){ driveMixer(-.35, 0, 0); }
+                else { driveMixer(.35, 0, 0); }
+                if(onTeamColor()) beaconState++;
                 break;
             case 5:
-                if(presserTimer < System.nanoTime())
+                if(driveForward(true, .05, .25)){
+                    resetMotors();
                     beaconState++;
+                }
                 break;
             case 6:
-                pushButton.setPosition(ServoNormalize(relaxedPosition));
+                pushButton.setPosition(ServoNormalize(pressedPosition));
+                presserTimer = System.nanoTime() + (long) 2e9;
                 beaconState++;
                 break;
             case 7:
-                if(driveCrab(false, .10, .30)) beaconState++;
+                if(presserTimer < System.nanoTime())
+                    beaconState++;
+                break;
+            case 8:
+                pushButton.setPosition(ServoNormalize(relaxedPosition));
+                beaconState++;
+                break;
+            case 9:
+                if(driveCrab(false, .10, .50)) beaconState++;
                 break;
             default:
                 beaconState = 0;
