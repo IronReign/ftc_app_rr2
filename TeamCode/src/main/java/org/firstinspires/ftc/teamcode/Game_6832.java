@@ -118,7 +118,7 @@ public class Game_6832 extends LinearOpMode {
     private int flingSpeed = 5000; //ticks per second
     private int TPM_Forward = 1772; //set this value
     private int TPM_Crab = 3386; //set this value
-    static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
+    static final private long toggleLockout = (long)2e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
     private int autoState = 0;
     private int beaconState = 0;
@@ -132,6 +132,8 @@ public class Game_6832 extends LinearOpMode {
     private int state = 0;
     private boolean runAutonomous = true;
     private long autoTimer = 0;
+    private boolean[] buttonSavedStates = new boolean[8];
+    private boolean[] buttonCurrentState = new boolean[8];
 
     private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
     private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
@@ -221,13 +223,13 @@ public class Game_6832 extends LinearOpMode {
             if(gamepad1.y){
                 flingNumber = 3;
             }
-            if(toggleAllowed()) {
+            if(toggleAllowed(2)) {
                 if (gamepad1.x) {
                     isBlue = !isBlue;
                 }
             }
             if(gamepad1.dpad_down){
-                if(toggleAllowed()){
+                if(toggleAllowed(4)){
                     kobe.halfCycle();
                 }
             }
@@ -274,6 +276,9 @@ public class Game_6832 extends LinearOpMode {
                         kobe.halfCycle();
                         active = false;
                         break;
+                    case 3:
+                        secondaryAuto();
+                        break;
                 }
                 updateSensors();
             }
@@ -295,7 +300,7 @@ public class Game_6832 extends LinearOpMode {
                     break;
                 case 1: //drive forward and shoot in the goal
 
-                    if (driveForward(true, .94, 1)) {
+                    if (driveForward(true, 1.25, 1)) {
                         resetMotors();
                         for (int n = 0; n < flingNumber; n++)
                             kobe.fling();
@@ -328,7 +333,7 @@ public class Game_6832 extends LinearOpMode {
                     break;
                 case 4: //drive up near the first beacon
 
-                    if (driveForward(!isBlue, .6, 1)) {
+                    if (driveForward(!isBlue, .35, 1)) {
                         resetMotors();
                         autoState++;
                     }
@@ -375,24 +380,76 @@ public class Game_6832 extends LinearOpMode {
     }
 
     public void stateSwitch(){
-        if(toggleAllowed()) {
+        /*button indexes:
+        0 = a
+        1 = b
+        2 = x
+        3 = y
+        4 = dpad_down
+        5 = left bumper
+        6 = right bumper
+        7 = start button
+        */
+        buttonCurrentState[0] = gamepad1.a;
+        buttonCurrentState[1] = gamepad1.b;
+        buttonCurrentState[2] = gamepad1.x;
+        buttonCurrentState[3] = gamepad1.y;
+        buttonCurrentState[4] = gamepad1.dpad_down;
+        buttonCurrentState[5] = gamepad1.left_bumper;
+        buttonCurrentState[6] = gamepad1.right_bumper;
+        buttonCurrentState[7] = gamepad1.start;
+
+        if(toggleAllowed(5)) {
             if (gamepad1.left_bumper) {
                 state--;
                 if (state < 0) {
-                    state = 2;
+                    state = 3;
                 }
                 active = false;
-            } else if (gamepad1.right_bumper) {
+            }
+        }
+        if (toggleAllowed(6)) {
+              if (gamepad1.right_bumper) {
                 state++;
-                if (state > 2) {
+                if (state > 3) {
                     state = 0;
                 }
                 active = false;
             }
+        }
+        if(toggleAllowed(7)) {
             if (gamepad1.start) {
                 active = !active;
-                autoTimer = System.nanoTime() + (long)30e9;
             }
+        }
+    }
+
+    public void secondaryAuto(){
+        switch(autoState){
+            case 0:
+                resetMotors();
+                autoState++;
+                break;
+            case 1:
+                if(driveForward(true, 2.25, 1)){
+                    resetMotors();
+                    autoState++;
+                }
+                break;
+            case 2:
+                for(int n = 0; n < flingNumber; n++){
+                    kobe.fling();
+                }
+                autoState++;
+                motorConveyor.setPower(0);
+                break;
+            case 3:
+                if(driveForward(true, .5, 1)){
+                    resetMotors();
+                    autoState++;
+                }
+            default:
+                break;
         }
     }
 
@@ -410,6 +467,7 @@ public class Game_6832 extends LinearOpMode {
 
     public void joystickDrive(){
 
+
         driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
         motorFrontLeft.setPower(powerFrontLeft);
@@ -420,26 +478,26 @@ public class Game_6832 extends LinearOpMode {
         //toggle the particle conveyor on and off - quick and dirty
         if (gamepad1.a)
         {
-            if(toggleAllowed())
+            if(toggleAllowed(0))
             {
                 kobe.collect();
             }
         }
         if (gamepad1.b)
         {
-            if(toggleAllowed())
+            if(toggleAllowed(1))
             {
                 kobe.eject();
             }
         }
-        if(toggleAllowed()) {
+        if(toggleAllowed(2)) {
             if (gamepad1.x) {
 
                 kobe.fling();
             }
         }
         if(gamepad1.y){
-            if(toggleAllowed()) {
+            if(toggleAllowed(3)) {
                 if (kobe.isStopped()) {
                     kobe.restart();
                 } else {
@@ -448,7 +506,7 @@ public class Game_6832 extends LinearOpMode {
             }
         }
         if(gamepad1.dpad_down){
-            if(toggleAllowed()){
+            if(toggleAllowed(4)){
                 kobe.halfCycle();
             }
         }
@@ -558,15 +616,36 @@ public class Game_6832 extends LinearOpMode {
         return result;
     }
 
-    boolean toggleAllowed()
+    boolean toggleAllowed(int buttonIndex)
     {
-        if (System.nanoTime()> toggleOKTime)
-        {
-            toggleOKTime= System.nanoTime()+toggleLockout;
-            return true;
-        }
-        else
-            return false;
+        /*button indexes:
+        0 = a
+        1 = b
+        2 = x
+        3 = y
+        4 = dpad_down
+        5 = left bumper
+        6 = right bumper
+        7 = start button
+        */
+//        if(buttonCurrentState[buttonIndex] != buttonSavedStates[buttonIndex] && buttonCurrentState[buttonIndex]){
+//            buttonSavedStates[buttonIndex] = true;
+//            return true;
+//        }
+//        else if(buttonCurrentState[buttonIndex] == buttonSavedStates[buttonIndex] && !buttonCurrentState[buttonIndex]){
+//            buttonSavedStates[buttonIndex] = false;
+//            return false;
+//        }
+//        else return false;
+        return true;
+
+//        if (System.nanoTime()> toggleOKTime)
+//        {
+//            toggleOKTime= System.nanoTime()+toggleLockout;
+//            return true;
+//        }
+//        else
+//            return false;
     }
     public void driveMixer(double forward,double crab ,double rotate){
         powerBackRight = 0;

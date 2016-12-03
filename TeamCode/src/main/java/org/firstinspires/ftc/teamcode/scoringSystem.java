@@ -71,7 +71,6 @@ public class scoringSystem {
         setPosition(0);
         motorFlinger.setPower(1);
     }
-
     public void fling(){
         motorConveyor.setPower(-1);
         flingTimer = System.nanoTime() + 200000000;
