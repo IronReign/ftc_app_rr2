@@ -123,7 +123,7 @@ public class Game_6832 extends LinearOpMode {
     private int autoState = 0;
     private int beaconState = 0;
     private boolean initiallized = false;
-    private int flingNumber = 0;
+    private int flingNumber = 2;
     private boolean isBlue = false;
     private boolean targetBeacon = true;
     private double IMUTargetHeading = 0;
@@ -287,20 +287,22 @@ public class Game_6832 extends LinearOpMode {
         }
     }
     public void autonomous(){
+        if(autoState == 0)
+            autoTimer = System.nanoTime() + (long) 30e9;
         if(autoTimer > System.nanoTime()) {
             switch (autoState) {
                 case -1: //sit and spin - do nothing
                     break;
 
                 case 0: //reset all the motors before starting autonomous
-                    autoTimer = System.nanoTime() + (long) 30e9;
+                    //autoTimer = System.nanoTime() + (long) 30e9;
                     resetMotors();
                     autoState++;
                     deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                     break;
                 case 1: //drive forward and shoot in the goal
 
-                    if (driveForward(true, 1.25, 1)) {
+                    if (driveForward(true, 1.45, 1)) {
                         resetMotors();
                         for (int n = 0; n < flingNumber; n++)
                             kobe.fling();
@@ -333,7 +335,7 @@ public class Game_6832 extends LinearOpMode {
                     break;
                 case 4: //drive up near the first beacon
 
-                    if (driveForward(!isBlue, .35, 1)) {
+                    if (driveForward(!isBlue, .20, 1)) {
                         resetMotors();
                         autoState++;
                     }
@@ -530,11 +532,11 @@ public class Game_6832 extends LinearOpMode {
         if(isBlue){ dist = beaconDistAft; }
         else { dist = beaconDistFore; }
         if(dist > .25){
-            driveMixer(0, -.10, 0);
+            driveMixer(0, -.35, 0);
             return false;
         }
         else if(dist < .15){
-            driveMixer(0, .10, 0);
+            driveMixer(0, .35, 0);
             return false;
         }
         else{
@@ -562,7 +564,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 1:
-                if(driveForward(!isBlue, .05, 0)){
+                if(driveForward(!isBlue, .10, .45)){
                     resetMotors();
                     beaconState++;
                 }
@@ -578,7 +580,7 @@ public class Game_6832 extends LinearOpMode {
                 if(onTeamColor()) beaconState++;
                 break;
             case 5:
-                if(driveForward(true, .05, .25)){
+                if(driveForward(true, 0, .25)){
                     resetMotors();
                     beaconState++;
                 }
