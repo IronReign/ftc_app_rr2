@@ -133,7 +133,8 @@ public class Game_6832 extends LinearOpMode {
     private boolean runAutonomous = true;
     private long autoTimer = 0;
     private boolean[] buttonSavedStates = new boolean[8];
-    private boolean[] buttonCurrentState = new boolean[8];
+    //private boolean[] buttonCurrentState = new boolean[8];
+    private boolean slowMode = false;
 
     private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
     private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
@@ -173,11 +174,11 @@ public class Game_6832 extends LinearOpMode {
 
         this.motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        this.motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        this.motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        this.motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        this.motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        this.motorFlinger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        this.motorFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorFlinger.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -223,15 +224,15 @@ public class Game_6832 extends LinearOpMode {
             if(gamepad1.y){
                 flingNumber = 3;
             }
-            if(toggleAllowed(2)) {
-                if (gamepad1.x) {
+            if(toggleAllowed(gamepad1.x,2)) {
+
                     isBlue = !isBlue;
-                }
+
             }
-            if(gamepad1.dpad_down){
-                if(toggleAllowed(4)){
+            if(toggleAllowed(gamepad1.dpad_down,4)){
+
                     kobe.halfCycle();
-                }
+
             }
 
             telemetry.addData("Status", "Initialized");
@@ -392,37 +393,39 @@ public class Game_6832 extends LinearOpMode {
         6 = right bumper
         7 = start button
         */
-        buttonCurrentState[0] = gamepad1.a;
-        buttonCurrentState[1] = gamepad1.b;
-        buttonCurrentState[2] = gamepad1.x;
-        buttonCurrentState[3] = gamepad1.y;
-        buttonCurrentState[4] = gamepad1.dpad_down;
-        buttonCurrentState[5] = gamepad1.left_bumper;
-        buttonCurrentState[6] = gamepad1.right_bumper;
-        buttonCurrentState[7] = gamepad1.start;
+//        buttonCurrentState[0] = gamepad1.a;
+//        buttonCurrentState[1] = gamepad1.b;
+//        buttonCurrentState[2] = gamepad1.x;
+//        buttonCurrentState[3] = gamepad1.y;
+//        buttonCurrentState[4] = gamepad1.dpad_down;
+//        buttonCurrentState[5] = gamepad1.left_bumper;
+//        buttonCurrentState[6] = gamepad1.right_bumper;
+//        buttonCurrentState[7] = gamepad1.start;
 
-        if(toggleAllowed(5)) {
-            if (gamepad1.left_bumper) {
+        if(toggleAllowed(gamepad1.left_bumper,5)) {
+
                 state--;
                 if (state < 0) {
                     state = 3;
                 }
                 active = false;
-            }
+
         }
-        if (toggleAllowed(6)) {
-              if (gamepad1.right_bumper) {
+
+        if (toggleAllowed(gamepad1.right_bumper,6)) {
+
                 state++;
                 if (state > 3) {
                     state = 0;
                 }
                 active = false;
-            }
+
         }
-        if(toggleAllowed(7)) {
-            if (gamepad1.start) {
+
+        if(toggleAllowed(gamepad1.start,7)) {
+
                 active = !active;
-            }
+
         }
     }
 
@@ -478,39 +481,37 @@ public class Game_6832 extends LinearOpMode {
         motorBackRight.setPower(powerBackRight);
 
         //toggle the particle conveyor on and off - quick and dirty
-        if (gamepad1.a)
+        if (toggleAllowed(gamepad1.a,0))
         {
-            if(toggleAllowed(0))
-            {
                 kobe.collect();
-            }
         }
-        if (gamepad1.b)
+
+        if (toggleAllowed(gamepad1.b,1))
         {
-            if(toggleAllowed(1))
-            {
                 kobe.eject();
-            }
+
         }
-        if(toggleAllowed(2)) {
-            if (gamepad1.x) {
+
+        if(toggleAllowed(gamepad1.x,2)) {
+
 
                 kobe.fling();
-            }
+
         }
-        if(gamepad1.y){
-            if(toggleAllowed(3)) {
+
+        if(toggleAllowed(gamepad1.y,3)){
+
                 if (kobe.isStopped()) {
                     kobe.restart();
                 } else {
                     kobe.emergencyStop();
                 }
-            }
         }
-        if(gamepad1.dpad_down){
-            if(toggleAllowed(4)){
+
+        if(toggleAllowed(gamepad1.dpad_down,4)){
+
                 kobe.halfCycle();
-            }
+
         }
 
         kobe.updateCollection();
@@ -618,7 +619,7 @@ public class Game_6832 extends LinearOpMode {
         return result;
     }
 
-    boolean toggleAllowed(int buttonIndex)
+    boolean toggleAllowed(boolean button, int buttonIndex)
     {
         /*button indexes:
         0 = a
@@ -630,25 +631,24 @@ public class Game_6832 extends LinearOpMode {
         6 = right bumper
         7 = start button
         */
-//        if(buttonCurrentState[buttonIndex] != buttonSavedStates[buttonIndex] && buttonCurrentState[buttonIndex]){
-//            buttonSavedStates[buttonIndex] = true;
-//            return true;
-//        }
-//        else if(buttonCurrentState[buttonIndex] == buttonSavedStates[buttonIndex] && !buttonCurrentState[buttonIndex]){
-//            buttonSavedStates[buttonIndex] = false;
-//            return false;
-//        }
-//        else return false;
-        return true;
+        if (button) {
+            if (!buttonSavedStates[buttonIndex])  { //we just pushed the button, and when we last looked at it, it was not pressed
+                buttonSavedStates[buttonIndex] = true;
+                return true;
+            }
+            //       else if(buttonCurrentState[buttonIndex] == buttonSavedStates[buttonIndex] && buttonCurrentState[buttonIndex]){
+            else { //the button is pressed, but it was last time too - so ignore
 
-//        if (System.nanoTime()> toggleOKTime)
-//        {
-//            toggleOKTime= System.nanoTime()+toggleLockout;
-//            return true;
-//        }
-//        else
-//            return false;
+                return false;
+            }
+        }
+
+        buttonSavedStates[buttonIndex] = false; //not pressed, so remember that it is not
+        return false; //not pressed
+
     }
+
+
     public void driveMixer(double forward,double crab ,double rotate){
         powerBackRight = 0;
         powerFrontRight = 0;
@@ -753,10 +753,10 @@ public class Game_6832 extends LinearOpMode {
         motorFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
     public long getAverageTicks(){
         long averageTicks = (motorFrontLeft.getCurrentPosition() + motorBackLeft.getCurrentPosition() + motorFrontRight.getCurrentPosition() + motorBackRight.getCurrentPosition())/4;
