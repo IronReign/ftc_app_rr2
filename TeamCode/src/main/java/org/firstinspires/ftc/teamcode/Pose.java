@@ -1,9 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
-import com.vuforia.EyewearDevice;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -18,17 +24,60 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * orientation and location of the robot.  The update method must be called regularly, it
  * monitors and integrates data from the orientation (IMU) and odometry (motor encoder) sensors.
  * @author Max Virani, Tycho Virani
- * @version _0.2
+ * @version 1.2
  * @since 2016-12-10
  */
 
 public class Pose
 {
 
+    HardwareMap hwMap;
+
+    //motors
+
+    DcMotor motorFrontLeft = null;
+    DcMotor motorFrontRight = null;
+    DcMotor motorBackLeft = null;
+    DcMotor motorBackRight = null;
+    DcMotor motorConveyor = null;
+    DcMotor motorFlinger = null;
+    Servo   pushButton = null;
+
+    BNO055IMU imu;
+    Orientation angles;
+
+    OpticalDistanceSensor beaconPresentRear;
+    OpticalDistanceSensor beaconPresentFore;
+
+    byte[] colorForeCache = new byte[100];
+    byte[] colorRearCache = new byte[100];
+
+    I2cDevice beaconColorFore;
+    I2cDevice beaconColorRear;
+    I2cDeviceSynch colorForeReader;
+    I2cDeviceSynch colorRearReader;
+    long colorFore;
+    long colorAft;
+    double beaconDistAft; //holds most recent linearized distance reading from ODS sensor
+    double beaconDistFore;
+
+    private double powerFrontLeft = 0;
+    private double powerFrontRight = 0;
+    private double powerBackLeft = 0;
+    private double powerBackRight = 0;
+    private double powerConveyor = 0;
+
+    public scoringSystem pa = null;
+
+    private long flingTimer = 0;
+    private int flingSpeed = 5000; //ticks per second
+    private int TPM_Forward = 1772 * 32/42; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int TPM_Strafe = 3386 * 32/42; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
 
     private double poseX;
     private double poseY;
     private double poseHeading;
+    private double poseHeadingRad; //current heading converted to radians. Might be rotated by 90 degrees from imu's heading when strafing
     private double poseSpeed;
     private double posePitch;
     private double poseRoll;
@@ -37,24 +86,35 @@ public class Pose
     private double offsetHeading;
     private double offsetPitch;
     private double offsetRoll;
-    private long ticksPerMeterLeft = 20000; //arbitrary initial value so we don't get a divide by zero
-    private long ticksPerMeterRight= 20000; //need actual measured value
-    private long ticksPerMeterClimber = 11687; //actual measured value
-    private long ticksPerInchClimber = (long)(ticksPerMeterClimber / 39.3701); //used to verify the tick values vs the tape measure
-    private long ticksClimberOffset = 0;
+    private double displacement;
+    private double displacementPrev;
+    private double odometer;
+
+
     private long ticksLeftPrev;
     private long ticksRightPrev;
     private long ticksLeftOffset; //provide a way to offset (effectively reset) the motor encoder readings
     private long ticksRightOffset;
     private double wheelbase; //the width between the wheels
-    public DcMotor flingerLeft;
-    private DcMotor flingerRight;
-    protected boolean flingerRelaxing = false;
-    protected boolean flingerFlinging = false;
+
     final protected double flingerRelaxPwr = 0.075;
     final protected double flingerFlingPwr = -1;
+
     long flingerTimer;
+
+    public enum moveMode{
+        forward,
+        backward,
+        left,
+        right,
+        rotate
+    }
+
+    private moveMode moveMode;
+
     Orientation imuAngles;
+    protected boolean targetAngleInitialized = false;
+    private int beaconState = 0;
 
 
     /**
@@ -66,7 +126,7 @@ public class Pose
      * @param heading The heading of the robot
      * @param speed The speed of the robot
      */
-    public Pose(double x, double y, double heading, double speed, DcMotor flingLeft, DcMotor flingRight)
+    public Pose(double x, double y, double heading, double speed)
     {
 
         poseX     = x;
@@ -75,35 +135,31 @@ public class Pose
         poseSpeed = speed;
         posePitch = 0;
         poseRoll = 0;
-        flingerLeft = flingLeft;
-        flingerRight = flingRight;
     }
 
     /**
      * Creates a Pose instance with _0 speed, to prevent muscle fatigue
-     * by excess typing demand on the software team members. This is likely
-     * the one to use on cliffInit when speed is zero and starting position is known
+     * by excess typing demand on the software team members.
      *
      * @param x     The position relative to the x axis of the field
      * @param y     The position relative to the y axis of the field
      * @param angle The angle of the robot
      */
-    public Pose(double x, double y, double angle, DcMotor flingLeft, DcMotor flingRight)
+    public Pose(double x, double y, double angle)
     {
 
         poseX     = x;
         poseY     = y;
         poseHeading = angle;
         poseSpeed = 0;
-        flingerLeft = flingLeft;
-        flingerRight = flingRight;
+
     }
 
     /**
      * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 angle.
      * Useful for determining the Pose of the robot relative to the origin.
      */
-    public Pose(DcMotor flingLeft, DcMotor flingRight)
+    public Pose()
     {
 
         poseX     = 0;
@@ -112,8 +168,198 @@ public class Pose
         poseSpeed = 0;
         posePitch=0;
         poseRoll=0;
-        flingerLeft = flingLeft;
-        flingerRight = flingRight;
+
+    }
+
+
+    public void init(HardwareMap ahwMap) {
+        // save reference to HW Map
+        hwMap = ahwMap;
+               /* eg: Initialize the hardware variables. Note that the strings used here as parameters
+         * to 'get' must correspond to the names assigned during the robot configuration
+         * step (using the FTC Robot Controller app on the phone).
+         */
+        this.motorFrontLeft = this.hwMap.dcMotor.get("motorFrontLeft");
+        this.motorFrontRight = this.hwMap.dcMotor.get("motorFrontRight");
+        this.motorBackLeft = this.hwMap.dcMotor.get("motorBackLeft");
+        this.motorBackRight = this.hwMap.dcMotor.get("motorBackRight");
+        this.motorConveyor = this.hwMap.dcMotor.get("motorConveyor");
+        this.motorFlinger = this.hwMap.dcMotor.get("motorFlinger");
+        this.pushButton = this.hwMap.servo.get("mjolnir");
+
+        // get a reference to our distance sensors
+        beaconPresentRear = hwMap.opticalDistanceSensor.get("beaconPresentRear");
+        beaconPresentFore = hwMap.opticalDistanceSensor.get("beaconPresentFore");
+
+        // color sensors init
+        beaconColorFore = hwMap.i2cDevice.get("beaconColorFore");
+        beaconColorRear = hwMap.i2cDevice.get("beaconColorRear");
+
+        colorForeReader = new I2cDeviceSynchImpl(beaconColorFore, I2cAddr.create8bit(0x60), false);
+        colorRearReader = new I2cDeviceSynchImpl(beaconColorRear, I2cAddr.create8bit(0x64), false);
+
+        colorForeReader.engage();
+        colorRearReader.engage();
+
+        //motor configurations
+
+        this.motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        this.motorFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorFlinger.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+
+        this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        this.pa = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
+
+        BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+        parametersIMU.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled      = true;
+        parametersIMU.loggingTag          = "IMU";
+
+        //imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = (BNO055IMU)hwMap.get("imu");
+        imu.initialize(parametersIMU);
+
+
+        //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
+        colorForeReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+        colorRearReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+
+    }
+
+    public void driveMixer(double forward,double strafe ,double rotate){
+        powerBackRight = 0;
+        powerFrontRight = 0;
+        powerBackLeft = 0;
+        powerFrontLeft = 0;
+
+        powerFrontLeft = forward;
+        powerBackLeft = forward;
+        powerFrontRight = forward;
+        powerBackRight = forward;
+
+        powerFrontLeft += -strafe;
+        powerFrontRight += strafe;
+        powerBackLeft += strafe;
+        powerBackRight += -strafe;
+
+        powerFrontLeft -= rotate;
+        powerBackLeft -= rotate;
+        powerFrontRight += rotate;
+        powerBackRight += rotate;
+
+        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
+        motorBackLeft.setPower(clampMotor(powerBackLeft));
+        motorFrontRight.setPower(clampMotor(powerFrontRight));
+        motorBackRight.setPower(clampMotor(powerBackRight));
+
+    }
+
+    public void resetMotors(){
+        motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        motorFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public long getAverageTicks(){
+        long averageTicks = (motorFrontLeft.getCurrentPosition() + motorBackLeft.getCurrentPosition() + motorFrontRight.getCurrentPosition() + motorBackRight.getCurrentPosition())/4;
+        return averageTicks;
+    }
+    public long getAverageAbsTicks(){
+        long averageTicks = (Math.abs(motorFrontLeft.getCurrentPosition()) + Math.abs(motorBackLeft.getCurrentPosition()) + Math.abs(motorFrontRight.getCurrentPosition()) + Math.abs(motorBackRight.getCurrentPosition()))/4;
+        return averageTicks;
+    }
+
+    public double clampMotor(double power) { return clampDouble(-1, 1, power); }
+
+    public double clampDouble(double min, double max, double value)
+    {
+        double result = value;
+        if(value > max)
+            result = max;
+        if(value < min)
+            result = min;
+        return result;
+    }
+
+
+
+    //    public void moveTicks(double forward, double strafe, double rotate, long ticks){
+//        ticks += motorFrontLeft.getCurrentPosition();
+//        while(motorFrontLeft.getCurrentPosition() < ticks && opModeIsActive()){
+//            telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
+//            telemetry.update();
+//            driveMixer(forward, strafe, rotate);
+//        }
+//    }
+    public boolean driveForward(boolean forward, double targetMeters, double power){
+        if(!forward){
+            moveMode = moveMode.forward;
+            targetMeters = 0 - targetMeters;
+            power = -power;
+        }
+        else moveMode = moveMode.backward;
+
+        long targetPos = (long)(targetMeters * TPM_Forward);
+        if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
+            driveMixer(power, 0, 0);
+            return false;
+        }
+        else { //destination achieved
+            driveMixer(0, 0, 0);
+            return true;
+        }
+    }
+    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
+        moveMode = moveMode.rotate;
+        if(!clockwise){
+            targetAngle = -targetAngle;
+            power = -power;
+        }
+        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
+        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
+            driveMixer(0, 0, power);
+            return false;
+        }
+        else {
+            driveMixer(0, 0, 0);
+            return true;
+        }
+    }
+
+    public boolean driveStrafe(boolean left, double targetMeters, double power){
+
+        if(!left){
+            moveMode = moveMode.right;
+            targetMeters = -targetMeters;
+            power = -power;
+        }
+        else moveMode = moveMode.left;
+
+        long targetPos = (long)(targetMeters * TPM_Strafe);
+        if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){
+            driveMixer(0, power, 0);
+            return false;
+        }
+        else {
+            driveMixer(0, 0, 0);
+            return true;
+        }
     }
 
 
@@ -206,81 +452,32 @@ public class Pose
         return poseRoll;
     }
 
-    public long getTicksPerMeterRight() {
-        return ticksPerMeterRight;
+    public long getTPM_Forward() {
+        return TPM_Forward;
     }
 
-    public void setTicksPerMeterRight(long ticksPerMeterRight) {
-        this.ticksPerMeterRight = ticksPerMeterRight;
+    public void setTPM_Forward(long TPM_Forward) {
+        this.TPM_Forward = (int)TPM_Forward;
     }
 
-    public long getTicksPerMeterLeft() {
-        return ticksPerMeterLeft;
+    public long getTPM_Strafe() {
+        return TPM_Strafe;
     }
 
-    /**
-     *
-     * @param ticksPerMeterLeft
-     */
-    public void setTicksPerMeterLeft(long ticksPerMeterLeft) {
-        this.ticksPerMeterLeft = ticksPerMeterLeft;
+    public void setTicksPerMeterLeft(long TPM_Strafe) {
+        this.TPM_Strafe = (int)TPM_Strafe;
     }
 
-    public boolean fling(){ //returns true when complete - any subsequent call will restart the fling
-        return flingerMove(.15, flingerFlingPwr);
-    }
+    public void updateSensors(){
+        // read color sensors
+        colorForeCache = colorForeReader.read(0x04, 1);
+        colorRearCache = colorRearReader.read(0x04, 1);
+        colorAft  = (colorRearCache[0] & 0xFF);
+        colorFore = (colorForeCache[0] & 0xFF);
 
-    public boolean flingRelax(){//returns true when complete - any subsequent call will restart the relax
-        return flingerMove(1, flingerRelaxPwr);
-    }
-
-
-    private boolean flingerMove(double seconds, double power) //returns true when move is complete - so don't call after it returns true unless we want to start a fresh move
-    {
-        if (((long)flingerTimer)==0){ //this needs to be true only the first time in
-            flingerTimer=System.nanoTime() + (long)(seconds * 1e9); //set expiration time
-            flingerLeft.setPower(power);
-            flingerRight.setPower(power);
-
-        }
-        if (flingerTimer < System.nanoTime()) //timer has expired
-        {
-            flingerLeft.setPower(0);
-            flingerRight.setPower(0);
-            flingerTimer=0;
-            return true;
-        }
-
-        return false; //do nothing - motors should already be moving at specified power
-
-    }
-
-
-    protected int flingCount=0;
-
-
-    public boolean flingerWiggle(){ //return true when settled
-        if (System.nanoTime() > flingerTimer ) {
-            if (flingCount < 20) {
-                if ((flingCount & 1) == 0) {//upstroke on even
-                    flingerLeft.setPower(-.1);
-                    flingerRight.setPower(-.1);
-                } else { //downstroke on odds
-                    flingerLeft.setPower(.2);
-                    flingerRight.setPower(.2);
-                }
-                flingerTimer = System.nanoTime() + (long).5e8;
-                flingCount++;
-                return false;
-            }
-            else {
-                flingCount = 0; //reset in case we need to re-wiggle later
-                flingerTimer=0;
-                return true;
-            }
-        }
-        else return false;
-
+        //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
+        beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
+        beaconDistFore = Math.pow(beaconPresentFore.getLightDetected(), 0.5); //calculate linear value
     }
 
     /**
@@ -301,6 +498,7 @@ public class Pose
      * @param ticksLeft
      * @param ticksRight
      */
+
     public void Update(BNO055IMU imu, long ticksLeft, long ticksRight){
         long currentTime = System.nanoTime();
         if (!initialized){
@@ -320,15 +518,40 @@ public class Pose
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
 
-        double displacement = (((double)(ticksRight - ticksRightPrev)/ticksPerMeterRight) + ((double)(ticksLeft - ticksLeftPrev)/ticksPerMeterLeft))/2.0;
+        //double displacement = (((double)(ticksRight - ticksRightPrev)/ticksPerMeterRight) + ((double)(ticksLeft - ticksLeftPrev)/ticksPerMeterLeft))/2.0;
 
+        // we haven't worked out the trig of calculating displacement from any driveMixer combination, so
+        // for now we are just restricting ourselves to cardinal relative directions of pure forward, backward, left and right
+        // so no diagonals or rotations - if we do those then our absolute positioning fails
+
+        switch (moveMode) {
+            case forward:
+            case backward:
+                displacement = (getAverageTicks() - displacementPrev) * TPM_Forward;
+                odometer += Math.abs(displacement);
+                poseHeadingRad = Math.toRadians(poseHeading);
+                break;
+            case left:
+                displacement = (getAverageAbsTicks() - displacementPrev) * TPM_Strafe; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
+                poseHeadingRad = Math.toRadians(poseHeading)- Math.PI/2; //actual heading is rotated 90 degrees counterclockwise
+
+                break;
+            case right:
+                displacement = (getAverageAbsTicks() - displacementPrev) * TPM_Strafe; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
+                poseHeadingRad = Math.toRadians(poseHeading) + Math.PI/2; //actual heading is rotated 90 degrees clockwise
+
+                break;
+            default:
+                displacement=0; //when rotating or in an undefined moveMode, ignore/reset displacement
+                displacementPrev = 0;
+                break;
+        }
+
+        odometer += Math.abs(displacement);
         poseSpeed = displacement / (double)(currentTime - this.timeStamp)*1000000; //meters per second when ticks per meter is calibrated
 
         timeStamp = currentTime;
-        ticksRightPrev = ticksRight;
-        ticksLeftPrev = ticksLeft;
-
-        double poseHeadingRad = Math.toRadians(poseHeading);
+        displacementPrev = displacement;
 
         poseX += displacement * Math.cos(poseHeadingRad);
         poseY += displacement * Math.sin(poseHeadingRad);
@@ -346,21 +569,23 @@ public class Pose
 
     /**
      *
+     * gets the odometer. The odometer tracks the robot's total amount of travel since the last odometer reset
+     * The value is in meters and is always increasing (absolute), even when the robot is moving backwards
      * @returns odometer value
      */
     public double getOdometer() {
 
-    return  (((double)(ticksRightPrev - ticksRightOffset)/ticksPerMeterRight) + ((double)(ticksLeftPrev - ticksLeftOffset)/ticksPerMeterLeft))/2.0;
+    return  odometer;
 
     }
 
     /**
-     *
+     * resets the odometer. The odometer tracks the robot's total amount of travel since the last odometer reset
+     * The value is in meters and is always increasing (absolute), even when the robot is moving backwards
       * @param distance
      */
     public void setOdometer(double distance){
-        ticksRightOffset = ticksRightPrev + (long) (distance * ticksPerMeterRight);
-        ticksLeftOffset = ticksLeftPrev + (long) (distance * ticksPerMeterLeft);
+        odometer = 0;
     }
 
     /**
@@ -434,6 +659,62 @@ public class Pose
     }
 
 
-}
+    public boolean pressTeamBeacon(boolean isBlue ){
+        switch(beaconState){
+            case 0:
+//                if(isBlue){ driveMixer(-1, 0, 0); }
+//                else { driveMixer(1, 0, 0); }
+//                if(foundBeacon()) {
+//                    driveMixer(0, 0, 0);
+//                    resetMotors();
+//                    beaconState++;
+//                }
+                break;
+            case 1:
+//                if(driveForward(!isBlue, .10, .45)){
+//                    resetMotors();
+//                    beaconState++;
+//                }
+                break;
+            case 2:
+//                if(findBeaconPressRange()) beaconState++;
+                break;
+            case 3:
+//                if(findBeaconPressRange()) beaconState++;
+                break;
+            case 4:
+//                if(isBlue){ driveMixer(-.35, 0, 0); }
+//                else { driveMixer(.35, 0, 0); }
+//                if(onTeamColor()) beaconState++;
+                break;
+            case 5:
+//                if(driveForward(true, 0, .25)){
+//                    resetMotors();
+//                    beaconState++;
+//                }
+                break;
+            case 6:
+//                pushButton.setPosition(ServoNormalize(pressedPosition));
+//                presserTimer = System.nanoTime() + (long) 2e9;
+//                beaconState++;
+                break;
+            case 7:
+//                if(presserTimer < System.nanoTime())
+//                    beaconState++;
+                break;
+            case 8:
+//                pushButton.setPosition(ServoNormalize(relaxedPosition));
+//                beaconState++;
+                break;
+            case 9:
+//                if(driveStrafe(false, .10, .50)) beaconState++;
+                break;
+            default:
+//                beaconState = 0;
+                return true;
+        }
+        return false;
+    }
 
+}
 
