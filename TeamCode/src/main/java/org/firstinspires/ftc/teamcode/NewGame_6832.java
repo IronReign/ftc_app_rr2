@@ -66,7 +66,7 @@ public class NewGame_6832 extends LinearOpMode {
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private Pose deadShot = new Pose();
+    private Pose robot = new Pose();
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance();
 
@@ -91,9 +91,13 @@ public class NewGame_6832 extends LinearOpMode {
     private int state = 0;
     private boolean runAutonomous = true;
     private long autoTimer = 0;
-    private boolean[] buttonSavedStates = new boolean[8];
+    private boolean[] buttonSavedStates = new boolean[11];
     //private boolean[] buttonCurrentState = new boolean[8];
     private boolean slowMode = false;
+
+    private boolean runBeaconTest = false;
+    private boolean runBeaconTestLeft = true;
+
 
     private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
     private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
@@ -101,7 +105,7 @@ public class NewGame_6832 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        deadShot.init(this.hardwareMap);
+        robot.init(this.hardwareMap);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -136,7 +140,7 @@ public class NewGame_6832 extends LinearOpMode {
             }
             if(toggleAllowed(gamepad1.dpad_down,4)){
 
-                    deadShot.pa.halfCycle();
+                    robot.pa.halfCycle();
 
             }
 
@@ -179,14 +183,14 @@ public class NewGame_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 2:
-                        deadShot.pa.halfCycle();
+                        robot.pa.halfCycle();
                         active = false;
                         break;
                     case 3:
                         secondaryAuto();
                         break;
                 }
-                deadShot.updateSensors();
+                robot.updateSensors();
             }
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
@@ -202,16 +206,16 @@ public class NewGame_6832 extends LinearOpMode {
 
                 case 0: //reset all the motors before starting autonomous
                     //autoTimer = System.nanoTime() + (long) 30e9;
-                    deadShot.resetMotors();
+                    robot.resetMotors();
                     autoState++;
                     deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                     break;
                 case 1: //drive forward and shoot in the goal
 
-                    if (deadShot.driveForward(true, 1.45, 1)) {
-                        deadShot.resetMotors();
+                    if (robot.driveForward(true, 1.45, 1)) {
+                        robot.resetMotors();
                         for (int n = 0; n < flingNumber; n++)
-                            deadShot.pa.fling();
+                            robot.pa.fling();
                         autoState++;
                         deadShotSays.play(hardwareMap.appContext, R.raw.a02);
                     }
@@ -219,9 +223,9 @@ public class NewGame_6832 extends LinearOpMode {
                 case 2:  // 180 degree turn if alternate alliance, then moves are inverted
                     if (isBlue) {
 
-                        if (deadShot.rotateRelative(true, 90, .30)) {
-                            deadShot.targetAngleInitialized = false;
-                            deadShot.resetMotors();
+                        if (robot.rotateRelative(true, 90, .30)) {
+                            robot.targetAngleInitialized = false;
+                            robot.resetMotors();
                             autoState++;
                         }
                         else autoState++; deadShotSays.play(hardwareMap.appContext, R.raw.a03);
@@ -233,40 +237,40 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
                 case 3: //drive towards the corner vortex
 
-                    if (deadShot.driveStrafe(true, 1, 1)) {
-                        deadShot.resetMotors();
+                    if (robot.driveStrafe(true, 1, 1)) {
+                        robot.resetMotors();
                         deadShotSays.play(hardwareMap.appContext, R.raw.a04);
                         autoState++;
                     }
                     break;
                 case 4: //drive up near the first beacon
 
-                    if (deadShot.driveForward(!isBlue, .20, 1)) {
-                        deadShot.resetMotors();
+                    if (robot.driveForward(!isBlue, .20, 1)) {
+                        robot.resetMotors();
                         autoState++;
                     }
                     break;
                 case 5: //drive towards the wall in order to press the first beacon
-                    if (deadShot.driveStrafe(true, .5, 1)) {
-                        deadShot.resetMotors();
+                    if (robot.driveStrafe(true, .5, 1)) {
+                        robot.resetMotors();
                         autoState++;
                     }
                     break;
                 case 6: //press the first beacon
-                    if (deadShot.pressTeamBeacon(isBlue)) {
-                        deadShot.resetMotors();
+                    if (robot.pressAllianceBeacon(isBlue, false)) {
+                        robot.resetMotors();
                         autoState++;
                     }
                     break;
                 case 7: //drive up next to the second beacon
-                    if (deadShot.driveForward(!isBlue, 1.0, 1)) {
-                        deadShot.resetMotors();
+                    if (robot.driveForward(!isBlue, 1.0, 1)) {
+                        robot.resetMotors();
                         autoState++;
                     }
                     break;
                 case 8: //press the second beacon
-                    if (deadShot.pressTeamBeacon(isBlue)) {
-                        deadShot.resetMotors();
+                    if (robot.pressAllianceBeacon(isBlue, true)) {
+                        robot.resetMotors();
                         autoState++;
                     }
                     break;
@@ -279,35 +283,31 @@ public class NewGame_6832 extends LinearOpMode {
                 default:
                     break;
             }
-            deadShot.pa.updateCollection();
+            robot.pa.updateCollection();
         }
         else{
-            deadShot.pa.emergencyStop();
-            deadShot.driveMixer(0, 0, 0);
+            robot.pa.emergencyStop();
+            robot.driveMixer(0, 0, 0);
         }
     }
 
     public void stateSwitch(){
-        /*button indexes:
-        0 = a
-        1 = b
-        2 = x
-        3 = y
-        4 = dpad_down
-        5 = left bumper
-        6 = right bumper
-        7 = start button
-        */
-//        buttonCurrentState[0] = gamepad1.a;
-//        buttonCurrentState[1] = gamepad1.b;
-//        buttonCurrentState[2] = gamepad1.x;
-//        buttonCurrentState[3] = gamepad1.y;
-//        buttonCurrentState[4] = gamepad1.dpad_down;
-//        buttonCurrentState[5] = gamepad1.left_bumper;
-//        buttonCurrentState[6] = gamepad1.right_bumper;
-//        buttonCurrentState[7] = gamepad1.start;
 
-        if(toggleAllowed(gamepad1.left_bumper,5)) {
+        /*button indexes:
+        0  = a
+        1  = b
+        2  = x
+        3  = y
+        4  = dpad_down
+        5  = dpad_up
+        6  = dpad_left
+        7  = dpad_right
+        8  = left bumper
+        9  = right bumper
+        10 = start button
+        */
+
+        if(toggleAllowed(gamepad1.left_bumper,8)) {
 
                 state--;
                 if (state < 0) {
@@ -317,7 +317,7 @@ public class NewGame_6832 extends LinearOpMode {
 
         }
 
-        if (toggleAllowed(gamepad1.right_bumper,6)) {
+        if (toggleAllowed(gamepad1.right_bumper,9)) {
 
                 state++;
                 if (state > 3) {
@@ -327,7 +327,7 @@ public class NewGame_6832 extends LinearOpMode {
 
         }
 
-        if(toggleAllowed(gamepad1.start,7)) {
+        if(toggleAllowed(gamepad1.start,10)) {
 
                 active = !active;
 
@@ -337,25 +337,25 @@ public class NewGame_6832 extends LinearOpMode {
     public void secondaryAuto(){
         switch(autoState){
             case 0:
-                deadShot.resetMotors();
+                robot.resetMotors();
                 autoState++;
                 break;
             case 1:
-                if(deadShot.driveForward(true, 2.25, 1)){
-                    deadShot.resetMotors();
+                if(robot.driveForward(true, 2.25, 1)){
+                    robot.resetMotors();
                     autoState++;
                 }
                 break;
             case 2:
                 for(int n = 0; n < flingNumber; n++){
-                    deadShot.pa.fling();
+                    robot.pa.fling();
                 }
                 autoState++;
-                deadShot.motorConveyor.setPower(0);
+                robot.motorConveyor.setPower(0);
                 break;
             case 3:
-                if(deadShot.driveForward(true, .5, 1)){
-                    deadShot.resetMotors();
+                if(robot.driveForward(true, .5, 1)){
+                    robot.resetMotors();
                     autoState++;
                 }
             default:
@@ -367,96 +367,88 @@ public class NewGame_6832 extends LinearOpMode {
     public void joystickDrive(){
 
 
-        deadShot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
+        if(!runBeaconTest) robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
         //toggle the particle conveyor on and off - quick and dirty
         if (toggleAllowed(gamepad1.a,0))
         {
-            deadShot.pa.collect();
+            robot.pa.collect();
         }
 
         if (toggleAllowed(gamepad1.b,1))
         {
-                deadShot.pa.eject();
+                robot.pa.eject();
 
         }
 
         if(toggleAllowed(gamepad1.x,2)) {
 
 
-                deadShot.pa.fling();
+                robot.pa.fling();
 
         }
 
         if(toggleAllowed(gamepad1.y,3)){
 
-                if (deadShot.pa.isStopped()) {
-                    deadShot.pa.restart();
+                if (robot.pa.isStopped()) {
+                    robot.pa.restart();
                 } else {
-                    deadShot.pa.emergencyStop();
+                    robot.pa.emergencyStop();
                 }
         }
 
         if(toggleAllowed(gamepad1.dpad_down,4)){
 
-                deadShot.pa.halfCycle();
+                robot.pa.halfCycle();
 
         }
 
-        deadShot.pa.updateCollection();
+        if(toggleAllowed(gamepad1.dpad_up, 5)){
+            runBeaconTest = !runBeaconTest;
+            robot.resetBeaconPresserState();
+        }
+        if(toggleAllowed(gamepad1.dpad_left, 6) && !runBeaconTest){
+            isBlue = !isBlue;
+        }
+        if(toggleAllowed(gamepad1.dpad_right, 7) && !runBeaconTest){
+            runBeaconTestLeft = !runBeaconTestLeft;
+        }
+
+        if(runBeaconTest) {
+            robot.pressAllianceBeacon(isBlue, runBeaconTestLeft);
+            telemetry.addData("Status", "Test beacon on left Side: " + runBeaconTestLeft);
+            telemetry.addData("Status", "Side: " + getAlliance());
+        }
+
+        robot.pa.updateCollection();
     }
 
 
 
 
 
-    public boolean foundBeacon() {
-        if(isBlue){
-            return deadShot.beaconDistAft > 0.05;
-        }
-        return deadShot.beaconDistFore > .05;
-    }
 
-    public boolean findBeaconPressRange() {
-        double dist;
-        if(isBlue){ dist = deadShot.beaconDistAft; }
-        else { dist = deadShot.beaconDistFore; }
-        if(dist > .25){
-            deadShot.driveMixer(0, -.35, 0);
-            return false;
-        }
-        else if(dist < .15){
-            deadShot.driveMixer(0, .35, 0);
-            return false;
-        }
-        else{
-            deadShot.driveMixer(0, 0, 0);
-            return true;
-        }
-    }
-
-    public boolean onTeamColor(){
-        if(isBlue){
-            return deadShot.colorAft == 3;
-        }
-        return (deadShot.colorFore > 9 && deadShot.colorFore < 12);
-    }
 
 
 
 
     boolean toggleAllowed(boolean button, int buttonIndex)
     {
+
         /*button indexes:
-        0 = a
-        1 = b
-        2 = x
-        3 = y
-        4 = dpad_down
-        5 = left bumper
-        6 = right bumper
-        7 = start button
+        0  = a
+        1  = b
+        2  = x
+        3  = y
+        4  = dpad_down
+        5  = dpad_up
+        6  = dpad_left
+        7  = dpad_right
+        8  = left bumper
+        9  = right bumper
+        10 = start button
         */
+
         if (button) {
             if (!buttonSavedStates[buttonIndex])  { //we just pushed the button, and when we last looked at it, it was not pressed
                 buttonSavedStates[buttonIndex] = true;
@@ -508,7 +500,7 @@ public class NewGame_6832 extends LinearOpMode {
                 // Acquiring the angles is relatively expensive; we don't want
                 // to do that in each of the three items that need that info, as that's
                 // three times the necessary expense.
-                angles = deadShot.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                angles = robot.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
             }
         });
 
@@ -528,12 +520,12 @@ public class NewGame_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("status", new Func<String>() {
                     @Override public String value() {
-                        return deadShot.imu.getSystemStatus().toShortString();
+                        return robot.imu.getSystemStatus().toShortString();
                     }
                 })
                 .addData("calib", new Func<String>() {
                     @Override public String value() {
-                        return deadShot.imu.getCalibrationStatus().toString();
+                        return robot.imu.getCalibrationStatus().toString();
                     }
                 });
 
@@ -561,33 +553,33 @@ public class NewGame_6832 extends LinearOpMode {
                 })
                 .addData("TicksFL", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(deadShot.motorFrontLeft.getCurrentPosition());
+                        return Long.toString(robot.motorFrontLeft.getCurrentPosition());
                     }
                 })
                 .addData("TicksAvg", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(deadShot.getAverageTicks());
+                        return Long.toString(robot.getAverageTicks());
                     }
                 });
         telemetry.addLine()
                 .addData("DistRear", new Func<String>() {
                     @Override public String value() {
-                        return String.valueOf(deadShot.beaconDistAft);
+                        return String.valueOf(robot.beaconDistAft);
                     }
                 })
                 .addData("RearColor", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(deadShot.colorAft);
+                        return Long.toString(robot.colorAft);
                     }
                 })
                 .addData("DistFore", new Func<String>() {
                     @Override public String value() {
-                        return String.valueOf(deadShot.beaconDistFore);
+                        return String.valueOf(robot.beaconDistFore);
                     }
                 })
                 .addData("ForeColor", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(deadShot.colorFore);
+                        return Long.toString(robot.colorFore);
                     }
                 });
 

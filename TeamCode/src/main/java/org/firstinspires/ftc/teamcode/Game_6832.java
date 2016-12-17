@@ -158,7 +158,7 @@ public class Game_6832 extends LinearOpMode {
 
         // get a reference to our distance sensors
         beaconPresentRear = hardwareMap.opticalDistanceSensor.get("beaconPresentRear");
-        beaconPresentFore = hardwareMap.opticalDistanceSensor.get("beaconPresentFore");
+        beaconPresentFore = hardwareMap.opticalDistanceSensor.get("beaconPresent");
 
         // color sensors init
         beaconColorFore = hardwareMap.i2cDevice.get("beaconColorFore");

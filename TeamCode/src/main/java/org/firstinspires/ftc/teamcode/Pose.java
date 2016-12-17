@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -47,7 +48,8 @@ public class Pose
     Orientation angles;
 
     OpticalDistanceSensor beaconPresentRear;
-    OpticalDistanceSensor beaconPresentFore;
+    OpticalDistanceSensor beaconPresent;
+
 
     byte[] colorForeCache = new byte[100];
     byte[] colorRearCache = new byte[100];
@@ -89,7 +91,11 @@ public class Pose
     private double displacement;
     private double displacementPrev;
     private double odometer;
+    static double scanSpeed = .5;
+    private long presserTimer = 0;
+    private long presserSavedTime = 0;
 
+    SoundPlayer deadShotSays = SoundPlayer.getInstance();
 
     private long ticksLeftPrev;
     private long ticksRightPrev;
@@ -189,7 +195,7 @@ public class Pose
 
         // get a reference to our distance sensors
         beaconPresentRear = hwMap.opticalDistanceSensor.get("beaconPresentRear");
-        beaconPresentFore = hwMap.opticalDistanceSensor.get("beaconPresentFore");
+        beaconPresent = hwMap.opticalDistanceSensor.get("beaconPresentFore");
 
         // color sensors init
         beaconColorFore = hwMap.i2cDevice.get("beaconColorFore");
@@ -365,7 +371,7 @@ public class Pose
 
     /**
      * Set the current position of the robot in the X direction on the field
-      * @param poseX
+     * @param poseX
      */
     public void setPoseX(double poseX) {
         this.poseX = poseX;
@@ -477,7 +483,7 @@ public class Pose
 
         //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
         beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
-        beaconDistFore = Math.pow(beaconPresentFore.getLightDetected(), 0.5); //calculate linear value
+        beaconDistFore = Math.pow(beaconPresent.getLightDetected(), 0.5); //calculate linear value
     }
 
     /**
@@ -575,14 +581,14 @@ public class Pose
      */
     public double getOdometer() {
 
-    return  odometer;
+        return  odometer;
 
     }
 
     /**
      * resets the odometer. The odometer tracks the robot's total amount of travel since the last odometer reset
      * The value is in meters and is always increasing (absolute), even when the robot is moving backwards
-      * @param distance
+     * @param distance
      */
     public void setOdometer(double distance){
         odometer = 0;
@@ -606,22 +612,22 @@ public class Pose
 
         //allow wrap around
 
-            if (Math.abs(diff) > 180)
-                    {
-                if (diff > 0) {
-                    diff -= 360;
-                } else {
-                    diff += 360;
-                }
+        if (Math.abs(diff) > 180)
+        {
+            if (diff > 0) {
+                diff -= 360;
+            } else {
+                diff += 360;
             }
-        return diff;
         }
+        return diff;
+    }
 
 
     /**
      * Apply and angular adjustment to a base angle with result wrapping around at 360 degress
      *
-      * @param angle1
+     * @param angle1
      * @param angle2
      * @return
      */
@@ -646,11 +652,11 @@ public class Pose
 
     double getDistanceTo(double x, double y){
 
-            double dx = x - poseX;
-            double dy = y - poseY;
-            return Math.sqrt(dx*dx + dy*dy);
+        double dx = x - poseX;
+        double dy = y - poseY;
+        return Math.sqrt(dx*dx + dy*dy);
 
-        }
+    }
 
 
     public double ServoNormalize(int pulse){
@@ -658,63 +664,136 @@ public class Pose
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
 
+    public boolean nearBeacon(boolean isBlue) { //did the optical distance sensor see something close enough to
+        if(isBlue){                              //be one of the beacons
+            return beaconDistFore > 0.08;
+        }
+        return beaconDistFore > .08;
+    }
 
-    public boolean pressTeamBeacon(boolean isBlue ){
-        switch(beaconState){
+    public boolean findBeaconPressRange(boolean isBlue) { //is the robot close enough to push the beacon with the
+        double dist;                                      //the servo (DEPRECATED)
+        if(isBlue){ dist = beaconDistAft; }
+        else { dist = beaconDistFore; }
+        if(dist > .25){
+            driveMixer(0, -.35, 0);
+            return false;
+        }
+        else if(dist < .15){
+            driveMixer(0, .35, 0);
+            return false;
+        }
+        else{
+            driveMixer(0, 0, 0);
+            return true;
+        }
+    }
+
+    public boolean onAllianceColor(boolean isBlue){ //is the robot looking at it's team's aliance color
+        if(isBlue){
+            return colorFore == 3;
+        }
+        return (colorFore > 9 && colorFore < 12);
+    }
+
+    public boolean onOpposingColor(boolean isBlue){ //is the robot looking at it's team's aliance color
+        if(isBlue){
+            return (colorFore > 9 && colorFore < 12);
+        }
+        return colorFore == 3;
+    }
+    public boolean findOpposingColor(boolean isBlue, boolean fromLeft){
+        if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-.07, 0, 0); }
+        else { driveMixer(.07, 0, 0); }
+        if(onOpposingColor(isBlue)){
+            return true;
+        }
+        return false;
+    }
+
+
+    public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
+        switch(beaconState){                                              // to the alliance color in autonomous
             case 0:
-//                if(isBlue){ driveMixer(-1, 0, 0); }
-//                else { driveMixer(1, 0, 0); }
-//                if(foundBeacon()) {
-//                    driveMixer(0, 0, 0);
+                if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-scanSpeed, 0, 0); }
+                else { driveMixer(scanSpeed, 0, 0); }
+                if(nearBeacon(isBlue)) {
+                    driveMixer(0, 0, 0);
+                    resetMotors();
+                    beaconState++;
+                }
+                break;
+            case 1:     //stub
+                if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .15, .25)){
 //                    resetMotors();
-//                    beaconState++;
-//                }
+                    beaconState++;
+                }
                 break;
-            case 1:
-//                if(driveForward(!isBlue, .10, .45)){
-//                    resetMotors();
-//                    beaconState++;
-//                }
+            case 2:     //stub
+//                if(findBeaconPressRange())
+                beaconState++;
                 break;
-            case 2:
-//                if(findBeaconPressRange()) beaconState++;
+            case 3:     //stub
+//                if(findBeaconPressRange())
+                deadShotSays.play(hwMap.appContext, R.raw.a03);
+                beaconState++;
                 break;
-            case 3:
-//                if(findBeaconPressRange()) beaconState++;
+            case 4:     //drives to find the opposing alliance's color on the beacon in order to put it out of the
+                if(findOpposingColor(isBlue, fromLeft)) beaconState++;  //range of the beacon presser
                 break;
-            case 4:
-//                if(isBlue){ driveMixer(-.35, 0, 0); }
-//                else { driveMixer(.35, 0, 0); }
-//                if(onTeamColor()) beaconState++;
-                break;
-            case 5:
+            case 5:     //stub
 //                if(driveForward(true, 0, .25)){
 //                    resetMotors();
-//                    beaconState++;
+                    beaconState++;
 //                }
                 break;
-            case 6:
+            case 6:     //begins moving sideways in order to press the beacon and sets a timer to stop moving if the
+                        //beacon takes too long to switch
 //                pushButton.setPosition(ServoNormalize(pressedPosition));
 //                presserTimer = System.nanoTime() + (long) 2e9;
 //                beaconState++;
+                driveMixer(0, .35, 0);
+                deadShotSays.play(hwMap.appContext, R.raw.a06);
+                presserTimer = System.nanoTime() + (long) 2e9;
+                beaconState++;
                 break;
-            case 7:
+            case 7:     //continue trying to press the beacon until the color switches to the color of the alliance
+                        //or the beacon takes more than 5 seconds to press
 //                if(presserTimer < System.nanoTime())
 //                    beaconState++;
+                if(onAllianceColor(isBlue) || presserTimer < System.nanoTime()){
+                    presserSavedTime = System.nanoTime();
+                    driveMixer(0, 0, 0);
+                    deadShotSays.play(hwMap.appContext, R.raw.a07);
+                    beaconState++;
+                }
                 break;
-            case 8:
+            case 8:     //stub
 //                pushButton.setPosition(ServoNormalize(relaxedPosition));
 //                beaconState++;
+                beaconState++;
+                resetMotors();
                 break;
-            case 9:
-//                if(driveStrafe(false, .10, .50)) beaconState++;
+            case 9:     //strafe away from the beacon
+                if(driveStrafe(false, .25, .50)) beaconState++;
                 break;
+            case 10:    //retry all steps from locating the opposing alliance's color to pressing the beacon if
+                        //the initial press was unsuccessful
+                if(presserSavedTime > presserTimer)
+                    beaconState = 4;
+                else beaconState++;
+                break;
+
             default:
-//                beaconState = 0;
+                beaconState = 0;
                 return true;
         }
         return false;
     }
+    public void resetBeaconPresserState(){
+        beaconState = 0;
+    }
+
 
 }
 
