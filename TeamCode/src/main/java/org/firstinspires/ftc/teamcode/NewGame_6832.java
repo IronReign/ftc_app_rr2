@@ -366,6 +366,19 @@ public class NewGame_6832 extends LinearOpMode {
 
     public void joystickDrive(){
 
+        /*button indexes:
+        0  = a
+        1  = b
+        2  = x
+        3  = y
+        4  = dpad_down
+        5  = dpad_up
+        6  = dpad_left
+        7  = dpad_right
+        8  = left bumper
+        9  = right bumper
+        10 = start button
+        */
 
         if(!runBeaconTest) robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
@@ -415,7 +428,8 @@ public class NewGame_6832 extends LinearOpMode {
         }
 
         if(runBeaconTest) {
-            robot.pressAllianceBeacon(isBlue, runBeaconTestLeft);
+            if(robot.pressAllianceBeacon(isBlue, runBeaconTestLeft))
+                runBeaconTest = false;
             telemetry.addData("Status", "Test beacon on left Side: " + runBeaconTestLeft);
             telemetry.addData("Status", "Side: " + getAlliance());
         }

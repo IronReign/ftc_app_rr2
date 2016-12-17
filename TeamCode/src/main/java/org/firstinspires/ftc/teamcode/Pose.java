@@ -724,7 +724,7 @@ public class Pose
                 }
                 break;
             case 1:     //stub
-                if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .15, .25)){
+                if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .25, .25)){
 //                    resetMotors();
                     beaconState++;
                 }
@@ -766,16 +766,16 @@ public class Pose
                     driveMixer(0, 0, 0);
                     deadShotSays.play(hwMap.appContext, R.raw.a07);
                     beaconState++;
+                    resetMotors();
                 }
                 break;
             case 8:     //stub
 //                pushButton.setPosition(ServoNormalize(relaxedPosition));
 //                beaconState++;
                 beaconState++;
-                resetMotors();
                 break;
             case 9:     //strafe away from the beacon
-                if(driveStrafe(false, .25, .50)) beaconState++;
+                if(driveStrafe(false, .25, .50)) { beaconState++; }
                 break;
             case 10:    //retry all steps from locating the opposing alliance's color to pressing the beacon if
                         //the initial press was unsuccessful
