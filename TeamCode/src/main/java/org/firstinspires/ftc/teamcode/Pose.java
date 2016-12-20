@@ -226,10 +226,10 @@ public class Pose
         this.pa = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
-        parametersIMU.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parametersIMU.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parametersIMU.loggingEnabled      = true;
-        parametersIMU.loggingTag          = "IMU";
+        parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled       = true;
+        parametersIMU.loggingTag           = "IMU";
 
         //imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu = (BNO055IMU)hwMap.get("imu");
@@ -270,16 +270,24 @@ public class Pose
 
     }
 
-    public void resetMotors(){
+    public void resetMotors(boolean enableEncoders){
         motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (enableEncoders) {
+            motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        else {
+            motorFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
 
-        motorFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public long getAverageTicks(){
@@ -484,6 +492,7 @@ public class Pose
         //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
         beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
         beaconDistFore = Math.pow(beaconPresent.getLightDetected(), 0.5); //calculate linear value
+        Update(imu, 0, 0);
     }
 
     /**
@@ -711,6 +720,19 @@ public class Pose
         return false;
     }
 
+    public boolean turnIMU(double targetAngle, double power, boolean turnRight){
+        if(turnRight)
+            driveMixer(0, 0, power);
+        else
+            driveMixer(0, 0, -power);
+        if(turnRight && targetAngle <= poseHeading)
+            return true;
+        else if(!turnRight && targetAngle >= poseHeading)
+            return true;
+        else return false;
+
+    }
+
 
     public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
         switch(beaconState){                                              // to the alliance color in autonomous
@@ -719,7 +741,7 @@ public class Pose
                 else { driveMixer(scanSpeed, 0, 0); }
                 if(nearBeacon(isBlue)) {
                     driveMixer(0, 0, 0);
-                    resetMotors();
+                    resetMotors(true);
                     beaconState++;
                 }
                 break;
@@ -766,7 +788,7 @@ public class Pose
                     driveMixer(0, 0, 0);
                     deadShotSays.play(hwMap.appContext, R.raw.a07);
                     beaconState++;
-                    resetMotors();
+                    resetMotors(true);
                 }
                 break;
             case 8:     //stub

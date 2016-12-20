@@ -74,20 +74,16 @@ public class NewGame_6832 extends LinearOpMode {
 
 
     private boolean active = true;
+    boolean joystickDriveStarted = false;
 
-
-    static final private long toggleLockout = (long)2e8; // fractional second lockout between all toggle button
-    private long toggleOKTime = 0; //when should next toggle be allowed
     private int autoState = 0;
     private int beaconState = 0;
-    private boolean initiallized = false;
-    private int flingNumber = 2;
+
+    private int flingNumber = 3;
     private boolean isBlue = false;
-    private boolean targetBeacon = true;
-    private double IMUTargetHeading = 0;
+
     Orientation angles;
 
-    private long presserTimer = 0;
     private int state = 0;
     private boolean runAutonomous = true;
     private long autoTimer = 0;
@@ -152,16 +148,10 @@ public class NewGame_6832 extends LinearOpMode {
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
-        // eg: Set the drive motor directions:
-        // "Reverse" the motor that runs backwards when connected directly to the battery
-        // leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
-        // rightMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
-
-
-
 
         // Wait for the game to start (driver presses PLAY)
-//        waitForStart();
+        //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
+        //todo However, it's clearly not happening at this location any more, so we need to move this comment to where it should be
         runtime.reset();
 
         if(!runAutonomous){
@@ -206,14 +196,14 @@ public class NewGame_6832 extends LinearOpMode {
 
                 case 0: //reset all the motors before starting autonomous
                     //autoTimer = System.nanoTime() + (long) 30e9;
-                    robot.resetMotors();
+                    robot.resetMotors(true);
                     autoState++;
                     deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                     break;
                 case 1: //drive forward and shoot in the goal
 
-                    if (robot.driveForward(true, 1.45, 1)) {
-                        robot.resetMotors();
+                    if (robot.driveForward(true, .65, 1)) {
+                        robot.resetMotors(true);
                         for (int n = 0; n < flingNumber; n++)
                             robot.pa.fling();
                         autoState++;
@@ -223,9 +213,9 @@ public class NewGame_6832 extends LinearOpMode {
                 case 2:  // 180 degree turn if alternate alliance, then moves are inverted
                     if (isBlue) {
 
-                        if (robot.rotateRelative(true, 90, .30)) {
+                        if (robot.turnIMU(180, .5, true)) {
                             robot.targetAngleInitialized = false;
-                            robot.resetMotors();
+                            robot.resetMotors(true);
                             autoState++;
                         }
                         else autoState++; deadShotSays.play(hardwareMap.appContext, R.raw.a03);
@@ -234,43 +224,44 @@ public class NewGame_6832 extends LinearOpMode {
                         deadShotSays.play(hardwareMap.appContext, R.raw.a03);
 //                        active = false;
                     }
+//                        autoState++;
                     break;
                 case 3: //drive towards the corner vortex
 
-                    if (robot.driveStrafe(true, 1, 1)) {
-                        robot.resetMotors();
+                    if (robot.driveStrafe(true, .75, 1)) {
+                        robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a04);
                         autoState++;
                     }
                     break;
                 case 4: //drive up near the first beacon
 
-                    if (robot.driveForward(!isBlue, .20, 1)) {
-                        robot.resetMotors();
+                    if (robot.driveForward(!isBlue, 1.5 , 1)) {
+                        robot.resetMotors(true);
                         autoState++;
                     }
                     break;
                 case 5: //drive towards the wall in order to press the first beacon
-                    if (robot.driveStrafe(true, .5, 1)) {
-                        robot.resetMotors();
+                    if (robot.driveStrafe(true, .75 , 1)) {
+                        robot.resetMotors(true);
                         autoState++;
                     }
                     break;
                 case 6: //press the first beacon
                     if (robot.pressAllianceBeacon(isBlue, false)) {
-                        robot.resetMotors();
+                        robot.resetMotors(true);
                         autoState++;
                     }
                     break;
                 case 7: //drive up next to the second beacon
                     if (robot.driveForward(!isBlue, 1.0, 1)) {
-                        robot.resetMotors();
+                        robot.resetMotors(true);
                         autoState++;
                     }
                     break;
                 case 8: //press the second beacon
                     if (robot.pressAllianceBeacon(isBlue, true)) {
-                        robot.resetMotors();
+                        robot.resetMotors(true);
                         autoState++;
                     }
                     break;
@@ -337,12 +328,12 @@ public class NewGame_6832 extends LinearOpMode {
     public void secondaryAuto(){
         switch(autoState){
             case 0:
-                robot.resetMotors();
+                robot.resetMotors(true);
                 autoState++;
                 break;
             case 1:
-                if(robot.driveForward(true, 2.25, 1)){
-                    robot.resetMotors();
+                if(robot.driveForward(true, 1.75, 1)){
+                    robot.resetMotors(true);
                     autoState++;
                 }
                 break;
@@ -355,7 +346,7 @@ public class NewGame_6832 extends LinearOpMode {
                 break;
             case 3:
                 if(robot.driveForward(true, .5, 1)){
-                    robot.resetMotors();
+                    robot.resetMotors(true);
                     autoState++;
                 }
             default:
@@ -365,6 +356,9 @@ public class NewGame_6832 extends LinearOpMode {
 
 
     public void joystickDrive(){
+
+
+
 
         /*button indexes:
         0  = a
@@ -379,6 +373,9 @@ public class NewGame_6832 extends LinearOpMode {
         9  = right bumper
         10 = start button
         */
+        if (!joystickDriveStarted) {
+            robot.resetMotors(false);
+        }
 
         if(!runBeaconTest) robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
@@ -546,9 +543,17 @@ public class NewGame_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("heading", new Func<String>() {
                     @Override public String value() {
-                        return formatAngle(angles.angleUnit, angles.firstAngle);
+                        //return formatAngle(angles.angleUnit, angles.firstAngle);
+                        return Double.toString(robot.getHeading());
                     }
                 })
+                .addData("headingRaw", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles.angleUnit, angles.firstAngle);
+
+                    }
+                })
+
                 .addData("roll", new Func<String>() {
                     @Override public String value() {
                         return formatAngle(angles.angleUnit, angles.secondAngle);
