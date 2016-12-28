@@ -91,7 +91,7 @@ public class NewGame_6832 extends LinearOpMode {
     //private boolean[] buttonCurrentState = new boolean[8];
     private boolean slowMode = false;
 
-    private boolean runBeaconTest = false;
+    private boolean runTest = false;
     private boolean runBeaconTestLeft = true;
 
 
@@ -167,16 +167,19 @@ public class NewGame_6832 extends LinearOpMode {
             if(active) {
                 switch(state){
                     case 0:
+                        joystickDriveStarted = false;
                         autonomous();
                         break;
                     case 1:
                         joystickDrive();
                         break;
                     case 2:
+                        joystickDriveStarted = false;
                         robot.pa.halfCycle();
                         active = false;
                         break;
                     case 3:
+                        joystickDriveStarted = false;
                         secondaryAuto();
                         break;
                 }
@@ -199,6 +202,10 @@ public class NewGame_6832 extends LinearOpMode {
                     robot.resetMotors(true);
                     autoState++;
                     deadShotSays.play(hardwareMap.appContext, R.raw.a01);
+                    if(isBlue)
+                        robot.setHeading(270);
+                    else
+                        robot.setHeading(0);
                     break;
                 case 1: //drive forward and shoot in the goal
 
@@ -328,6 +335,7 @@ public class NewGame_6832 extends LinearOpMode {
     public void secondaryAuto(){
         switch(autoState){
             case 0:
+                robot.setHeading(315);
                 robot.resetMotors(true);
                 autoState++;
                 break;
@@ -374,10 +382,11 @@ public class NewGame_6832 extends LinearOpMode {
         10 = start button
         */
         if (!joystickDriveStarted) {
-            robot.resetMotors(false);
+            robot.resetMotors(true);
+            joystickDriveStarted = true;
         }
 
-        if(!runBeaconTest) robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
+        if(!runTest) robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
         //toggle the particle conveyor on and off - quick and dirty
         if (toggleAllowed(gamepad1.a,0))
@@ -413,22 +422,33 @@ public class NewGame_6832 extends LinearOpMode {
 
         }
 
-        if(toggleAllowed(gamepad1.dpad_up, 5)){
-            runBeaconTest = !runBeaconTest;
-            robot.resetBeaconPresserState();
-        }
-        if(toggleAllowed(gamepad1.dpad_left, 6) && !runBeaconTest){
-            isBlue = !isBlue;
-        }
-        if(toggleAllowed(gamepad1.dpad_right, 7) && !runBeaconTest){
-            runBeaconTestLeft = !runBeaconTestLeft;
+//        if(toggleAllowed(gamepad1.dpad_up, 5)){
+//            runTest = !runTest;
+//            robot.resetBeaconPresserState();
+//        }
+//        if(toggleAllowed(gamepad1.dpad_left, 6) && !runTest){
+//            isBlue = !isBlue;
+//        }
+//        if(toggleAllowed(gamepad1.dpad_right, 7) && !runTest){
+//            runBeaconTestLeft = !runBeaconTestLeft;
+//        }
+//
+//        if(runTest) {
+//            if(robot.pressAllianceBeacon(isBlue, runBeaconTestLeft))
+//                runTest = false;
+//            telemetry.addData("Status", "Test beacon on left Side: " + runBeaconTestLeft);
+//            telemetry.addData("Status", "Side: " + getAlliance());
+//        }
+        if(toggleAllowed(gamepad1.dpad_up, 5)) {
+            robot.setHeading(0);
         }
 
-        if(runBeaconTest) {
-            if(robot.pressAllianceBeacon(isBlue, runBeaconTestLeft))
-                runBeaconTest = false;
-            telemetry.addData("Status", "Test beacon on left Side: " + runBeaconTestLeft);
-            telemetry.addData("Status", "Side: " + getAlliance());
+        if(toggleAllowed(gamepad1.dpad_left, 6)) {
+            runTest = !runTest;
+        }
+
+        if(runTest){
+            robot.RotateIMU(.01, 0, 0, Integer.MAX_VALUE, 0);
         }
 
         robot.pa.updateCollection();
@@ -554,12 +574,12 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                 })
 
-                .addData("roll", new Func<String>() {
+                .addData("rollRaw", new Func<String>() {
                     @Override public String value() {
                         return formatAngle(angles.angleUnit, angles.secondAngle);
                     }
                 })
-                .addData("pitch", new Func<String>() {
+                .addData("pitchRaw", new Func<String>() {
                     @Override public String value() {
                         return formatAngle(angles.angleUnit, angles.thirdAngle);
                     }
@@ -573,6 +593,11 @@ public class NewGame_6832 extends LinearOpMode {
                 .addData("TicksFL", new Func<String>() {
                     @Override public String value() {
                         return Long.toString(robot.motorFrontLeft.getCurrentPosition());
+                    }
+                })
+                .addData("TicksBL", new Func<String>() {
+                    @Override public String value() {
+                        return Long.toString(robot.motorBackLeft.getCurrentPosition());
                     }
                 })
                 .addData("TicksAvg", new Func<String>() {

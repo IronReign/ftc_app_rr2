@@ -36,6 +36,14 @@ public class Pose
 
     //motors
 
+    PIDController drivePID = new PIDController(0, 0, 0);
+
+    private double KpDrive = .007;
+    private double KiDrive = 0.01;
+    private double KdDrive = 0;
+    private double driveIMUBasePower = .5;
+    private double motorPower = 0;
+
     DcMotor motorFrontLeft = null;
     DcMotor motorFrontRight = null;
     DcMotor motorBackLeft = null;
@@ -85,7 +93,7 @@ public class Pose
     private double poseRoll;
     private long timeStamp; //timestamp of last update
     private boolean initialized = false;
-    private double offsetHeading;
+    public  double offsetHeading;
     private double offsetPitch;
     private double offsetRoll;
     private double displacement;
@@ -94,6 +102,7 @@ public class Pose
     static double scanSpeed = .5;
     private long presserTimer = 0;
     private long presserSavedTime = 0;
+    private double zeroHeading = 0;
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance();
 
@@ -108,15 +117,18 @@ public class Pose
 
     long flingerTimer;
 
-    public enum moveMode{
+    public enum MoveMode{
         forward,
         backward,
         left,
         right,
-        rotate
+        rotate,
+        still;
     }
 
-    private moveMode moveMode;
+    protected MoveMode moveMode;
+
+
 
     Orientation imuAngles;
     protected boolean targetAngleInitialized = false;
@@ -209,19 +221,12 @@ public class Pose
 
         //motor configurations
 
-        this.motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        this.motorFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        this.motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        this.motorFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        this.motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        this.motorFlinger.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        moveMode = MoveMode.still;
 
         this.pa = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
 
@@ -240,6 +245,53 @@ public class Pose
         colorForeReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
         colorRearReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
 
+    }
+
+    public void RotatePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
+        //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
+        //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
+        drivePID.setOutputRange(-.5,.5);
+        drivePID.setPID(Kp, Ki, Kd);
+        drivePID.setSetpoint(targetAngle);
+        drivePID.enable();
+
+        drivePID.setInputRange(0, 360);
+        drivePID.setContinuous();
+        drivePID.setInput(currentAngle);
+        double correction = drivePID.performPID();
+        /*ArrayList toUpdate = new ArrayList();
+        toUpdate.add((PID.m_deltaTime));
+        toUpdate.add(Double.valueOf(PID.m_error));
+        toUpdate.add(new Double(PID.m_totalError));
+        toUpdate.add(new Double(PID.pwrP));
+        toUpdate.add(new Double(PID.pwrI));
+        toUpdate.add(new Double(PID.pwrD));*/
+/*
+        logger.UpdateLog(Long.toString(System.nanoTime()) + ","
+                + Double.toString(PID.m_deltaTime) + ","
+                + Double.toString(pose.getOdometer()) + ","
+                + Double.toString(PID.m_error) + ","
+                + Double.toString(PID.m_totalError) + ","
+                + Double.toString(PID.pwrP) + ","
+                + Double.toString(PID.pwrI) + ","
+                + Double.toString(PID.pwrD) + ","
+                + Double.toString(correction));
+        motorLeft.setPower(pwr + correction);
+        motorRight.setPower(pwr - correction);
+
+*/
+        driveMixer(0, 0, correction);
+    }
+    public void RotateIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle){
+        RotatePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
+    }
+
+    public void setZeroHeading(){
+        setHeading(0);
+    }
+    public void setHeading(double angle){
+        poseHeading = angle;
+        initialized = false;
     }
 
     public void driveMixer(double forward,double strafe ,double rotate){
@@ -516,10 +568,11 @@ public class Pose
 
     public void Update(BNO055IMU imu, long ticksLeft, long ticksRight){
         long currentTime = System.nanoTime();
+        imuAngles= imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         if (!initialized){
             //first time in - we assume that the robot has not started moving and that orientation values are set to the current absolute orientation
             //so first set of imu readings are effectively offsets
-            imuAngles= imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+
 
             offsetHeading = wrapAngleMinus(poseHeading, imuAngles.firstAngle);
             offsetRoll = wrapAngleMinus(imuAngles.secondAngle, poseRoll);
