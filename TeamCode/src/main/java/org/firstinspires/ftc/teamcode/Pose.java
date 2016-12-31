@@ -38,9 +38,9 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    private double KpDrive = .007;
-    private double KiDrive = 0.01;
-    private double KdDrive = 0;
+    private double KpDrive = 0.007;
+    private double KiDrive = 0.00;
+    private double KdDrive = 0.001;
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
@@ -103,6 +103,9 @@ public class Pose
     private long presserTimer = 0;
     private long presserSavedTime = 0;
     private double zeroHeading = 0;
+    private long turnTimer = 0;
+    private boolean turnTimerInit = false;
+    private double minTurnError = 1.0;
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance();
 
@@ -284,6 +287,23 @@ public class Pose
     }
     public void RotateIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle){
         RotatePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
+    }
+
+    public boolean RotateIMU(double targetAngle, double maxTime){
+        if(!turnTimerInit){
+            turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
+            turnTimerInit = true;
+        }
+        RotatePID(KpDrive, KiDrive, KdDrive, 0, poseHeading, targetAngle); //if the robot turns within a threshold of the target
+        if(Math.abs(poseHeading - targetAngle) < minTurnError) {
+            turnTimerInit = false;
+            return true;
+        }
+        if(turnTimer < System.nanoTime()){ //if the robot takes too long to turn within a threshold of the target (it gets stuck)
+            turnTimerInit = false;
+            return true;
+        }
+        return false;
     }
 
     public void setZeroHeading(){
@@ -844,13 +864,16 @@ public class Pose
                     resetMotors(true);
                 }
                 break;
-            case 8:     //stub
-//                pushButton.setPosition(ServoNormalize(relaxedPosition));
-//                beaconState++;
-                beaconState++;
-                break;
-            case 9:     //strafe away from the beacon
+            case 8:     //strafe away from the beacon
                 if(driveStrafe(false, .25, .50)) { beaconState++; }
+                break;
+            case 9:     //turn back to proper direction
+                if(isBlue){
+                    if(RotateIMU(270, 1.5)) beaconState++;
+                }
+                else{
+                    if(RotateIMU(0, 1.5)) beaconState++;
+                }
                 break;
             case 10:    //retry all steps from locating the opposing alliance's color to pressing the beacon if
                         //the initial press was unsuccessful

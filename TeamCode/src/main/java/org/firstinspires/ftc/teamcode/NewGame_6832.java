@@ -79,7 +79,7 @@ public class NewGame_6832 extends LinearOpMode {
     private int autoState = 0;
     private int beaconState = 0;
 
-    private int flingNumber = 3;
+    private int flingNumber = 0;
     private boolean isBlue = false;
 
     Orientation angles;
@@ -127,7 +127,7 @@ public class NewGame_6832 extends LinearOpMode {
                 flingNumber = 2;
             }
             if(gamepad1.y){
-                flingNumber = 3;
+                flingNumber = 0;
             }
             if(toggleAllowed(gamepad1.x,2)) {
 
@@ -203,7 +203,7 @@ public class NewGame_6832 extends LinearOpMode {
                     autoState++;
                     deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                     if(isBlue)
-                        robot.setHeading(270);
+                        robot.setHeading(90);
                     else
                         robot.setHeading(0);
                     break;
@@ -218,20 +218,25 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 2:  // 180 degree turn if alternate alliance, then moves are inverted
-                    if (isBlue) {
-
-                        if (robot.turnIMU(180, .5, true)) {
-                            robot.targetAngleInitialized = false;
-                            robot.resetMotors(true);
+                    if(isBlue) {
+                        if (robot.RotateIMU(90, 3))
                             autoState++;
-                        }
-                        else autoState++; deadShotSays.play(hardwareMap.appContext, R.raw.a03);
-                    } else {
-                        autoState++;
-                        deadShotSays.play(hardwareMap.appContext, R.raw.a03);
-//                        active = false;
                     }
+                    else autoState++;
+//                    if (isBlue) {
+//
+//                        if (robot.turnIMU(180, .5, true)) {
+//                            robot.targetAngleInitialized = false;
+//                            robot.resetMotors(true);
+//                            autoState++;
+//                        }
+//                        else autoState++; deadShotSays.play(hardwareMap.appContext, R.raw.a03);
+//                    } else {
 //                        autoState++;
+//                        deadShotSays.play(hardwareMap.appContext, R.raw.a03);
+////                        active = false;
+//                    }
+////                        autoState++;
                     break;
                 case 3: //drive towards the corner vortex
 
@@ -335,7 +340,7 @@ public class NewGame_6832 extends LinearOpMode {
     public void secondaryAuto(){
         switch(autoState){
             case 0:
-                robot.setHeading(315);
+                robot.setHeading(135);
                 robot.resetMotors(true);
                 autoState++;
                 break;
@@ -350,7 +355,7 @@ public class NewGame_6832 extends LinearOpMode {
                     robot.pa.fling();
                 }
                 autoState++;
-                robot.motorConveyor.setPower(0);
+                robot.motorConveyor.setPower(90);
                 break;
             case 3:
                 if(robot.driveForward(true, .5, 1)){
@@ -440,7 +445,7 @@ public class NewGame_6832 extends LinearOpMode {
 //            telemetry.addData("Status", "Side: " + getAlliance());
 //        }
         if(toggleAllowed(gamepad1.dpad_up, 5)) {
-            robot.setHeading(0);
+            robot.setHeading(90);
         }
 
         if(toggleAllowed(gamepad1.dpad_left, 6)) {
@@ -570,6 +575,12 @@ public class NewGame_6832 extends LinearOpMode {
                 .addData("headingRaw", new Func<String>() {
                     @Override public String value() {
                         return formatAngle(angles.angleUnit, angles.firstAngle);
+
+                    }
+                })
+                .addData("headingOffset", new Func<String>() {
+                    @Override public String value() {
+                        return Double.toString(robot.offsetHeading);
 
                     }
                 })
