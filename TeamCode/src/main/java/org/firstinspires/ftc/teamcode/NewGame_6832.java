@@ -166,21 +166,35 @@ public class NewGame_6832 extends LinearOpMode {
             stateSwitch();
             if(active) {
                 switch(state){
-                    case 0:
+                    case 0: //main autonomous function that scores 1 or 2 balls and toggles both beacons
                         joystickDriveStarted = false;
                         autonomous();
                         break;
-                    case 1:
+                    case 1: //this is the autonomous we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
+                        joystickDriveStarted = false;
+                        secondaryAuto();
+                        break;
+                    case 2: //code for tele-op control
                         joystickDrive();
                         break;
-                    case 2:
+                    case 3: //half-cycles the flinger
                         joystickDriveStarted = false;
                         robot.pa.halfCycle();
                         active = false;
                         break;
-                    case 3:
+                    case 4: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
-                        secondaryAuto();
+                        if(robot.getAverageTicks() < 2000){
+                            robot.driveMixer(1,0,0);
+                        }
+                        else robot.driveMixer(0,0,0);
+                        break;
+                    case 5: //provides data for left/right calibration
+                        joystickDriveStarted = false;
+                        if(robot.getAverageAbsTicks() < 2000){
+                            robot.driveMixer(0,1,0);
+                        }
+                        else robot.driveMixer(0,0,0);
                         break;
                 }
                 robot.updateSensors();
@@ -312,27 +326,30 @@ public class NewGame_6832 extends LinearOpMode {
 
         if(toggleAllowed(gamepad1.left_bumper,8)) {
 
-                state--;
-                if (state < 0) {
-                    state = 3;
-                }
-                active = false;
+            state--;
+            if (state < 0) {
+                state = 5 ;
+            }
+            robot.resetMotors(true);
+            active = false;
 
         }
 
         if (toggleAllowed(gamepad1.right_bumper,9)) {
 
-                state++;
-                if (state > 3) {
-                    state = 0;
-                }
-                active = false;
+            state++;
+            if (state > 5) {
+                state = 0;
+            }
+            robot.resetMotors(true);
+            active = false;
 
         }
 
         if(toggleAllowed(gamepad1.start,10)) {
 
-                active = !active;
+            robot.resetMotors(true);
+            active = !active;
 
         }
     }

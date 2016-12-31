@@ -81,8 +81,8 @@ public class Pose
 
     private long flingTimer = 0;
     private int flingSpeed = 5000; //ticks per second
-    private int TPM_Forward = 1772 * 32/42; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
-    private int TPM_Strafe = 3386 * 32/42; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int TPM_Forward = 2439; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int TPM_Strafe = 3145 ; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
 
     private double poseX;
     private double poseY;
