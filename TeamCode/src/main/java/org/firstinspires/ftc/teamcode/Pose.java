@@ -101,7 +101,7 @@ public class Pose
     private double displacement;
     private double displacementPrev;
     private double odometer;
-    static double scanSpeed = .5;
+    static double scanSpeed = .35;
     private long presserTimer = 0;
     private long presserSavedTime = 0;
     private double zeroHeading = 0;
@@ -910,7 +910,7 @@ public class Pose
 //                beaconState++;
                 driveMixer(0, .35, 0);
                 deadShotSays.play(hwMap.appContext, R.raw.a06);
-                presserTimer = System.nanoTime() + (long) 2e9;
+                presserTimer = System.nanoTime() + (long) 1e9;
                 beaconState++;
                 break;
             case 7:     //continue trying to press the beacon until the color switches to the color of the alliance
@@ -926,14 +926,14 @@ public class Pose
                 }
                 break;
             case 8:     //strafe away from the beacon
-                if(driveStrafe(false, .25, .50)) { beaconState++; }
+                if(driveStrafe(false, .1, .35)) { beaconState++; }
                 break;
             case 9:     //turn back to proper direction
                 if(isBlue){
-                    if(RotateIMU(270, 1.5)) beaconState++;
+                    if(RotateIMU(90, .5)) beaconState++;
                 }
                 else{
-                    if(RotateIMU(0, 1.5)) beaconState++;
+                    if(RotateIMU(0, .5)) beaconState++;
                 }
                 break;
             case 10:    //retry all steps from locating the opposing alliance's color to pressing the beacon if
@@ -942,10 +942,10 @@ public class Pose
                     beaconState = 4;
                 else beaconState++;
                 break;
-
-            default:
+            case 11:
                 beaconState = 0;
                 return true;
+
         }
         return false;
     }
