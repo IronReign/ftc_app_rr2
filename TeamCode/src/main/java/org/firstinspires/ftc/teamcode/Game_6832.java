@@ -33,7 +33,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.adafruit.BNO055IMU;
-import com.qualcomm.hardware.ams.AMSColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -113,7 +112,7 @@ public class Game_6832 extends LinearOpMode {
     private double powerBackRight = 0;
     private double powerConveyor = 0;
     private boolean active = true;
-    private scoringSystem kobe = null;
+    private ParticleSystem kobe = null;
     private long flingTimer = 0;
     private int flingSpeed = 5000; //ticks per second
     private int TPM_Forward = 1772; //set this value
@@ -161,8 +160,8 @@ public class Game_6832 extends LinearOpMode {
         beaconPresentFore = hardwareMap.opticalDistanceSensor.get("beaconPresent");
 
         // color sensors init
-        beaconColorFore = hardwareMap.i2cDevice.get("beaconColorFore");
-        beaconColorRear = hardwareMap.i2cDevice.get("beaconColorRear");
+        beaconColorFore = hardwareMap.i2cDevice.get("beaconColor");
+        beaconColorRear = hardwareMap.i2cDevice.get("ballColor");
 
         colorForeReader = new I2cDeviceSynchImpl(beaconColorFore, I2cAddr.create8bit(0x60), false);
         colorRearReader = new I2cDeviceSynchImpl(beaconColorRear, I2cAddr.create8bit(0x64), false);
@@ -186,7 +185,7 @@ public class Game_6832 extends LinearOpMode {
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        this.kobe = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
+        this.kobe = new ParticleSystem(flingSpeed, motorFlinger, motorConveyor);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit           = BNO055IMU.AngleUnit.DEGREES;

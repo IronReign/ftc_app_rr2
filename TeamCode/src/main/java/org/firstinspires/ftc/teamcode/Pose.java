@@ -50,6 +50,7 @@ public class Pose
     DcMotor motorBackRight = null;
     DcMotor motorConveyor = null;
     DcMotor motorFlinger = null;
+    DcMotor motorLift = null;
     Servo   pushButton = null;
 
     BNO055IMU imu;
@@ -62,8 +63,8 @@ public class Pose
     byte[] colorForeCache = new byte[100];
     byte[] colorRearCache = new byte[100];
 
-    I2cDevice beaconColorFore;
-    I2cDevice beaconColorRear;
+    I2cDevice beaconColor;
+    I2cDevice ballColor;
     I2cDeviceSynch colorForeReader;
     I2cDeviceSynch colorRearReader;
     long colorFore;
@@ -77,7 +78,8 @@ public class Pose
     private double powerBackRight = 0;
     private double powerConveyor = 0;
 
-    public scoringSystem pa = null;
+    public ParticleSystem particle = null;
+    public CapTrap cap = null;
 
     private long flingTimer = 0;
     private int flingSpeed = 5000; //ticks per second
@@ -106,6 +108,8 @@ public class Pose
     private long turnTimer = 0;
     private boolean turnTimerInit = false;
     private double minTurnError = 1.0;
+    public boolean maintainHeadingInit = false;;
+    private double poseSavedHeading = 0.0;
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance();
 
@@ -192,6 +196,11 @@ public class Pose
 
     }
 
+    public void ResetTPM(){
+        TPM_Forward = 2493;
+        TPM_Strafe = 3145;
+    }
+
 
     public void init(HardwareMap ahwMap) {
         // save reference to HW Map
@@ -206,6 +215,7 @@ public class Pose
         this.motorBackRight = this.hwMap.dcMotor.get("motorBackRight");
         this.motorConveyor = this.hwMap.dcMotor.get("motorConveyor");
         this.motorFlinger = this.hwMap.dcMotor.get("motorFlinger");
+        this.motorLift = this.hwMap.dcMotor.get("motorLift");
         this.pushButton = this.hwMap.servo.get("mjolnir");
 
         // get a reference to our distance sensors
@@ -213,11 +223,11 @@ public class Pose
         beaconPresent = hwMap.opticalDistanceSensor.get("beaconPresentFore");
 
         // color sensors init
-        beaconColorFore = hwMap.i2cDevice.get("beaconColorFore");
-        beaconColorRear = hwMap.i2cDevice.get("beaconColorRear");
+        beaconColor = hwMap.i2cDevice.get("beaconColor");
+        ballColor = hwMap.i2cDevice.get("ballColor");
 
-        colorForeReader = new I2cDeviceSynchImpl(beaconColorFore, I2cAddr.create8bit(0x60), false);
-        colorRearReader = new I2cDeviceSynchImpl(beaconColorRear, I2cAddr.create8bit(0x64), false);
+        colorForeReader = new I2cDeviceSynchImpl(beaconColor, I2cAddr.create8bit(0x60), false);
+        colorRearReader = new I2cDeviceSynchImpl(ballColor, I2cAddr.create8bit(0x64), false);
 
         colorForeReader.engage();
         colorRearReader.engage();
@@ -228,10 +238,12 @@ public class Pose
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
-        this.pa = new scoringSystem(flingSpeed, motorFlinger, motorConveyor);
+        this.particle = new ParticleSystem(flingSpeed, motorFlinger, motorConveyor);
+        this.cap = new CapTrap(motorLift);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
@@ -249,6 +261,43 @@ public class Pose
         colorRearReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
 
     }
+
+    public void DrivePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
+        //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
+        //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
+        drivePID.setOutputRange(-.5,.5);
+        drivePID.setPID(Kp, Ki, Kd);
+        drivePID.setSetpoint(targetAngle);
+        drivePID.enable();
+
+        drivePID.setInputRange(0, 360);
+        drivePID.setContinuous();
+        drivePID.setInput(currentAngle);
+        double correction = drivePID.performPID();
+        /*ArrayList toUpdate = new ArrayList();
+        toUpdate.add((PID.m_deltaTime));
+        toUpdate.add(Double.valueOf(PID.m_error));
+        toUpdate.add(new Double(PID.m_totalError));
+        toUpdate.add(new Double(PID.pwrP));
+        toUpdate.add(new Double(PID.pwrI));
+        toUpdate.add(new Double(PID.pwrD));*/
+/*
+        logger.UpdateLog(Long.toString(System.nanoTime()) + ","
+                + Double.toString(PID.m_deltaTime) + ","
+                + Double.toString(pose.getOdometer()) + ","
+                + Double.toString(PID.m_error) + ","
+                + Double.toString(PID.m_totalError) + ","
+                + Double.toString(PID.pwrP) + ","
+                + Double.toString(PID.pwrI) + ","
+                + Double.toString(PID.pwrD) + ","
+                + Double.toString(correction));
+        motorLeft.setPower(pwr + correction);
+        motorRight.setPower(pwr - correction);
+*/
+        driveMixer(pwr, 0, correction);
+    }
+
+
 
     public void RotatePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
@@ -289,12 +338,12 @@ public class Pose
         RotatePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
     }
 
-    public boolean RotateIMU(double targetAngle, double maxTime){
+    public boolean RotateIMU(double targetAngle, double maxTime){ //uses default pose PID constants and has end conditions
         if(!turnTimerInit){
             turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
             turnTimerInit = true;
         }
-        RotatePID(KpDrive, KiDrive, KdDrive, 0, poseHeading, targetAngle); //if the robot turns within a threshold of the target
+        RotateIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle); //if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
             return true;
@@ -304,6 +353,18 @@ public class Pose
             return true;
         }
         return false;
+    }
+    public void MaintainHeading(boolean buttonState){
+        if(buttonState) {
+            if (!maintainHeadingInit) {
+                poseSavedHeading = poseHeading;
+                maintainHeadingInit = true;
+            }
+            RotateIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading);
+        }
+        if(!buttonState){
+            maintainHeadingInit = false;
+        }
     }
 
     public void setZeroHeading(){
@@ -542,13 +603,13 @@ public class Pose
         return TPM_Forward;
     }
 
-    public void setTPM_Forward(long TPM_Forward) {
-        this.TPM_Forward = (int)TPM_Forward;
-    }
+    public void setTPM_Forward(long TPM_Forward) { this.TPM_Forward = (int)TPM_Forward; }
 
     public long getTPM_Strafe() {
         return TPM_Strafe;
     }
+
+    public void setTPM_Strafe(long TPM_Strafe) { this.TPM_Strafe = (int)TPM_Strafe; }
 
     public void setTicksPerMeterLeft(long TPM_Strafe) {
         this.TPM_Strafe = (int)TPM_Strafe;

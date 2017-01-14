@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Created by tycho on 11/18/2016.
  */
 
-public class scoringSystem {
+public class ParticleSystem {
     private int position = 0; //range of 1-1120
     private int speed = 0; //ticks per second
     private int backupSpeed = -1;
@@ -22,14 +22,14 @@ public class scoringSystem {
     private double powerConveyor = 0;
     private long flingTimer = 0;
 
-    public scoringSystem(DcMotor motorFlinger, DcMotor motorConveyor){
+    public ParticleSystem(DcMotor motorFlinger, DcMotor motorConveyor){
         position = 0;
         this.motorFlinger = motorFlinger;
         this.motorConveyor = motorConveyor;
         resetFlinger();
     }
 
-    public scoringSystem(int ticksPerSec, DcMotor motorFlinger, DcMotor motorConveyor){
+    public ParticleSystem(int ticksPerSec, DcMotor motorFlinger, DcMotor motorConveyor){
         position = 0;
         this.speed = ticksPerSec;
         this.motorFlinger = motorFlinger;
@@ -37,7 +37,7 @@ public class scoringSystem {
         resetFlinger();
     }
 
-    public scoringSystem(int ticksPerSec, int position, DcMotor motorFlinger, DcMotor motorConveyor){
+    public ParticleSystem(int ticksPerSec, int position, DcMotor motorFlinger, DcMotor motorConveyor){
         this.speed = ticksPerSec;
         this.position = position;
         this.motorFlinger = motorFlinger;
