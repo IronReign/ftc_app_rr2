@@ -108,7 +108,7 @@ public class NewGame_6832 extends LinearOpMode {
 
         configureDashboard();
 
-        while(!isStarted()){
+        while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
                 try {
                     this.wait();
@@ -149,7 +149,7 @@ public class NewGame_6832 extends LinearOpMode {
         }
 
 
-        // Wait for the game to start (driver presses PLAY)
+
         //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
         //todo However, it's clearly not happening at this location any more, so we need to move this comment to where it should be
         runtime.reset();
@@ -210,19 +210,7 @@ public class NewGame_6832 extends LinearOpMode {
     }
 
     public void demo(){
-//        if(toggleAllowed(gamepad1.y, 3)){
-//            runDemo = !runDemo;
-//        }
-//        if(runDemo){
-//            robot.MaintainHeading(gamepad1.a);
-//
-//            if(gamepad1.b){ autonomous(.20); }
-//            else { resetAuto(); }
-//
-//
-//        }
-//        else{ joystickDrive(); }
-        autonomous(.20);
+        robot.MaintainHeading(gamepad1.x);
 
     }
 
@@ -348,7 +336,7 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
                 case 1: //drive forward and shoot in the goal
 
-                    if (robot.driveForward(true, .85, .5)) {
+                    if (robot.driveForward(true, .85, .65)) {
                         robot.resetMotors(true);
                         for (int n = 0; n < flingNumber; n++)
                             robot.particle.fling();
@@ -374,14 +362,21 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 4: //drive up near the first beacon
-
-                    if (robot.driveForward(!isBlue, .75, .65)) {
-                        robot.resetMotors(true);
-                        autoState++;
+                    if(isBlue) {
+                        if (robot.driveForward(!isBlue, .75, .75)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                    }
+                    else{
+                        if (robot.driveForward(!isBlue, 1.35, .75)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
                     }
                     break;
                 case 5: //drive towards the wall in order to press the first beacon
-                    if (robot.driveStrafe(true, .9 , .35)) {
+                    if (robot.driveStrafe(true, .9 , .45)) {
                         robot.resetMotors(true);
                         autoState++;
                     }
@@ -394,10 +389,10 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
                 case 7:
                     if(isBlue){
-                        if(robot.RotateIMU(90, .5)) autoState++;
+                        if(robot.RotateIMU(90, .25)) autoState++;
                     }
                     else{
-                        if(robot.RotateIMU(0, .5)) autoState++;
+                        if(robot.RotateIMU(0, .25)) autoState++;
                     }
                     break;
                 case 8: //press the first beacon
@@ -407,7 +402,7 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 9: //drive up next to the second beacon
-                    if (robot.driveForward(!isBlue, .75, 1)) {
+                    if (robot.driveForward(!isBlue, .85, 1)) {
                         robot.resetMotors(true);
                         autoState++;
                     }
@@ -456,7 +451,7 @@ public class NewGame_6832 extends LinearOpMode {
 
             state--;
             if (state < 0) {
-                state = 5 ;
+                state = 7 ;
             }
             robot.resetMotors(true);
             active = false;
@@ -466,7 +461,7 @@ public class NewGame_6832 extends LinearOpMode {
         if (toggleAllowed(gamepad1.right_bumper,9)) {
 
             state++;
-            if (state > 5) {
+            if (state > 7) {
                 state = 0;
             }
             robot.resetMotors(true);
@@ -490,7 +485,7 @@ public class NewGame_6832 extends LinearOpMode {
                 autoState++;
                 break;
             case 1:
-                if(robot.driveForward(true, 1.75, 1)){
+                if(robot.driveForward(true, 1.35, 1)){
                     robot.resetMotors(true);
                     autoState++;
                 }
@@ -500,12 +495,14 @@ public class NewGame_6832 extends LinearOpMode {
                     robot.particle.fling();
                 }
                 autoState++;
-                robot.motorConveyor.setPower(90);
+                //robot.motorConveyor.setPower(90);
                 break;
             case 3:
-                if(robot.driveForward(true, .5, 1)){
+                if(robot.driveForward(true, .35, 1)){
                     robot.resetMotors(true);
+                    robot.motorConveyor.setPower(0);
                     autoState++;
+                break;
                 }
             default:
                 break;

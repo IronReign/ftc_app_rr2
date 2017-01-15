@@ -846,8 +846,8 @@ public class Pose
         return colorFore == 3;
     }
     public boolean findOpposingColor(boolean isBlue, boolean fromLeft){
-        if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-.07, 0, 0); }
-        else { driveMixer(.07, 0, 0); }
+        if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-.1, 0, 0); }
+        else { driveMixer(.1, 0, 0); }
         if(onOpposingColor(isBlue)){
             return true;
         }
@@ -880,7 +880,7 @@ public class Pose
                 }
                 break;
             case 1:     //stub
-                if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .25, .25)){
+                if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .1, .5)){
 //                    resetMotors();
                     beaconState++;
                 }
@@ -926,21 +926,21 @@ public class Pose
                 }
                 break;
             case 8:     //strafe away from the beacon
-                if(driveStrafe(false, .1, .35)) { beaconState++; }
+                if(driveStrafe(false, .1, .45)) { beaconState++; }
                 break;
             case 9:     //turn back to proper direction
                 if(isBlue){
-                    if(RotateIMU(90, .5)) beaconState++;
+                    if(RotateIMU(90, .25)) beaconState++;
                 }
                 else{
-                    if(RotateIMU(0, .5)) beaconState++;
+                    if(RotateIMU(0, .25)) beaconState++;
                 }
                 break;
             case 10:    //retry all steps from locating the opposing alliance's color to pressing the beacon if
                         //the initial press was unsuccessful
-                if(presserSavedTime > presserTimer)
-                    beaconState = 4;
-                else beaconState++;
+                //if(presserSavedTime > presserTimer)
+                //    beaconState = 4;
+                 beaconState++;
                 break;
             case 11:
                 beaconState = 0;
