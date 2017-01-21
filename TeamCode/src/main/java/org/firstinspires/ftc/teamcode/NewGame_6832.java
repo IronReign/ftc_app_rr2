@@ -200,6 +200,8 @@ public class NewGame_6832 extends LinearOpMode {
                         demo();
                         break;
                     case 7: //autonomous demo mode
+                        testableAuto();
+                        break;
 
                 }
                 robot.updateSensors();
