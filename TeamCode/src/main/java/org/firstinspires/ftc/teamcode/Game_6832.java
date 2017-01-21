@@ -57,7 +57,7 @@ import java.util.Locale;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
+ * the tertiaryAuto or the teleop period of an FTC match. The names of OpModes appear on the menu
  * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
  * class is instantiated on the Robot Controller and executed.
  *
@@ -294,7 +294,7 @@ public class Game_6832 extends LinearOpMode {
                 case -1: //sit and spin - do nothing
                     break;
 
-                case 0: //reset all the motors before starting autonomous
+                case 0: //reset all the motors before starting tertiaryAuto
                     //autoTimer = System.nanoTime() + (long) 30e9;
                     resetMotors();
                     autoState++;

@@ -47,7 +47,7 @@ import java.util.Locale;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
+ * the tertiaryAuto or the teleop period of an FTC match. The names of OpModes appear on the menu
  * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
  * class is instantiated on the Robot Controller and executed.
  *
@@ -166,11 +166,11 @@ public class NewGame_6832 extends LinearOpMode {
             stateSwitch();
             if(active) {
                 switch(state){
-                    case 0: //main autonomous function that scores 1 or 2 balls and toggles both beacons
+                    case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
                         joystickDriveStarted = false;
                         autonomous(1);
                         break;
-                    case 1: //this is the autonomous we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
+                    case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
                         joystickDriveStarted = false;
                         secondaryAuto();
                         break;
@@ -199,7 +199,7 @@ public class NewGame_6832 extends LinearOpMode {
                     case 6: //demo mode
                         demo();
                         break;
-                    case 7: //autonomous demo mode
+                    case 7: //tertiaryAuto demo mode
                         testableAuto();
                         break;
 
@@ -313,10 +313,119 @@ public class NewGame_6832 extends LinearOpMode {
 
     public void resetAuto(){
         autoState = 0;
+        autoTimer = 0;
         robot.ResetTPM();
     }
 
-    public void autonomous(double scaleFactor){
+    public void autonomous(double scaleFactor){ //this auto starts pointed towards the space between the beacons
+        if (autoState == 0)
+            autoTimer = System.nanoTime() + (long) 30e9;
+        if (autoTimer > System.nanoTime()) {
+            switch (autoState) {
+                case -1: //sit and spin - do nothing
+                    break;
+
+                case 0: //reset all the motors before starting autonomous
+                    //autoTimer = System.nanoTime() + (long) 30e9;
+                    robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
+                    robot.setTPM_Strafe((long) (robot.getTPM_Strafe() * scaleFactor));
+                    robot.resetMotors(true);
+                    autoState++;
+                    deadShotSays.play(hardwareMap.appContext, R.raw.a01);
+                    robot.setHeading(45);
+                    break;
+                case 1:
+                    if(robot.driveForward(true, 2, 1)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 2:
+                    if(isBlue){
+                        if(robot.RotateIMU(90, 1.5)) autoState++;
+                    }
+                    else{
+                        if(robot.RotateIMU(0, 1.5)) autoState++;
+                    }
+                    break;
+                case 3:
+                    if(robot.driveStrafe(true, .5, .35)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 4:
+                    autoState++;
+                    break;
+                case 5:
+                    autoState++;
+                    break;
+                case 6:
+                    if (robot.driveStrafe(false, .05 , .45)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 7:
+                    if(isBlue){
+                        if(robot.RotateIMU(90, .25)) autoState++;
+                    }
+                    else{
+                        if(robot.RotateIMU(0, .25)) autoState++;
+                    }
+                    break;
+                case 8: //press the first beacon
+                    if (robot.pressAllianceBeacon(isBlue, false)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 9: //drive up next to the second beacon
+                    if (robot.driveForward(!isBlue, .85, 1)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 10: //press the second beacon
+                    if (robot.pressAllianceBeacon(isBlue, true)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                case 11:
+                    if(robot.driveForward(isBlue, .5, .65)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 12:
+                    if(isBlue){
+                        if(robot.RotateIMU(180, .25)) autoState++;
+                    }
+                    else{
+                        if(robot.RotateIMU(90, .25)) autoState++;
+                    }
+                    break;
+                case 13:
+                    if(robot.driveForward(true, .25, .5)){
+                        robot.resetMotors(true);
+                        for (int n = 0; n < flingNumber; n++)
+                            robot.particle.fling();
+                        autoState++;
+                    }
+                    break;
+                default:
+                    robot.ResetTPM();
+                    break;
+            }
+            robot.particle.updateCollection();
+        }
+        else{
+            robot.particle.emergencyStop();
+            robot.driveMixer(0, 0, 0);
+        }
+    }
+
+    public void tertiaryAuto(double scaleFactor){
         if(autoState == 0)
             autoTimer = System.nanoTime() + (long) 30e9;
         if(autoTimer > System.nanoTime()) {
@@ -324,7 +433,7 @@ public class NewGame_6832 extends LinearOpMode {
                 case -1: //sit and spin - do nothing
                     break;
 
-                case 0: //reset all the motors before starting autonomous
+                case 0: //reset all the motors before starting tertiaryAuto
                     //autoTimer = System.nanoTime() + (long) 30e9;
                     robot.setTPM_Forward((long)(robot.getTPM_Forward() * scaleFactor));
                     robot.setTPM_Strafe((long)(robot.getTPM_Strafe() * scaleFactor));
@@ -457,6 +566,7 @@ public class NewGame_6832 extends LinearOpMode {
             }
             robot.resetMotors(true);
             active = false;
+            resetAuto();
 
         }
 
@@ -468,11 +578,11 @@ public class NewGame_6832 extends LinearOpMode {
             }
             robot.resetMotors(true);
             active = false;
+            resetAuto();
 
         }
 
         if(toggleAllowed(gamepad1.start,10)) {
-
             robot.resetMotors(true);
             active = !active;
 

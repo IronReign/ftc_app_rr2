@@ -869,7 +869,7 @@ public class Pose
 
 
     public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
-        switch(beaconState){                                              // to the alliance color in autonomous
+        switch(beaconState){                                              // to the alliance color in tertiaryAuto
             case 0:
                 if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-scanSpeed, 0, 0); }
                 else { driveMixer(scanSpeed, 0, 0); }
