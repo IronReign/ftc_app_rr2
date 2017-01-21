@@ -509,6 +509,32 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
+    public void testableAuto(){
+        switch(autoState){
+            case 0:
+                robot.resetMotors(true);
+                autoState++;
+                break;
+            case 1:
+                if(robot.driveForward(true, 2, .5)){
+                    robot.resetMotors(true);
+                    autoTimer = System.nanoTime() + (long)1e9;
+                    autoState++;
+                }
+                break;
+            case 2:
+                if(System.nanoTime() > autoTimer) autoState++;
+                break;
+            case 3:
+                if(robot.driveForward(false, 2, .5)){
+                    robot.resetMotors(true);
+                    autoTimer = System.nanoTime() + (long)1e9;
+                    autoState++;
+                }
+                break;
+        }
+    }
+
 
 
     boolean toggleAllowed(boolean button, int buttonIndex)
