@@ -236,7 +236,7 @@ public class Pose
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
+        // this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
 
