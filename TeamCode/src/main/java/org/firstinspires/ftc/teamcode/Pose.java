@@ -101,7 +101,7 @@ public class Pose
     private double displacement;
     private double displacementPrev;
     private double odometer;
-    static double scanSpeed = .35;
+    static double scanSpeed = .25;
     private long presserTimer = 0;
     private long presserSavedTime = 0;
     private double zeroHeading = 0;
@@ -236,7 +236,7 @@ public class Pose
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        // this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -869,7 +869,7 @@ public class Pose
 
 
     public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
-        switch(beaconState){                                              // to the alliance color in tertiaryAuto
+        switch(beaconState){                                              // to the alliance color in tertiaryAu2to
             case 0:
                 if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-scanSpeed, 0, 0); }
                 else { driveMixer(scanSpeed, 0, 0); }
@@ -880,10 +880,10 @@ public class Pose
                 }
                 break;
             case 1:     //stub
-                if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .1, .5)){
+                //if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .1, .5)){
 //                    resetMotors();
                     beaconState++;
-                }
+                //}
                 break;
             case 2:     //stub
 //                if(findBeaconPressRange())

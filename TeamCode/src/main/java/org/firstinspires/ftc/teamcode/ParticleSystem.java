@@ -14,10 +14,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class ParticleSystem {
     private int position = 0; //range of 1-1120
     private int speed = 0; //ticks per second
+
     private int backupSpeed = -1;
     DcMotor motorFlinger = null;
     DcMotor motorConveyor = null;
-    private double power = 0;
+    private double power = .65;
     static int ticksPerRot = 1680;
     private double powerConveyor = 0;
     private long flingTimer = 0;
@@ -72,7 +73,7 @@ public class ParticleSystem {
         motorFlinger.setPower(1);
     }
     public void fling(){
-        motorConveyor.setPower(-1);
+        motorConveyor.setPower(-power);
         flingTimer = System.nanoTime() + 200000000;
         while(flingTimer > System.nanoTime()){ powerConveyor = -1; }
         motorConveyor.setPower(0);
@@ -89,22 +90,22 @@ public class ParticleSystem {
         motorConveyor.setPower(0);
         flingTimer = System.nanoTime() + 500000000;
         while(flingTimer > System.nanoTime()){ powerConveyor = 0; }
-        motorConveyor.setPower(1);
+        motorConveyor.setPower(power);
         flingTimer = System.nanoTime() + 1000000000;
-        while(flingTimer > System.nanoTime()){ powerConveyor = 1; }
+        while(flingTimer > System.nanoTime()){ powerConveyor = power; }
         powerConveyor = 0;
     }
 
     public void collect(){
         if (powerConveyor == 0)
-            powerConveyor = 1;
+            powerConveyor = power;
         else
             powerConveyor = 0;
     }
 
     public void eject(){
         if (powerConveyor == 0)
-            powerConveyor = -1;
+            powerConveyor = -power;
         else
             powerConveyor = 0;
     }
