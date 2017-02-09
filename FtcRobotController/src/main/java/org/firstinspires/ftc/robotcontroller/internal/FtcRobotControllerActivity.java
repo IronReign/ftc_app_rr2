@@ -45,6 +45,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -94,6 +95,23 @@ import org.firstinspires.inspection.RcInspectionActivity;
 import java.io.File;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 public class FtcRobotControllerActivity extends Activity {
 
@@ -196,6 +214,12 @@ public class FtcRobotControllerActivity extends Activity {
     super.onCreate(savedInstanceState);
     RobotLog.writeLogcatToDisk();
     RobotLog.vv(TAG, "onCreate()");
+
+    if (!OpenCVLoader.initDebug()) {
+      Log.e(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), not working.");
+    } else {
+      Log.d(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), working.");
+    }
 
     receivedUsbAttachmentNotifications = new ConcurrentLinkedQueue<UsbDevice>();
     eventLoop = null;
