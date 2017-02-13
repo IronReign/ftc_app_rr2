@@ -37,6 +37,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
+import com.vuforia.PIXEL_FORMAT;
+import com.vuforia.Image;
+
+import android.graphics.Bitmap;
+import android.util.Log;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.MatrixF;
@@ -49,6 +54,24 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +108,7 @@ import java.util.List;
  */
 
 @Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
-@Disabled
+//@Disabled
 public class ConceptVuforiaNavigation extends LinearOpMode {
 
     public static final String TAG = "Vuforia Sample";
@@ -98,7 +121,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
      */
     VuforiaLocalizer vuforia;
 
-    @Override public void runOpMode() {
+    @Override public void runOpMode() throws InterruptedException {
         /**
          * Start up Vuforia, telling it the id of the view that we wish to use as the parent for
          * the camera monitor feedback; if no camera monitor feedback is desired, use the parameterless
@@ -126,6 +149,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         parameters.vuforiaLicenseKey = "ATL6i4D/////AAAAGTkmmlOAlE6bi5wxY+GFDEYkiReJ4JoLKVqIj7L5JPEFanFxDXGWvNPh5QR4YboR1fVEnH7msYfNfuIiuARyXfZFlOWBYQ7PYL7s6zhTc7dDhxeF/HKTiiNUsnS2ahWhMbOyOQcwERpRwjTOONg1gcObtCJWVHHui3EphLOLOUFsumD5jQ4V7SkAnQ8MpIOHM8ntNJ0cwcO2TYGWp7rhYwaX5pywNiFcTHn4/9QVSLjnWnA+iN8jypntxolwNAsYILKDTS+8vRgbOnNQWK/RTkEHDZxV0We627e/AINsgGQzwKb0cITEhnQDStnZJPAxv6mVY4+ssmng7ezD/M+JkiqrZhmtlk5mHx5+MTC+anMs";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
+
 
         /**
          * Load the data sets that for the trackable objects we wish to track. These particular data
@@ -288,13 +312,48 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
         /** Wait for the game to begin */
         telemetry.addData(">", "Press Play to start tracking");
+        telemetry.addData("OpenCV", Core.NATIVE_LIBRARY_NAME);
         telemetry.update();
         waitForStart();
+
+
 
         /** Start tracking the data sets we care about. */
         stonesAndChips.activate();
 
+
         while (opModeIsActive()) {
+            Log.d(TAG,"This opModeIsActive while I see a stream of these messages");
+            Image rgb = null;
+            Mat img = null;
+
+            VuforiaLocalizer.CloseableFrame frame = null;
+            frame = vuforia.getFrameQueue().take(); //takes the frame at the head of the queue    <-----  If I uncomment this the code crashes the linearOpMode even through the Vuforia tracking is still showing on robot controller screen
+
+            if (frame != null) {
+                long numImages = frame.getNumImages();
+                Log.d(TAG,String.valueOf(numImages));
+
+                for (int i = 0; i < numImages; i++) {
+                    if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
+                        rgb = frame.getImage(i);
+                        break;
+                    }
+                }
+
+                if (rgb != null) {
+                    Bitmap bmp = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
+                    bmp.copyPixelsFromBuffer(rgb.getPixels());
+
+                    img = new Mat();
+                    Utils.bitmapToMat(bmp, img);
+                    telemetry.addData("Img", "Converted");
+                    telemetry.update();
+                }
+
+                frame.close(); //doesn't seem to matter if this is present or not
+                }//if frame null
+            telemetry.update();
 
             for (VuforiaTrackable trackable : allTrackables) {
                 /**
@@ -319,8 +378,10 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                 telemetry.addData("Pos", "Unknown");
             }
             telemetry.update();
-        }
-    }
+
+
+        }//while opmodeactive
+    }//runopmode
 
     /**
      * A simple utility that extracts positioning information from a transformation matrix

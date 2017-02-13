@@ -44,14 +44,14 @@ public class Pose
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
-    DcMotor motorFrontLeft = null;
+    DcMotor motorFrontLeft  = null;
     DcMotor motorFrontRight = null;
-    DcMotor motorBackLeft = null;
-    DcMotor motorBackRight = null;
-    DcMotor motorConveyor = null;
-    DcMotor motorFlinger = null;
-    DcMotor motorLift = null;
-    Servo   pushButton = null;
+    DcMotor motorBackLeft   = null;
+    DcMotor motorBackRight  = null;
+    DcMotor motorConveyor   = null;
+    DcMotor motorLauncher   = null;
+    DcMotor motorLift       = null;
+    Servo servoGate         = null;
 
     BNO055IMU imu;
     Orientation angles;
@@ -72,19 +72,19 @@ public class Pose
     double beaconDistAft; //holds most recent linearized distance reading from ODS sensor
     double beaconDistFore;
 
-    private double powerFrontLeft = 0;
+    private double powerFrontLeft  = 0;
     private double powerFrontRight = 0;
-    private double powerBackLeft = 0;
-    private double powerBackRight = 0;
-    private double powerConveyor = 0;
+    private double powerBackLeft   = 0;
+    private double powerBackRight  = 0;
+    private double powerConveyor   = 0;
 
     public ParticleSystem particle = null;
     public CapTrap cap = null;
 
     private long flingTimer = 0;
-    private int flingSpeed = 5000; //ticks per second
+    private int flingSpeed  = 5000; //ticks per second
     private int TPM_Forward = 2439; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
-    private int TPM_Strafe = 3145 ; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int TPM_Strafe  = 3145 ; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
 
     private double poseX;
     private double poseY;
@@ -209,14 +209,14 @@ public class Pose
          * to 'get' must correspond to the names assigned during the robot configuration
          * step (using the FTC Robot Controller app on the phone).
          */
-        this.motorFrontLeft = this.hwMap.dcMotor.get("motorFrontLeft");
+        this.motorFrontLeft  = this.hwMap.dcMotor.get("motorFrontLeft");
         this.motorFrontRight = this.hwMap.dcMotor.get("motorFrontRight");
-        this.motorBackLeft = this.hwMap.dcMotor.get("motorBackLeft");
-        this.motorBackRight = this.hwMap.dcMotor.get("motorBackRight");
-        this.motorConveyor = this.hwMap.dcMotor.get("motorConveyor");
-        this.motorFlinger = this.hwMap.dcMotor.get("motorFlinger");
-        this.motorLift = this.hwMap.dcMotor.get("motorLift");
-        this.pushButton = this.hwMap.servo.get("mjolnir");
+        this.motorBackLeft   = this.hwMap.dcMotor.get("motorBackLeft");
+        this.motorBackRight  = this.hwMap.dcMotor.get("motorBackRight");
+        this.motorConveyor   = this.hwMap.dcMotor.get("motorConveyor");
+        this.motorLauncher   = this.hwMap.dcMotor.get("motorLauncher");
+        this.motorLift       = this.hwMap.dcMotor.get("motorLift");
+        this.servoGate       = this.hwMap.servo.get("servoGate");
 
         // get a reference to our distance sensors
         beaconPresentRear = hwMap.opticalDistanceSensor.get("beaconPresentRear");
@@ -237,12 +237,13 @@ public class Pose
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.motorFlinger.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
-        this.particle = new ParticleSystem(flingSpeed, motorFlinger, motorConveyor);
+        this.particle = new ParticleSystem(flingSpeed, motorLauncher, motorConveyor, servoGate);
         this.cap = new CapTrap(motorLift);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
@@ -905,7 +906,7 @@ public class Pose
                 break;
             case 6:     //begins moving sideways in order to press the beacon and sets a timer to stop moving if the
                         //beacon takes too long to switch
-//                pushButton.setPosition(ServoNormalize(pressedPosition));
+//                servoGate.setPosition(ServoNormalize(pressedPosition));
 //                presserTimer = System.nanoTime() + (long) 2e9;
 //                beaconState++;
                 driveMixer(0, .35, 0);

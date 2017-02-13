@@ -91,8 +91,8 @@ public class TeleOp_6832 extends LinearOpMode {
     static final private long toggleLockout = (long)3e8; // fractional second lockout between all toggle button
     private long toggleOKTime = 0; //when should next toggle be allowed
 
-    private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
-    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
+    private int pressedPosition = 750; //Note: find servo position value for pressing position on servoGate
+    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on servoGate
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -108,7 +108,7 @@ public class TeleOp_6832 extends LinearOpMode {
         this.motorBackLeft = this.hardwareMap.dcMotor.get("motorBackLeft");
         this.motorBackRight = this.hardwareMap.dcMotor.get("motorBackRight");
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
-        this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
+        this.motorFlinger = this.hardwareMap.dcMotor.get("motorLauncher");
 
        // floorSensor = hardwareMap.i2cDevice.get("floorSensor");
        // beaconSensor = hardwareMap.i2cDevice.get("beaconSensor");

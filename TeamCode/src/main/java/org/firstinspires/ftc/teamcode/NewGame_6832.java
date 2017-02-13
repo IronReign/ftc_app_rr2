@@ -95,8 +95,8 @@ public class NewGame_6832 extends LinearOpMode {
     private boolean runBeaconTestLeft = true;
 
 
-    private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
-    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
+    private int pressedPosition = 750; //Note: find servo position value for pressing position on servoGate
+    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on servoGate
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -255,7 +255,13 @@ public class NewGame_6832 extends LinearOpMode {
         if(toggleAllowed(gamepad1.x,2)) {
 
 
-            robot.particle.fling();
+            robot.particle.launch();
+
+        }
+
+        if(toggleAllowed(gamepad1.y,3)) {
+
+            robot.particle.spinUp();
 
         }
 //

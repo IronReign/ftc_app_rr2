@@ -135,8 +135,8 @@ public class Game_6832 extends LinearOpMode {
     //private boolean[] buttonCurrentState = new boolean[8];
     private boolean slowMode = false;
 
-    private int pressedPosition = 750; //Note: find servo position value for pressing position on pushButton
-    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on pushButton
+    private int pressedPosition = 750; //Note: find servo position value for pressing position on servoGate
+    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on servoGate
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -152,7 +152,7 @@ public class Game_6832 extends LinearOpMode {
         this.motorBackLeft = this.hardwareMap.dcMotor.get("motorBackLeft");
         this.motorBackRight = this.hardwareMap.dcMotor.get("motorBackRight");
         this.motorConveyor = this.hardwareMap.dcMotor.get("motorConveyor");
-        this.motorFlinger = this.hardwareMap.dcMotor.get("motorFlinger");
+        this.motorFlinger = this.hardwareMap.dcMotor.get("motorLauncher");
         this.pushButton = this.hardwareMap.servo.get("mjolnir");
 
         // get a reference to our distance sensors
