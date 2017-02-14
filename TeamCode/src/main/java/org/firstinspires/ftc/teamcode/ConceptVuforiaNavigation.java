@@ -121,7 +121,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
      */
     VuforiaLocalizer vuforia;
 
-    @Override public void runOpMode() throws InterruptedException {
+    @Override public void runOpMode() {
         /**
          * Start up Vuforia, telling it the id of the view that we wish to use as the parent for
          * the camera monitor feedback; if no camera monitor feedback is desired, use the parameterless
@@ -149,6 +149,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         parameters.vuforiaLicenseKey = "ATL6i4D/////AAAAGTkmmlOAlE6bi5wxY+GFDEYkiReJ4JoLKVqIj7L5JPEFanFxDXGWvNPh5QR4YboR1fVEnH7msYfNfuIiuARyXfZFlOWBYQ7PYL7s6zhTc7dDhxeF/HKTiiNUsnS2ahWhMbOyOQcwERpRwjTOONg1gcObtCJWVHHui3EphLOLOUFsumD5jQ4V7SkAnQ8MpIOHM8ntNJ0cwcO2TYGWp7rhYwaX5pywNiFcTHn4/9QVSLjnWnA+iN8jypntxolwNAsYILKDTS+8vRgbOnNQWK/RTkEHDZxV0We627e/AINsgGQzwKb0cITEhnQDStnZJPAxv6mVY4+ssmng7ezD/M+JkiqrZhmtlk5mHx5+MTC+anMs";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
+        vuforia.setFrameQueueCapacity(1);
 
 
         /**
@@ -156,19 +157,24 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * sets are stored in the 'assets' part of our application (you'll see them in the Android
          * Studio 'Project' view over there on the left of the screen). You can make your own datasets
          * with the Vuforia Target Manager: https://developer.vuforia.com/target-manager. PDFs for the
-         * example "StonesAndChips", datasets can be found in in this project in the
+         * example "FTC_201617", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables stonesAndChips = this.vuforia.loadTrackablesFromAsset("StonesAndChips");
-        VuforiaTrackable redTarget = stonesAndChips.get(0);
+        VuforiaTrackables beaconTargets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
+        beaconTargets.get(0).setName("Wheels");
+        beaconTargets.get(1).setName("Tools");
+        beaconTargets.get(2).setName("Lego");
+        beaconTargets.get(3).setName("Gears");
+
+        VuforiaTrackable redTarget = beaconTargets.get(3);
         redTarget.setName("RedTarget");  // Stones
 
-        VuforiaTrackable blueTarget  = stonesAndChips.get(1);
+        VuforiaTrackable blueTarget  = beaconTargets.get(1);
         blueTarget.setName("BlueTarget");  // Chips
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
-        allTrackables.addAll(stonesAndChips);
+        allTrackables.addAll(beaconTargets);
 
         /**
          * We use units of mm here because that's the recommended units of measurement for the
@@ -319,39 +325,48 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
 
         /** Start tracking the data sets we care about. */
-        stonesAndChips.activate();
+        beaconTargets.activate();
 
 
         while (opModeIsActive()) {
-            Log.d(TAG,"This opModeIsActive while I see a stream of these messages");
+
             Image rgb = null;
             Mat img = null;
 
             VuforiaLocalizer.CloseableFrame frame = null;
-            frame = vuforia.getFrameQueue().take(); //takes the frame at the head of the queue    <-----  If I uncomment this the code crashes the linearOpMode even through the Vuforia tracking is still showing on robot controller screen
 
-            if (frame != null) {
-                long numImages = frame.getNumImages();
-                Log.d(TAG,String.valueOf(numImages));
+            try {
+                frame = vuforia.getFrameQueue().take(); //takes the frame at the head of the queue    <-----  If I uncomment this the code crashes the linearOpMode even through the Vuforia tracking is still showing on robot controller screen
 
-                for (int i = 0; i < numImages; i++) {
-                    if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
-                        rgb = frame.getImage(i);
-                        break;
+
+                if (frame != null) {
+                    long numImages = frame.getNumImages();
+                    Log.d(TAG, String.valueOf(numImages));
+
+                    for (int i = 0; i < numImages; i++) {
+                        if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
+                            rgb = frame.getImage(i);
+                            break;
+                        }
                     }
+
+                    if (rgb != null) {
+                        Bitmap bmp = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
+                        bmp.copyPixelsFromBuffer(rgb.getPixels());
+
+                        img = new Mat();
+                        Utils.bitmapToMat(bmp, img);
+                        telemetry.addData("Img", "Converted");
+                        telemetry.update();
+                    }
+
+                    frame.close(); //doesn't seem to matter if this is present or not
                 }
+            }
+                catch (Exception e) {
 
-                if (rgb != null) {
-                    Bitmap bmp = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
-                    bmp.copyPixelsFromBuffer(rgb.getPixels());
+                    Log.d(TAG, e.toString());
 
-                    img = new Mat();
-                    Utils.bitmapToMat(bmp, img);
-                    telemetry.addData("Img", "Converted");
-                    telemetry.update();
-                }
-
-                frame.close(); //doesn't seem to matter if this is present or not
                 }//if frame null
             telemetry.update();
 
