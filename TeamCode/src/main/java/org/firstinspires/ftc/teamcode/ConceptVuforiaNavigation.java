@@ -336,7 +336,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
             VuforiaLocalizer.CloseableFrame frame = null;
 
             try {
-                frame = vuforia.getFrameQueue().take(); //takes the frame at the head of the queue    <-----  If I uncomment this the code crashes the linearOpMode even through the Vuforia tracking is still showing on robot controller screen
+                frame = vuforia.getFrameQueue().take(); //takes the frame at the head of the queue
 
 
                 if (frame != null) {

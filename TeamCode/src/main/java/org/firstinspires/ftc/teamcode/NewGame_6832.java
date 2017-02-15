@@ -254,7 +254,6 @@ public class NewGame_6832 extends LinearOpMode {
 
         if(toggleAllowed(gamepad1.x,2)) {
 
-
             robot.particle.launch();
 
         }

@@ -24,7 +24,7 @@ public class ParticleSystem {
     static int gateOpen         = 2250;
     private double collectPower = .65;
     private double ejectPower   = -.65;
-    private double launchPower = .65;
+    private double launchPower = 1;
 
     public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate){
         this.position      = 0;
@@ -73,10 +73,10 @@ public class ParticleSystem {
 
     public void resetFlinger(){
         motorLauncher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLauncher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorLauncher.setMaxSpeed(speed);
         setPosition(0);
-        motorLauncher.setPower(1);
+        motorLauncher.setPower(0);
     }
 
     public void fling(){
@@ -112,14 +112,14 @@ public class ParticleSystem {
 
     public void collect(){
         if (powerConveyor == 0)
-            powerConveyor = powerLauncher;
+            powerConveyor = collectPower/2;
         else
             powerConveyor = 0;
     }
 
     public void eject(){
         if (powerConveyor == 0)
-            powerConveyor = -powerLauncher;
+            powerConveyor = ejectPower;
         else
             powerConveyor = 0;
     }
@@ -127,11 +127,11 @@ public class ParticleSystem {
     public void launch(){
         if(servoGate.getPosition() == ServoNormalize(gateClosed)) {
             servoGate.setPosition(gateOpen);
-            motorConveyor.setPower(collectPower);
+            powerConveyor = collectPower/2;
         }
         else{
             servoGate.setPosition(gateClosed);
-            motorConveyor.setPower(0);
+            powerConveyor = 0;
          }
     }
 
