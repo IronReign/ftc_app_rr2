@@ -20,8 +20,8 @@ public class ParticleSystem {
     static int ticksPerRot       = 1680;
     private long flingTimer      = 0;
 
-    static int gateClosed       = 750;
-    static int gateOpen         = 2250;
+    static int gateClosed       = 2150;
+    static int gateOpen         = 1150;
     private double collectPower = .65;
     private double ejectPower   = -.65;
     private double launchPower = 1;
