@@ -166,12 +166,17 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         beaconTargets.get(2).setName("Lego");
         beaconTargets.get(3).setName("Gears");
 
-        VuforiaTrackable redTarget = beaconTargets.get(3);
-        redTarget.setName("RedTarget");  // Stones
+        VuforiaTrackable redNearTarget = beaconTargets.get(3);
+        redNearTarget.setName("redNear");  // Gears
 
-        VuforiaTrackable blueTarget  = beaconTargets.get(1);
-        blueTarget.setName("BlueTarget");  // Chips
+        VuforiaTrackable blueNearTarget  = beaconTargets.get(0);
+        blueNearTarget.setName("blueNear");  // Wheels
 
+        VuforiaTrackable redFarTarget = beaconTargets.get(1);
+        redFarTarget.setName("redFar");  // Tools
+
+        VuforiaTrackable blueFarTarget  = beaconTargets.get(2);
+        blueFarTarget.setName("blueFar");  // Legos
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
         allTrackables.addAll(beaconTargets);
@@ -186,6 +191,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         float mmPerInch        = 25.4f;
         float mmBotWidth       = 18 * mmPerInch;            // ... or whatever is right for your robot
         float mmFTCFieldWidth  = (12*12 - 2) * mmPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
+        float mmTargetHeight    = 173.0f;
 
         /**
          * In order for localization to work, we need to tell the system where each target we
@@ -245,30 +251,54 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          */
         OpenGLMatrix redTargetLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the RED WALL. Our translation here
-                is a negative translation in X.*/
-                .translation(-mmFTCFieldWidth/2, 0, 0)
+                is a negative translation in X.
+                nearRed is also translated 1 ft negative toward drivers*/
+                .translation(-mmFTCFieldWidth/2, -1 * mmPerInch, mmTargetHeight/2)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 90, 0));
-        redTarget.setLocation(redTargetLocationOnField);
-        RobotLog.ii(TAG, "Red Target=%s", format(redTargetLocationOnField));
+        redNearTarget.setLocation(redTargetLocationOnField);
+        RobotLog.ii(TAG, "RedNear Target=%s", format(redTargetLocationOnField));
+
+        OpenGLMatrix redFarTargetLocationOnField = OpenGLMatrix
+                /* Then we translate the target off to the RED WALL. Our translation here
+                is a negative translation in X.
+                farRed is also translated 3 ft toward audience on Y*/
+                .translation(-mmFTCFieldWidth/2, 3 * mmPerInch, mmTargetHeight/2)
+                .multiplied(Orientation.getRotationMatrix(
+                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
+                        AxesReference.EXTRINSIC, AxesOrder.XZX,
+                        AngleUnit.DEGREES, 90, 90, 0));
+        redNearTarget.setLocation(redTargetLocationOnField);
+        RobotLog.ii(TAG, "RedFar Target=%s", format(redFarTargetLocationOnField));
 
        /*
         * To place the Stones Target on the Blue Audience wall:
         * - First we rotate it 90 around the field's X axis to flip it upright
         * - Finally, we translate it along the Y axis towards the blue audience wall.
         */
-        OpenGLMatrix blueTargetLocationOnField = OpenGLMatrix
+        OpenGLMatrix blueNearTargetLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the Blue Audience wall.
                 Our translation here is a positive translation in Y.*/
-                .translation(0, mmFTCFieldWidth/2, 0)
+                .translation(1 * mmPerInch, mmFTCFieldWidth/2, mmTargetHeight/2)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 0, 0));
-        blueTarget.setLocation(blueTargetLocationOnField);
-        RobotLog.ii(TAG, "Blue Target=%s", format(blueTargetLocationOnField));
+        blueNearTarget.setLocation(blueNearTargetLocationOnField);
+        RobotLog.ii(TAG, "BlueNear Target=%s", format(blueNearTargetLocationOnField));
+
+        OpenGLMatrix blueFarTargetLocationOnField = OpenGLMatrix
+                /* Then we translate the target off to the Blue Audience wall.
+                Our translation here is a positive translation in Y.*/
+                .translation(-3 * mmPerInch, mmFTCFieldWidth/2, mmTargetHeight/2)
+                .multiplied(Orientation.getRotationMatrix(
+                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
+                        AxesReference.EXTRINSIC, AxesOrder.XZX,
+                        AngleUnit.DEGREES, 90, 0, 0));
+        blueNearTarget.setLocation(blueFarTargetLocationOnField);
+        RobotLog.ii(TAG, "BlueFar Target=%s", format(blueFarTargetLocationOnField));
 
         /**
          * Create a transformation matrix describing where the phone is on the robot. Here, we
@@ -294,8 +324,10 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
          */
-        ((VuforiaTrackableDefaultListener)redTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)blueTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)redNearTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)redFarTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)blueNearTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)blueFarTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
 
         /**
          * A brief tutorial: here's how all the math is going to work:
