@@ -10,15 +10,19 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class ParticleSystem {
     DcMotor motorLauncher = null;
     DcMotor motorConveyor = null;
-    Servo servoGate       = null;
+    Servo   servoGate     = null;
 
-    private int position         = 0; //range of 1-1120
-    private int speed            = 0; //ticks per second
-    private int backupSpeed      = -1;
-    private double powerLauncher = 0;
-    private double powerConveyor = 0;
-    static int ticksPerRot       = 1680;
-    private long flingTimer      = 0;
+    private int position           = 0; //range of 1-1120
+    private int speed              = 0; //ticks per second
+    private int backupSpeed        = -1;
+    private double powerLauncher   = 0;
+    private double powerConveyor   = 0;
+    static  int ticksPerRot        = 1680;
+    private long flingTimer        = 0;
+    private int launchState = 0;
+    private long prevTime          = 0;
+    public  float flywheelSpeed    = 0;
+    private long prevFlywheelTicks = 0;
 
     private double gateClosed    = ServoNormalize(2150);
     private double gateOpen      = ServoNormalize(1150);
@@ -32,6 +36,7 @@ public class ParticleSystem {
         this.motorLauncher = motorLauncher;
         this.motorConveyor = motorConveyor;
         this.servoGate     = servoGate;
+        motorConveyor.setMaxSpeed(1500);
         resetFlinger();
     }
 
@@ -41,6 +46,7 @@ public class ParticleSystem {
         this.motorLauncher = motorLauncher;
         this.motorConveyor = motorConveyor;
         this.servoGate     = servoGate;
+        motorConveyor.setMaxSpeed(1500);
         resetFlinger();
     }
 
@@ -50,6 +56,7 @@ public class ParticleSystem {
         this.motorLauncher = motorLauncher;
         this.motorConveyor = motorConveyor;
         this.servoGate     = servoGate;
+        motorConveyor.setMaxSpeed(1500);
         resetFlinger();
     }
 
@@ -126,20 +133,47 @@ public class ParticleSystem {
     }
 
     public void launch(){
-        if(servoPosition == gateClosed) {
-            servoPosition = gateOpen;
-            powerConveyor = collectPower/6;
+//        if(servoPosition == gateClosed) {
+//            servoPosition = gateOpen;
+//            powerConveyor = collectPower/3;
+//        }
+//        else{
+//            servoPosition = gateClosed;
+//            powerConveyor = 0;
+//        }
+//        switch(launchState){
+//            case 0:
+//
+//                break;
+//            default:
+//
+//        }
+        if(flywheelSpeed > 800){
+            powerConveyor = collectPower / 2;
         }
-        else{
+        else powerConveyor = 0;
+    }
+
+    public void toggleGate(boolean open){
+        if(open)
+            servoPosition = gateOpen;
+        else
             servoPosition = gateClosed;
-            powerConveyor = 0;
-         }
+    }
+    public void stopConveyor(){
+        powerConveyor = 0;
+    }
+    public void setConveyorMode(DcMotor.RunMode mode){
+        motorConveyor.setMode(mode);
     }
 
     public void updateCollection(){
         motorLauncher.setPower(powerLauncher);
         motorConveyor.setPower(powerConveyor);
         servoGate.setPosition(servoPosition);
+        flywheelSpeed = (float)(motorLauncher.getCurrentPosition() - prevFlywheelTicks)/(((System.nanoTime() - prevTime)/(float)(1e9))); //returns ticks per second
+        prevFlywheelTicks = motorLauncher.getCurrentPosition();
+        prevTime = System.nanoTime();
     }
 
     public void emergencyStop(){

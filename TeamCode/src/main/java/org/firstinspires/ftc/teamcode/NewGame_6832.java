@@ -80,6 +80,7 @@ public class NewGame_6832 extends LinearOpMode {
     private int beaconState = 0;
 
     private int flingNumber = 0;
+    private boolean shouldLaunch = false;
     private boolean isBlue = false;
 
     Orientation angles;
@@ -254,7 +255,11 @@ public class NewGame_6832 extends LinearOpMode {
 
         if(toggleAllowed(gamepad1.x,2)) {
 
-            robot.particle.launch();
+            shouldLaunch = !shouldLaunch;
+            robot.particle.toggleGate(shouldLaunch);
+            if(!shouldLaunch){
+                robot.particle.stopConveyor();
+            }
 
         }
 
@@ -315,6 +320,9 @@ public class NewGame_6832 extends LinearOpMode {
 
         else
             robot.cap.stop();
+        if(shouldLaunch){
+            robot.particle.launch();
+        }
         robot.particle.updateCollection();
     }
 
@@ -766,6 +774,12 @@ public class NewGame_6832 extends LinearOpMode {
                 .addData("state", new Func<String>() {
                     @Override public String value() {
                         return Integer.toString(state);
+                    }
+                })
+                .addData("Flywheel Speed", new Func<String>() {
+                    @Override public String value() {
+
+                        return Float.toString(robot.particle.flywheelSpeed);
                     }
                 });
 
