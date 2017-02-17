@@ -20,11 +20,12 @@ public class ParticleSystem {
     static int ticksPerRot       = 1680;
     private long flingTimer      = 0;
 
-    static int gateClosed       = 2150;
-    static int gateOpen         = 1150;
-    private double collectPower = .65;
-    private double ejectPower   = -.65;
-    private double launchPower = 1;
+    private double gateClosed    = ServoNormalize(2150);
+    private double gateOpen      = ServoNormalize(1150);
+    private double servoPosition = gateClosed;
+    private double collectPower  = .65;
+    private double ejectPower    = -.65;
+    private double launchPower   = 1;
 
     public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate){
         this.position      = 0;
@@ -112,7 +113,7 @@ public class ParticleSystem {
 
     public void collect(){
         if (powerConveyor == 0)
-            powerConveyor = collectPower/2;
+            powerConveyor = collectPower;
         else
             powerConveyor = 0;
     }
@@ -125,12 +126,12 @@ public class ParticleSystem {
     }
 
     public void launch(){
-        if(servoGate.getPosition() == ServoNormalize(gateClosed)) {
-            servoGate.setPosition(gateOpen);
-            powerConveyor = collectPower/2;
+        if(servoPosition == gateClosed) {
+            servoPosition = gateOpen;
+            powerConveyor = collectPower/6;
         }
         else{
-            servoGate.setPosition(gateClosed);
+            servoPosition = gateClosed;
             powerConveyor = 0;
          }
     }
@@ -138,6 +139,7 @@ public class ParticleSystem {
     public void updateCollection(){
         motorLauncher.setPower(powerLauncher);
         motorConveyor.setPower(powerConveyor);
+        servoGate.setPosition(servoPosition);
     }
 
     public void emergencyStop(){
