@@ -255,11 +255,12 @@ public class NewGame_6832 extends LinearOpMode {
 
         if(toggleAllowed(gamepad1.x,2)) {
 
-            shouldLaunch = !shouldLaunch;
-            robot.particle.toggleGate(shouldLaunch);
-            if(!shouldLaunch){
-                robot.particle.stopConveyor();
-            }
+//            shouldLaunch = !shouldLaunch;
+//            robot.particle.toggleGate(shouldLaunch);
+//            if(!shouldLaunch){
+//                robot.particle.stopConveyor();
+//            }
+            robot.particle.launch();
 
         }
 
@@ -320,9 +321,9 @@ public class NewGame_6832 extends LinearOpMode {
 
         else
             robot.cap.stop();
-        if(shouldLaunch){
-            robot.particle.launch();
-        }
+//        if(shouldLaunch){
+//            robot.particle.launch();
+//        }
         robot.particle.updateCollection();
     }
 

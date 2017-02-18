@@ -16,10 +16,12 @@ public class ParticleSystem {
     private int speed              = 0; //ticks per second
     private int backupSpeed        = -1;
     private double powerLauncher   = 0;
-    private double powerConveyor   = 0;
+    private int speedConveyor      = 0;
+    private int loadSpeed          = 400;
+    private int collectSpeed       = 3500;
     static  int ticksPerRot        = 1680;
     private long flingTimer        = 0;
-    private int launchState = 0;
+    private int launchState        = 0;
     private long prevTime          = 0;
     public  float flywheelSpeed    = 0;
     private long prevFlywheelTicks = 0;
@@ -27,8 +29,7 @@ public class ParticleSystem {
     private double gateClosed    = ServoNormalize(2150);
     private double gateOpen      = ServoNormalize(1150);
     private double servoPosition = gateClosed;
-    private double collectPower  = .65;
-    private double ejectPower    = -.65;
+    private double powerConveyor  = 1.0;
     private double launchPower   = 1;
 
     public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate){
@@ -36,7 +37,8 @@ public class ParticleSystem {
         this.motorLauncher = motorLauncher;
         this.motorConveyor = motorConveyor;
         this.servoGate     = servoGate;
-        motorConveyor.setMaxSpeed(1500);
+        motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
@@ -46,7 +48,8 @@ public class ParticleSystem {
         this.motorLauncher = motorLauncher;
         this.motorConveyor = motorConveyor;
         this.servoGate     = servoGate;
-        motorConveyor.setMaxSpeed(1500);
+        motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
@@ -56,7 +59,8 @@ public class ParticleSystem {
         this.motorLauncher = motorLauncher;
         this.motorConveyor = motorConveyor;
         this.servoGate     = servoGate;
-        motorConveyor.setMaxSpeed(1500);
+        motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
@@ -90,7 +94,7 @@ public class ParticleSystem {
     public void fling(){
         motorConveyor.setPower(-powerLauncher);
         flingTimer = System.nanoTime() + 200000000;
-        while(flingTimer > System.nanoTime()){ powerConveyor = -1; }
+        while(flingTimer > System.nanoTime()){ speedConveyor = -1; }
         motorConveyor.setPower(0);
         motorLauncher.setMaxSpeed(ticksPerRot);
         if(Math.abs(position) > Math.abs(motorLauncher.getCurrentPosition()) - 15            //prevents incrementing target pos
@@ -104,11 +108,11 @@ public class ParticleSystem {
         }
         motorConveyor.setPower(0);
         flingTimer = System.nanoTime() + 500000000;
-        while(flingTimer > System.nanoTime()){ powerConveyor = 0; }
+        while(flingTimer > System.nanoTime()){ speedConveyor = 0; }
         motorConveyor.setPower(powerLauncher);
         flingTimer = System.nanoTime() + 1000000000;
-        while(flingTimer > System.nanoTime()){ powerConveyor = powerLauncher; }
-        powerConveyor = 0;
+        while(flingTimer > System.nanoTime()){ speedConveyor = collectSpeed; }
+        speedConveyor = 0;
     }
 
     public void spinUp(){
@@ -119,28 +123,33 @@ public class ParticleSystem {
     }
 
     public void collect(){
-        if (powerConveyor == 0)
-            powerConveyor = collectPower;
+        if (speedConveyor == 0)
+            speedConveyor = collectSpeed;
         else
-            powerConveyor = 0;
+            speedConveyor = 0;
     }
 
     public void eject(){
-        if (powerConveyor == 0)
-            powerConveyor = ejectPower;
-        else
-            powerConveyor = 0;
+        if (speedConveyor == 0) {
+            speedConveyor = collectSpeed;
+            powerConveyor = -1;
+        }
+
+        else {
+            speedConveyor = 0;
+            powerConveyor = 1;
+        }
     }
 
     public void launch(){
-//        if(servoPosition == gateClosed) {
-//            servoPosition = gateOpen;
-//            powerConveyor = collectPower/3;
-//        }
-//        else{
-//            servoPosition = gateClosed;
-//            powerConveyor = 0;
-//        }
+        if(servoPosition == gateClosed) {
+            servoPosition = gateOpen;
+            speedConveyor = loadSpeed;
+        }
+        else{
+            servoPosition = gateClosed;
+            speedConveyor = 0;
+        }
 //        switch(launchState){
 //            case 0:
 //
@@ -148,10 +157,10 @@ public class ParticleSystem {
 //            default:
 //
 //        }
-        if(flywheelSpeed > 800){
-            powerConveyor = collectPower / 2;
-        }
-        else powerConveyor = 0;
+//        if(flywheelSpeed > 800){
+//            speedConveyor = collectPower / 2;
+//        }
+//        else speedConveyor = 0;
     }
 
     public void toggleGate(boolean open){
@@ -161,7 +170,7 @@ public class ParticleSystem {
             servoPosition = gateClosed;
     }
     public void stopConveyor(){
-        powerConveyor = 0;
+        speedConveyor = 0;
     }
     public void setConveyorMode(DcMotor.RunMode mode){
         motorConveyor.setMode(mode);
@@ -170,6 +179,7 @@ public class ParticleSystem {
     public void updateCollection(){
         motorLauncher.setPower(powerLauncher);
         motorConveyor.setPower(powerConveyor);
+        motorConveyor.setMaxSpeed(speedConveyor);
         servoGate.setPosition(servoPosition);
         flywheelSpeed = (float)(motorLauncher.getCurrentPosition() - prevFlywheelTicks)/(((System.nanoTime() - prevTime)/(float)(1e9))); //returns ticks per second
         prevFlywheelTicks = motorLauncher.getCurrentPosition();
@@ -179,7 +189,7 @@ public class ParticleSystem {
     public void emergencyStop(){
         backupSpeed = speed;
         motorLauncher.setPower(0);
-        powerConveyor = 0;
+        speedConveyor = 0;
         motorConveyor.setPower(0);
         setSpeed(0);
     }
