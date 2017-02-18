@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -15,6 +17,10 @@ import com.qualcomm.hardware.adafruit.BNO055IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 
 /**
@@ -856,17 +862,80 @@ public class Pose
     }
 
     public boolean turnIMU(double targetAngle, double power, boolean turnRight){
-        if(turnRight)
-            driveMixer(0, 0, power);
-        else
-            driveMixer(0, 0, -power);
-        if(turnRight && targetAngle <= poseHeading)
-            return true;
-        else if(!turnRight && targetAngle >= poseHeading)
-            return true;
-        else return false;
+            if(turnRight)
+                driveMixer(0, 0, power);
+            else
+                driveMixer(0, 0, -power);
+            if(turnRight && targetAngle <= poseHeading)
+                return true;
+            else if(!turnRight && targetAngle >= poseHeading)
+                return true;
+            else return false;
 
     }
+    public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe) {
+
+        if (beacon.getPose() != null) {
+            VectorF trans = beacon.getPose().getTranslation();
+
+            double angle = Math.toDegrees(Math.atan2(trans.get(0), -trans.get(2)));
+            Log.i("Beacon Angle", String.valueOf(angle));
+
+            if (strafe) {
+                //track(angle, Math.hypot(trans.get(0), trans.get(2) - bufferDistance), speed);
+                //driveMixer()
+            } else {  //turn first, then drive
+                if (angle < 0) {
+                    //imuTurnL(-angle, speed);
+                    turnIMU(-angle, .5, false);
+                } else {
+                    //imuTurnR(angle, speed);
+                    turnIMU(angle, .5, true);
+                }//else
+
+                //track(0, Math.hypot(trans.get(0), trans.get(2)) - bufferDistance, speed);
+            }//else
+
+        } else {
+            Log.i("VISION", "drive To Beacon failed: Beacon not visible");
+        }//else
+
+    }//driveToBeacon
+
+//    public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe,
+//                               double robotAngle, VectorF coordinate) {
+//
+//        if (beacon.getPose() != null) {
+//            VectorF trans = beacon.getPose().getTranslation();
+//
+//            Log.i(TAG, "strafeToBeacon: " + trans);
+//
+//            trans = VortexUtils.navOffWall(trans, robotAngle, coordinate);
+//
+//            Log.i(TAG, "strafeToBeacon: " + trans);
+//
+//            double angle = Math.toDegrees(Math.atan2(trans.get(0), trans.get(2)));
+//
+//            Log.i(TAG, "strafeToBeacon: " + angle);
+//
+//
+//            if (strafe) {
+//                //track(angle, Math.hypot(trans.get(0), trans.get(2)) - bufferDistance, speed);
+//            } else {
+//                if (angle < 0) {
+//                    imuTurnL(-angle, speed);
+//                } else {
+//                    imuTurnR(angle, speed);
+//                }//else
+//
+//                track(0, Math.hypot(trans.get(0), trans.get(2) - bufferDistance), speed);
+//            }//else
+//
+//        } else {
+//            RC.t.addData("FERMION", "Strafe To Beacon failed: Beacon not visible");
+//        }//else
+//    }//driveToBeacon
+
 
 
     public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
