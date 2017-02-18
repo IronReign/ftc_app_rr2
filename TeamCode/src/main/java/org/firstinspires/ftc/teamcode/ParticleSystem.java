@@ -122,11 +122,15 @@ public class ParticleSystem {
             powerLauncher = 0;
     }
 
-    public void collect(){
-        if (speedConveyor == 0)
+    public void collect() {
+        if (speedConveyor == 0){
             speedConveyor = collectSpeed;
-        else
+            powerConveyor = 1;
+        }
+        else {
             speedConveyor = 0;
+            powerConveyor = 1;
+        }
     }
 
     public void eject(){
