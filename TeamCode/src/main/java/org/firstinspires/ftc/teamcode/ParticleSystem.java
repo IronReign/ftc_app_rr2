@@ -122,24 +122,36 @@ public class ParticleSystem {
             powerLauncher = 0;
     }
 
-    public void collect() {
+    public void collectToggle() {
         if (speedConveyor == 0){
-            speedConveyor = collectSpeed;
-            powerConveyor = 1;
+            collectStart();
         }
         else {
-            speedConveyor = 0;
-            powerConveyor = 1;
+            servoPosition = gateClosed;
+            collectStop();
         }
+    }
+
+    public void collectStart(){
+        servoPosition = gateClosed;
+        speedConveyor = collectSpeed;
+        powerConveyor = 1;
+    }
+
+    public void collectStop(){
+        speedConveyor=0;
+
     }
 
     public void eject(){
         if (speedConveyor == 0) {
+            servoPosition = gateClosed;
             speedConveyor = collectSpeed;
             powerConveyor = -1;
         }
 
         else {
+            servoPosition = gateClosed;
             speedConveyor = 0;
             powerConveyor = 1;
         }

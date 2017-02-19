@@ -58,10 +58,10 @@ import java.util.Locale;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="GnuGame_6832", group="Linear Opmode")  // @Autonomous(...) is the other common choice
+@TeleOp(name="MotorTests", group="Linear Opmode")  // @Autonomous(...) is the other common choice
 //  @Autonomous
 
-public class NewGame_6832 extends LinearOpMode {
+public class MotorTests extends LinearOpMode {
 
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
@@ -379,14 +379,14 @@ public class NewGame_6832 extends LinearOpMode {
     }
 
     public void autonomous(double scaleFactor){ //this auto starts pointed towards the space between the beacons
-        if (autoState == 0 && autoTimer == 0) autoTimer = futureTime(30f);
-        if ( autoTimer > System.nanoTime()) {
+
+        if (autoTimer > System.nanoTime()) {
             switch (autoState) {
                 case -1: //sit and spin - do nothing
                     break;
 
                 case 0: //reset all the motors before starting autonomous
-
+                    autoTimer = futureTime(30f);
 
                     robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
                     robot.setTPM_Strafe((long) (robot.getTPM_Strafe() * scaleFactor));
@@ -425,7 +425,7 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 3:
-                    if(robot.driveForward(false, 2, .5)) { //drive away from wall for a clear turn
+                    if(robot.driveForward(false, .5, .5)) { //drive away from wall for a clear turn
                         robot.resetMotors(true);
                         autoState++;
                     }
@@ -521,7 +521,6 @@ public class NewGame_6832 extends LinearOpMode {
             robot.particle.emergencyStop();
             robot.driveMixer(0, 0, 0);
             //switch to teleop
-            autoTimer = 0;
             state = 2;
             active = true;
         }

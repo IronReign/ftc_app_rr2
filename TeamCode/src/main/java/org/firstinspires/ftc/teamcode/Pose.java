@@ -353,10 +353,12 @@ public class Pose
         RotateIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle); //if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
+            driveMixer(0,0,0);
             return true;
         }
         if(turnTimer < System.nanoTime()){ //if the robot takes too long to turn within a threshold of the target (it gets stuck)
             turnTimerInit = false;
+            driveMixer(0,0,0);
             return true;
         }
         return false;
