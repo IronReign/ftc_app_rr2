@@ -43,7 +43,7 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    private double KpDrive = 0.007;
+    protected double KpDrive = 0.007;
     private double KiDrive = 0.00;
     private double KdDrive = 0.001;
     private double driveIMUBasePower = .5;
@@ -354,7 +354,7 @@ public class Pose
 
         long targetPos = (long)(targetMeters * TPM_Forward);
         if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
-            DriveIMU(Kp, KiDrive, KdDrive, pwr, poseHeading);
+            DriveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle);
             return false;
         }
         else { //destination achieved
