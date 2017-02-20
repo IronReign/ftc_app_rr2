@@ -32,6 +32,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -99,6 +101,10 @@ public class NewGame_6832 extends LinearOpMode {
 
     private int pressedPosition = 750; //Note: find servo position value for pressing position on servoGate
     private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on servoGate
+
+    double testableDouble = .1;
+    double testableHeading = 0;
+    boolean testableDirection = true;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -208,10 +214,7 @@ public class NewGame_6832 extends LinearOpMode {
                         break;
                     case 4: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
-                        if(robot.getAverageTicks() < 2000){
-                            robot.driveMixer(1,0,0);
-                        }
-                        else robot.driveMixer(0,0,0);
+                        if(robot.driveForward(false, 1, .5)) active = false;
                         break;
                     case 5: //provides data for left/right calibration
                         joystickDriveStarted = false;
@@ -224,10 +227,12 @@ public class NewGame_6832 extends LinearOpMode {
                         demo();
                         break;
                     case 7: //tertiaryAuto demo mode
-                        tertiaryAuto(1.0);
-                        break;
+                        //tertiaryAuto(1.0);
+                        //break;
+                        testableHeading = robot.getHeading();
+                        state++;
                     case 8:
-                        testableAuto();
+                        testableAuto(testableHeading);
                         break;
                 }
                 robot.updateSensors();
@@ -396,9 +401,10 @@ public class NewGame_6832 extends LinearOpMode {
 
 
                     launchTimer = futureTime(0.75f);
-                    deadShotSays.play(hardwareMap.appContext, R.raw.a01);
+                    deadShotSays.play(hardwareMap.appContext, R.raw.a0);
                     if(!isBlue) robot.setHeading(180);
                     else robot.setHeading(270);
+
                     break;
                 case 1:
 //                    if(robot.driveForward(false, .25, 1)){
@@ -407,6 +413,7 @@ public class NewGame_6832 extends LinearOpMode {
                         launchTimer = futureTime(3.5f);
                         robot.particle.launch();
                         robot.resetMotors(true);
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                         autoState++;
                     }
                     break;
@@ -421,39 +428,54 @@ public class NewGame_6832 extends LinearOpMode {
                     if(System.nanoTime() >launchTimer){ //particles should have launched, shut down launching
                         robot.particle.launch();
                         robot.particle.spinUp();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a02);
                         autoState++;
                     }
                     break;
                 case 3:
-                    if(robot.driveForward(false, 2, .5)) { //drive away from wall for a clear turn
+                    if(robot.driveForward(false, .35, .5)) { //drive away from wall for a clear turn
                         robot.resetMotors(true);
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a03);
                         autoState++;
                     }
+                    break;
                 case 4:
-                    if(robot.RotateIMU(45, .75)) { //should now be pointing at the target beacon wall
+                    if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
                         robot.resetMotors(true);
                         robot.particle.collectStart();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a04);
                         autoState++;
                     }
                     break;
                 case 5:
-                    if(robot.driveForward(true, 2, .5)) { //drive to middle of beacon wall
-                        robot.resetMotors(true);
+                    if(robot.driveForward(!isBlue, 2, .75)) { //drive to middle of beacon wall
+                        //robot.resetMotors(true);
                         robot.particle.collectStop();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a05);
                         autoState++;
                     }
                     break;
                 case 6:
+                    if(robot.driveForward(!isBlue, 2.5, .35)) { //drive to middle of beacon wall
+                        robot.resetMotors(true);
+                        robot.particle.collectStop();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a06);
+                        autoState++;
+                    }
+                    break;
+                case 7:
 
                     if(isBlue){ //align with blue beacon wall
                         if(robot.RotateIMU(90, 1.5)) {
                             robot.resetMotors(true);
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
                             autoState++;
                         }
                     }
                     else{ //align with red beacon wall
                         if(robot.RotateIMU(0, 1.5)) {
                             robot.resetMotors(true);
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
                             autoState++;
                         }
                     }
@@ -472,23 +494,35 @@ public class NewGame_6832 extends LinearOpMode {
 //                        if(robot.RotateIMU(0, .25)) autoState++;
 //                    }
 //                    break;
-//                case 9: //press the first beacon
-//                    if (robot.pressAllianceBeacon(isBlue, false)) {
+                case 8: //press the first beacon
+                    if (robot.pressAllianceBeacon(isBlue, false)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 9: //drive up next to the second beacon
+//                    if (robot.driveForward(!isBlue, .85, .5)) {
 //                        robot.resetMotors(true);
 //                        autoState++;
 //                    }
-//                    break;
-//                case 10: //drive up next to the second beacon
-//                    if (robot.driveForward(!isBlue, .85, 1)) {
-//                        robot.resetMotors(true);
-//                        autoState++;
-//                    }
-//                    break;
-//                case 11: //press the second beacon
-//                    if (robot.pressAllianceBeacon(isBlue, true)) {
-//                        robot.resetMotors(true);
-//                        autoState++;
-//                    }
+                    if(isBlue){
+                        if(robot.DriveIMUDistance(.1, .5, 90, false, .85)){
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                    }
+                    else{
+                        if(robot.DriveIMUDistance(.1, .5, 0, true, .85)){
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                    }
+                    break;
+                case 10: //press the second beacon
+                    if (robot.pressAllianceBeacon(isBlue, true)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
 //                case 12:
 //                    if(robot.driveForward(isBlue, .5, .65)){
 //                        robot.resetMotors(true);
@@ -527,150 +561,6 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
-    public void tertiaryAuto(double scaleFactor){
-        if(autoState == 0)
-            autoTimer = System.nanoTime() + (long) 30e9;
-        if(autoTimer > System.nanoTime()) {
-            switch (autoState) {
-                case -1: //sit and spin - do nothing
-                    break;
-
-                case 0: //reset all the motors before starting tertiaryAuto
-                    //autoTimer = System.nanoTime() + (long) 30e9;
-                    robot.setTPM_Forward((long)(robot.getTPM_Forward() * scaleFactor));
-                    robot.setTPM_Strafe((long)(robot.getTPM_Strafe() * scaleFactor));
-                    robot.resetMotors(true);
-                    autoState++;
-                    deadShotSays.play(hardwareMap.appContext, R.raw.a01);
-                    if(isBlue)
-                        robot.setHeading(90);
-                    else
-                        robot.setHeading(0);
-                    break;
-                case 1: //drive forward and shoot in the goal
-
-                    if (robot.driveForward(true, .85, .65)) {
-                        robot.resetMotors(true);
-                        for (int n = 0; n < flingNumber; n++)
-                            robot.particle.fling();
-                        autoState++;
-                        deadShotSays.play(hardwareMap.appContext, R.raw.a02);
-                    }
-                    break;
-                case 2:  // 180 degree turn if alternate alliance, then moves are inverted
-                    if(isBlue) {
-                        if (robot.RotateIMU(90, 2)) {
-                            autoState++;
-                            robot.resetMotors(true);
-                        }
-                    }
-                    else autoState++;
-                    break;
-                case 3: //drive towards the corner vortex
-                    if (isBlue) {
-                        if (robot.driveStrafe(true, .75, .75)) {
-                            robot.resetMotors(true);
-                            deadShotSays.play(hardwareMap.appContext, R.raw.a04);
-                            autoState++;
-                        }
-                    }
-                    else {
-                        if (robot.driveStrafe(true, 1.15, .75)) {
-                            robot.resetMotors(true);
-                            deadShotSays.play(hardwareMap.appContext, R.raw.a04);
-                            autoState++;
-                        }
-                    }
-
-                    break;
-                case 4: //drive up near the first beacon
-                    if(isBlue) {
-                        if (robot.driveForward(!isBlue, .75, .75)) {
-                            robot.resetMotors(true);
-                            autoState++;
-                        }
-                    }
-                    else{
-                        if (robot.driveForward(!isBlue, 1.5, .75)) {
-                            robot.resetMotors(true);
-                            autoState++;
-                        }
-                    }
-                    break;
-                case 5: //drive towards the wall in order to press the first beacon
-                    if (robot.driveStrafe(true, .9 , .45)) {
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                    break;
-                case 6:
-                    if (robot.driveStrafe(false, .05 , .45)) {
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                    break;
-                case 7:
-                    if(isBlue){
-                        if(robot.RotateIMU(90, .25)) autoState++;
-                    }
-                    else{
-                        if(robot.RotateIMU(0, .25)) autoState++;
-                    }
-
-                    break;
-                case 8: //press the first beacon
-                    if (robot.pressAllianceBeacon(isBlue, false)) {
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                    break;
-                case 9:
-                    if(isBlue){
-                        if(robot.RotateIMU(92, .25)) autoState++;
-                    }
-                    else{
-                        if(robot.RotateIMU(2, .25)) autoState++;
-                    }
-                    break;
-
-                case 10: //drive up next to the second beacon
-                    if (robot.driveForward(!isBlue, .85, 1)) {
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                    break;
-
-                case 11:
-                    if(isBlue){
-                        if(robot.RotateIMU(90, .25)) autoState++;
-                    }
-                    else{
-                        if(robot.RotateIMU(0, .25)) autoState++;
-                    }
-
-                case 12: //press the second beacon
-                    if (robot.pressAllianceBeacon(isBlue, true)) {
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                    break;
-//            case 9: //drive away from the second beacon
-//                if(driveCrab(false, 0, .5)) {
-//                    resetMotors();
-//                    autoState++;
-//                }
-
-                default:
-                    robot.ResetTPM();
-                    break;
-            }
-            robot.particle.updateCollection();
-        }
-        else{
-            robot.particle.emergencyStop();
-            robot.driveMixer(0, 0, 0);
-        }
-    }
 
     public void stateSwitch(){
 
@@ -751,18 +641,24 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
-    public void testableAuto(){
+    public void testableAuto(double heading){
+
+
+
+
         switch(autoState){
-            case 0:
+            case 0: //drive forward and backward 2 meters, increasing kp until we observe overshoot
                 robot.resetMotors(true);
                 autoState++;
                 break;
             case 1:
-                if(robot.driveForward(true, 2, .5)){
+                if(robot.DriveIMUDistance(testableDouble,.4, heading,  testableDirection, 2)){
+                    Log.i("Test DriveIMU: ",String.valueOf(testableDouble));
+                    testableDouble += .025;
+                    testableDirection = !testableDirection;
                     robot.resetMotors(true);
-                    autoTimer = System.nanoTime() + (long)1e9;
-                    autoState++;
                 }
+                // will loop here until manually interrupted.
                 break;
             case 2:
                 if(System.nanoTime() > autoTimer) autoState++;
@@ -933,6 +829,19 @@ public class NewGame_6832 extends LinearOpMode {
                         return Long.toString(robot.getAverageTicks());
                     }
                 });
+        telemetry.addLine()
+
+                .addData("PID Calc", new Func<String>() {
+                    @Override public String value() {
+                        return Double.toString(robot.drivePID.performPID() );
+                    }
+                })
+                .addData("PID Err", new Func<String>() {
+                    @Override public String value() {
+                        return Double.toString(robot.drivePID.getError());
+                    }
+                });
+
         telemetry.addLine()
                 .addData("DistRear", new Func<String>() {
                     @Override public String value() {

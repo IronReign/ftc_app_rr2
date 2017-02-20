@@ -20,7 +20,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 
 /**
@@ -306,7 +305,7 @@ public class Pose
 
 
 
-    public void RotatePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
+    public void MovePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
         drivePID.setOutputRange(-.5,.5);
@@ -339,10 +338,29 @@ public class Pose
         motorRight.setPower(pwr - correction);
 
 */
-        driveMixer(0, 0, correction);
+        driveMixer(pwr, 0, correction);
     }
-    public void RotateIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle){
-        RotatePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
+    public void DriveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle){
+        MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
+    }
+
+    public boolean DriveIMUDistance(double Kp, double pwr, double targetAngle,boolean forward, double targetMeters){
+        if(!forward){
+            moveMode = moveMode.backward;
+            targetMeters = -targetMeters;
+            pwr = -pwr;
+        }
+        else moveMode = moveMode.forward;
+
+        long targetPos = (long)(targetMeters * TPM_Forward);
+        if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
+            DriveIMU(Kp, KiDrive, KdDrive, pwr, poseHeading);
+            return false;
+        }
+        else { //destination achieved
+            driveMixer(0, 0, 0);
+            return true;
+        }
     }
 
     public boolean RotateIMU(double targetAngle, double maxTime){ //uses default pose PID constants and has end conditions
@@ -350,7 +368,7 @@ public class Pose
             turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
             turnTimerInit = true;
         }
-        RotateIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle); //if the robot turns within a threshold of the target
+        DriveIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle); //if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
             driveMixer(0,0,0);
@@ -369,7 +387,7 @@ public class Pose
                 poseSavedHeading = poseHeading;
                 maintainHeadingInit = true;
             }
-            RotateIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading);
+            DriveIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading);
         }
         if(!buttonState){
             maintainHeadingInit = false;
@@ -465,11 +483,11 @@ public class Pose
 //    }
     public boolean driveForward(boolean forward, double targetMeters, double power){
         if(!forward){
-            moveMode = moveMode.forward;
-            targetMeters = 0 - targetMeters;
+            moveMode = moveMode.backward;
+            targetMeters = -targetMeters;
             power = -power;
         }
-        else moveMode = moveMode.backward;
+        else moveMode = moveMode.forward;
 
         long targetPos = (long)(targetMeters * TPM_Forward);
         if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
@@ -841,6 +859,10 @@ public class Pose
         }
     }
 
+    public void drivePID(boolean forward, double power){
+
+    }
+
     public boolean onAllianceColor(boolean isBlue){ //is the robot looking at it's team's aliance color
         if(isBlue){
             return colorFore == 3;
@@ -854,27 +876,28 @@ public class Pose
         }
         return colorFore == 3;
     }
-    public boolean findOpposingColor(boolean isBlue, boolean fromLeft){
-        if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-.1, 0, 0); }
-        else { driveMixer(.1, 0, 0); }
+    public boolean findOpposingColor(boolean isBlue, boolean fromLeft, double pwr){
+        if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-pwr, 0, 0); }
+        else { driveMixer(pwr, 0, 0); }
         if(onOpposingColor(isBlue)){
             return true;
         }
         return false;
     }
 
-    public boolean turnIMU(double targetAngle, double power, boolean turnRight){
-            if(turnRight)
-                driveMixer(0, 0, power);
-            else
-                driveMixer(0, 0, -power);
-            if(turnRight && targetAngle <= poseHeading)
-                return true;
-            else if(!turnRight && targetAngle >= poseHeading)
-                return true;
-            else return false;
-
-    }
+    // Don't need this since we now have a PID version of RotateIMU
+//    public boolean turnIMU(double targetAngle, double power, boolean turnRight){
+//            if(turnRight)
+//                driveMixer(0, 0, power);
+//            else
+//                driveMixer(0, 0, -power);
+//            if(turnRight && targetAngle <= poseHeading)
+//                return true;
+//            else if(!turnRight && targetAngle >= poseHeading)
+//                return true;
+//            else return false;
+//
+//    }
     public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe) {
 
         if (beacon.getPose() != null) {
@@ -887,14 +910,7 @@ public class Pose
                 //track(angle, Math.hypot(trans.get(0), trans.get(2) - bufferDistance), speed);
                 //driveMixer()
             } else {  //turn first, then drive
-                if (angle < 0) {
-                    //imuTurnL(-angle, speed);
-                    turnIMU(-angle, .5, false);
-                } else {
-                    //imuTurnR(angle, speed);
-                    turnIMU(angle, .5, true);
-                }//else
-
+                RotateIMU(angle, 1.0);
                 //track(0, Math.hypot(trans.get(0), trans.get(2)) - bufferDistance, speed);
             }//else
 
@@ -943,13 +959,13 @@ public class Pose
     public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
         switch(beaconState){                                              // to the alliance color in tertiaryAu2to
             case 0:
-                if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-scanSpeed, 0, 0); }
-                else { driveMixer(scanSpeed, 0, 0); }
-                if(nearBeacon(isBlue)) {
-                    driveMixer(0, 0, 0);
+                //if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-scanSpeed, 0, 0); }
+                //else { driveMixer(scanSpeed, 0, 0); }
+                //if(nearBeacon(isBlue)) {
+                //    driveMixer(0, 0, 0);
                     resetMotors(true);
                     beaconState++;
-                }
+                //}
                 break;
             case 1:     //stub
                 //if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .1, .5)){
@@ -967,20 +983,23 @@ public class Pose
                 beaconState++;
                 break;
             case 4:     //drives to find the opposing alliance's color on the beacon in order to put it out of the
-                if(findOpposingColor(isBlue, fromLeft)) beaconState++;  //range of the beacon presser
+                if(findOpposingColor(isBlue, fromLeft, 0.15)) beaconState++;  //range of the beacon presser
                 break;
             case 5:     //stub
 //                if(driveForward(true, 0, .25)){
 //                    resetMotors();
-                    beaconState++;
-//                }
+                //check to see if we overshot, if so, go back very slowly and find the color again
+                if(onOpposingColor(isBlue)){
+                    if(findOpposingColor(isBlue, !fromLeft, 0.10)) beaconState++;
+                }
+                    else beaconState++;
                 break;
             case 6:     //begins moving sideways in order to press the beacon and sets a timer to stop moving if the
                         //beacon takes too long to switch
 //                servoGate.setPosition(ServoNormalize(pressedPosition));
 //                presserTimer = System.nanoTime() + (long) 2e9;
 //                beaconState++;
-                driveMixer(0, .35, 0);
+                driveMixer(0, .5, 0);
                 deadShotSays.play(hwMap.appContext, R.raw.a06);
                 presserTimer = System.nanoTime() + (long) 1e9;
                 beaconState++;
@@ -989,7 +1008,7 @@ public class Pose
                         //or the beacon takes more than 5 seconds to press
 //                if(presserTimer < System.nanoTime())
 //                    beaconState++;
-                if(onAllianceColor(isBlue) || presserTimer < System.nanoTime()){
+                if(/*onAllianceColor(isBlue) || */presserTimer < System.nanoTime()){
                     presserSavedTime = System.nanoTime();
                     driveMixer(0, 0, 0);
                     deadShotSays.play(hwMap.appContext, R.raw.a07);
@@ -997,15 +1016,15 @@ public class Pose
                     resetMotors(true);
                 }
                 break;
-            case 8:     //strafe away from the beacon
-                if(driveStrafe(false, .1, .45)) { beaconState++; }
+            case 8:
+                if(driveStrafe(false, .025, .25)) { beaconState++; }
                 break;
             case 9:     //turn back to proper direction
                 if(isBlue){
-                    if(RotateIMU(90, .25)) beaconState++;
+                    if(RotateIMU(90, .5)) beaconState++;
                 }
                 else{
-                    if(RotateIMU(0, .25)) beaconState++;
+                    if(RotateIMU(0, .5)) beaconState++;
                 }
                 break;
             case 10:    //retry all steps from locating the opposing alliance's color to pressing the beacon if
