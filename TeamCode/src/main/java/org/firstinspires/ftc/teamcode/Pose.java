@@ -1044,6 +1044,10 @@ public class Pose
         beaconState = 0;
     }
 
+    public double getBatteryVoltage(){
+        return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();
+    }
+
 
 }
 
