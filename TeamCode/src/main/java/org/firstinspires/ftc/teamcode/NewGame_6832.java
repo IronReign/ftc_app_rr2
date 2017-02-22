@@ -102,7 +102,9 @@ public class NewGame_6832 extends LinearOpMode {
     private int pressedPosition = 750; //Note: find servo position value for pressing position on servoGate
     private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on servoGate
 
-    double testableDouble = .1;
+    //these are meant as short term testing variables, don't expect their usage
+    //to be consistent across development sessions
+    double testableDouble = robot.KpDrive;
     double testableHeading = 0;
     boolean testableDirection = true;
 
@@ -506,7 +508,7 @@ public class NewGame_6832 extends LinearOpMode {
 //                        autoState++;
 //                    }
                     if(isBlue){
-                        if(robot.DriveIMUDistance(.1, .5, 90, false, .85)){
+                        if(robot.DriveIMUDistance(.01, .5, 90, false, .85)){
                             robot.resetMotors(true);
                             autoState++;
                         }
@@ -654,7 +656,7 @@ public class NewGame_6832 extends LinearOpMode {
             case 1:
                 if(robot.DriveIMUDistance(testableDouble,.4, heading,  testableDirection, 2)){
                     Log.i("Test DriveIMU: ",String.valueOf(testableDouble));
-                    testableDouble += .025;
+                    testableDouble += .001;
                     testableDirection = !testableDirection;
                     robot.resetMotors(true);
                 }
