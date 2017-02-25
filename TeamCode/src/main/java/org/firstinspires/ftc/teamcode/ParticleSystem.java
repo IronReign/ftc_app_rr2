@@ -115,11 +115,19 @@ public class ParticleSystem {
         speedConveyor = 0;
     }
 
-    public void spinUp(){
+    public void spinUpToggle(){
         if(powerLauncher == 0)
-            powerLauncher = launchPower;
+            spinUp();
         else
-            powerLauncher = 0;
+            spinDown();
+    }
+
+    public void spinUp(){
+            powerLauncher = launchPower;
+            }
+
+    public void spinDown(){
+        powerLauncher = 0;
     }
 
     public void collectToggle() {
@@ -157,15 +165,24 @@ public class ParticleSystem {
         }
     }
 
-    public void launch(){
-        if(servoPosition == gateClosed) {
-            servoPosition = gateOpen;
-            speedConveyor = loadSpeed;
+    public void launchToggle() {
+        if (servoPosition == gateClosed) {
+            launchBegin();
+        } else {
+            launchEnd();
         }
-        else{
-            servoPosition = gateClosed;
-            speedConveyor = 0;
-        }
+    }
+
+    public void launchBegin(){
+        servoPosition = gateOpen;
+        speedConveyor = loadSpeed;
+    }
+
+    public void launchEnd(){
+        servoPosition = gateClosed;
+        speedConveyor = 0;
+    }
+
 //        switch(launchState){
 //            case 0:
 //
@@ -177,7 +194,7 @@ public class ParticleSystem {
 //            speedConveyor = collectPower / 2;
 //        }
 //        else speedConveyor = 0;
-    }
+
 
     public void toggleGate(boolean open){
         if(open)

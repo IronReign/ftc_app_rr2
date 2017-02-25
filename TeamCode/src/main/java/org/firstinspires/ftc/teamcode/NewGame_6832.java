@@ -310,13 +310,13 @@ public class NewGame_6832 extends LinearOpMode {
 //            if(!shouldLaunch){
 //                robot.particle.stopConveyor();
 //            }
-            robot.particle.launch();
+            robot.particle.launchToggle();
 
         }
 
         if(toggleAllowed(gamepad1.y,3)) {
 
-            robot.particle.spinUp();
+            robot.particle.spinUpToggle();
 
         }
 //
@@ -374,7 +374,7 @@ public class NewGame_6832 extends LinearOpMode {
         else
             robot.cap.stop();
 //        if(shouldLaunch){
-//            robot.particle.launch();
+//            robot.particle.launchToggle();
 //        }
         robot.particle.updateCollection();
     }
@@ -398,49 +398,45 @@ public class NewGame_6832 extends LinearOpMode {
                     robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
                     robot.setTPM_Strafe((long) (robot.getTPM_Strafe() * scaleFactor));
                     robot.resetMotors(true);
-                    robot.particle.spinUp();
+
                     autoState++;
 
 
-                    launchTimer = futureTime(0.75f);
+                    //launchTimer = futureTime(0.75f);
                     deadShotSays.play(hardwareMap.appContext, R.raw.a0);
                     if(!isBlue) robot.setHeading(180);
                     else robot.setHeading(270);
+                    robot.particle.spinUp();
+                    robot.particle.launchEnd(); //gate should remain closed
 
                     break;
-                case 1:
-//                    if(robot.driveForward(false, .25, 1)){
-                    if(System.nanoTime() > launchTimer){
-                        robot.resetMotors(true);
-                        launchTimer = futureTime(3.5f);
-                        robot.particle.launch();
+                case 1://drive forward for proper shot distance to vortex
+                    if(robot.driveForward(false, .7, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
                         robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a01);
+                        launchTimer = futureTime(3.5f);
+                        robot.particle.launchBegin();
                         autoState++;
                     }
                     break;
+
                 case 2:
-//                    if(isBlue){
-//                        if(robot.RotateIMU(90, 1.5)) autoState++;
-//                    }
-//                    else{
-//                        if(robot.RotateIMU(0, 1.5)) autoState++;
-//                    }
-//                    break;
                     if(System.nanoTime() >launchTimer){ //particles should have launched, shut down launching
-                        robot.particle.launch();
-                        robot.particle.spinUp();
+                        robot.particle.launchEnd();
+                        robot.particle.spinDown();
                         deadShotSays.play(hardwareMap.appContext, R.raw.a02);
                         autoState++;
                     }
                     break;
+
                 case 3:
-                    if(robot.driveForward(false, .35, .5)) { //drive away from wall for a clear turn
+                    if(robot.driveForward(true, .4, .5)) { //back up a bit for a better turn to wall
                         robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a03);
                         autoState++;
                     }
                     break;
+
                 case 4:
                     if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
                         robot.resetMotors(true);
@@ -482,20 +478,6 @@ public class NewGame_6832 extends LinearOpMode {
                         }
                     }
                     break;
-//                case 7:
-//                    if (robot.driveStrafe(false, .05 , .45)) {
-//                        robot.resetMotors(true);
-//                        autoState++;
-//                    }
-//                    break;
-//                case 8:
-//                    if(isBlue){
-//                        if(robot.RotateIMU(90, .25)) autoState++;
-//                    }
-//                    else{
-//                        if(robot.RotateIMU(0, .25)) autoState++;
-//                    }
-//                    break;
                 case 8: //press the first beacon
                     if (robot.pressAllianceBeacon(isBlue, false)) {
                         robot.resetMotors(true);
@@ -503,10 +485,6 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 9: //drive up next to the second beacon
-//                    if (robot.driveForward(!isBlue, .85, .5)) {
-//                        robot.resetMotors(true);
-//                        autoState++;
-//                    }
                     if(isBlue){
                         if(robot.DriveIMUDistance(.01, .5, 90, false, .85)){
                             robot.resetMotors(true);
@@ -514,7 +492,7 @@ public class NewGame_6832 extends LinearOpMode {
                         }
                     }
                     else{
-                        if(robot.DriveIMUDistance(.1, .5, 0, true, .85)){
+                        if(robot.DriveIMUDistance(.01, .5, 0, true, .85)){
                             robot.resetMotors(true);
                             autoState++;
                         }
@@ -525,12 +503,24 @@ public class NewGame_6832 extends LinearOpMode {
                         robot.resetMotors(true);
                         autoState++;
                     }
-//                case 12:
-//                    if(robot.driveForward(isBlue, .5, .65)){
-//                        robot.resetMotors(true);
-//                        autoState++;
-//                    }
-//                    break;
+                    break;
+                case 11: //turn back to 45 to point to vortex
+                    if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
+                        robot.resetMotors(true);
+                        robot.particle.collectStart();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a11);
+                        autoState++;
+                    }
+                    break;
+                case 12: //drive back to push cap ball and park
+                    if(robot.driveForward(isBlue, 1.5, .75)) { //to center vortex
+
+                        robot.particle.collectStop();
+                        robot.resetMotors(true);
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a12);
+                        autoState++;
+                    }
+                    break;
 //                case 13:
 //                    if(isBlue){
 //                        if(robot.RotateIMU(180, .25)) autoState++;

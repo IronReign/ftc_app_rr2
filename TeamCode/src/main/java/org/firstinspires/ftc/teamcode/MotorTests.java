@@ -303,13 +303,13 @@ public class MotorTests extends LinearOpMode {
 //            if(!shouldLaunch){
 //                robot.particle.stopConveyor();
 //            }
-            robot.particle.launch();
+            robot.particle.launchToggle();
 
         }
 
         if(toggleAllowed(gamepad1.y,3)) {
 
-            robot.particle.spinUp();
+            robot.particle.spinUpToggle();
 
         }
 //
@@ -367,7 +367,7 @@ public class MotorTests extends LinearOpMode {
         else
             robot.cap.stop();
 //        if(shouldLaunch){
-//            robot.particle.launch();
+//            robot.particle.launchToggle();
 //        }
         robot.particle.updateCollection();
     }
@@ -391,7 +391,7 @@ public class MotorTests extends LinearOpMode {
                     robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
                     robot.setTPM_Strafe((long) (robot.getTPM_Strafe() * scaleFactor));
                     robot.resetMotors(true);
-                    robot.particle.spinUp();
+                    robot.particle.spinUpToggle();
                     autoState++;
 
 
@@ -405,7 +405,7 @@ public class MotorTests extends LinearOpMode {
                     if(System.nanoTime() > launchTimer){
                         robot.resetMotors(true);
                         launchTimer = futureTime(3.5f);
-                        robot.particle.launch();
+                        robot.particle.launchToggle();
                         robot.resetMotors(true);
                         autoState++;
                     }
@@ -419,8 +419,8 @@ public class MotorTests extends LinearOpMode {
 //                    }
 //                    break;
                     if(System.nanoTime() >launchTimer){ //particles should have launched, shut down launching
-                        robot.particle.launch();
-                        robot.particle.spinUp();
+                        robot.particle.launchToggle();
+                        robot.particle.spinUpToggle();
                         autoState++;
                     }
                     break;
