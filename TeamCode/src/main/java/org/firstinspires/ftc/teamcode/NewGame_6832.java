@@ -35,6 +35,7 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.ftccommon.SoundPlayer;
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -91,6 +92,7 @@ public class NewGame_6832 extends LinearOpMode {
     private boolean runAutonomous = true;
     private long autoTimer = 0;
     private long launchTimer = 0;
+    private long autoDelay = 0;
     private boolean[] buttonSavedStates = new boolean[11];
     //private boolean[] buttonCurrentState = new boolean[8];
     private boolean slowMode = false;
@@ -167,7 +169,14 @@ public class NewGame_6832 extends LinearOpMode {
             }
             if(toggleAllowed(gamepad1.dpad_down,4)){
 
-                    robot.particle.halfCycle();
+                autoDelay--;
+                if(autoDelay < 0) autoDelay = 15;
+
+            }
+            if(toggleAllowed(gamepad1.dpad_up, 5)){
+
+                autoDelay++;
+                if(autoDelay>15) autoDelay = 0;
 
             }
 
@@ -411,7 +420,7 @@ public class NewGame_6832 extends LinearOpMode {
 
                     break;
                 case 1://drive forward for proper shot distance to vortex
-                    if(robot.driveForward(false, .7, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
+                    if(robot.driveForward(false, .15, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
                         robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                         launchTimer = futureTime(3.5f);
@@ -430,7 +439,7 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
 
                 case 3:
-                    if(robot.driveForward(true, .4, .5)) { //back up a bit for a better turn to wall
+                    if(robot.driveForward(false, .0, .5)) { //back up a bit for a better turn to wall
                         robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a03);
                         autoState++;
@@ -454,7 +463,7 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 6:
-                    if(robot.driveForward(!isBlue, 2.5, .35)) { //drive to middle of beacon wall
+                    if(robot.driveForward(!isBlue, 2.80, .35)) { //drive to middle of beacon wall
                         robot.resetMotors(true);
                         robot.particle.collectStop();
                         deadShotSays.play(hardwareMap.appContext, R.raw.a06);
@@ -604,25 +613,36 @@ public class NewGame_6832 extends LinearOpMode {
     public void secondaryAuto(){
         switch(autoState){
             case 0:
-                robot.setHeading(135);
+                autoDelay = futureTime(autoDelay);
                 robot.resetMotors(true);
                 autoState++;
                 break;
             case 1:
-                if(robot.driveForward(true, 1.35, 1)){
+                if(System.nanoTime() > autoDelay) {
+                    robot.setHeading(135);
                     robot.resetMotors(true);
+                    robot.particle.spinUp();
                     autoState++;
                 }
                 break;
             case 2:
-                for(int n = 0; n < flingNumber; n++){
-                    robot.particle.fling();
+                if(robot.driveForward(false, .85, 1)){
+                    robot.resetMotors(true);
+                    launchTimer = futureTime((float)2.5);
+                    robot.particle.launchBegin();
+                    autoState++;
                 }
-                autoState++;
-                //robot.motorConveyor.setPower(90);
                 break;
             case 3:
-                if(robot.driveForward(true, .35, 1)){
+                if(System.nanoTime() > launchTimer){
+                    robot.particle.launchEnd();
+                    robot.particle.spinDown();
+                    autoState++;
+                }
+                //robot.motorConveyor.setPower(90);
+                break;
+            case 4:
+                if(robot.driveForward(false, .8, 1)){
                     robot.resetMotors(true);
                     robot.motorConveyor.setPower(0);
                     autoState++;
