@@ -133,7 +133,7 @@ public class NewGame_6832 extends LinearOpMode {
 
         VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         params.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
-        params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        params.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
 
         VuforiaLocalizer locale = ClassFactory.createVuforiaLocalizer(params);
         locale.setFrameQueueCapacity(1);
