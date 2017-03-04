@@ -45,8 +45,19 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 import java.util.Locale;
+import com.vuforia.CameraDevice;
+import com.vuforia.Image;
+import com.vuforia.PIXEL_FORMAT;
+import com.vuforia.Vuforia;
+import com.vuforia.HINT;
+import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -120,23 +131,25 @@ public class NewGame_6832 extends LinearOpMode {
 
         configureDashboard();
 
-//        VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-//        params.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
-//        params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
-//
-//        VuforiaLocalizer locale = ClassFactory.createVuforiaLocalizer(params);
-//        locale.setFrameQueueCapacity(1);
-//        Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
-//
+        VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
+        params.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
+        params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+
+        VuforiaLocalizer locale = ClassFactory.createVuforiaLocalizer(params);
+        locale.setFrameQueueCapacity(1);
+        Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
+
+        Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
+
 //        VuforiaTrackables beacons = locale.loadTrackablesFromAsset("FTC_2016-17");
 //        VuforiaTrackableDefaultListener wheels = (VuforiaTrackableDefaultListener) beacons.get(0).getListener();
 //        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
 
-//        VuforiaTrackables beaconTargets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
-//        beaconTargets.get(0).setName("Wheels");
-//        beaconTargets.get(1).setName("Tools");
-//        beaconTargets.get(2).setName("Lego");
-//        beaconTargets.get(3).setName("Gears");
+        VuforiaTrackables beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
+        beaconTargets.get(0).setName("Wheels");
+        beaconTargets.get(1).setName("Tools");
+        beaconTargets.get(2).setName("Lego");
+        beaconTargets.get(3).setName("Gears");
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
@@ -150,6 +163,7 @@ public class NewGame_6832 extends LinearOpMode {
                 }
             }
             //beacons.activate();
+            beaconTargets.activate();
 
             stateSwitch();
 
