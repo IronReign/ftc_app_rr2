@@ -103,7 +103,7 @@ public class MotorTests extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        robot.init(this.hardwareMap);
+        robot.init(this.hardwareMap, isBlue);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -938,11 +938,11 @@ public class MotorTests extends LinearOpMode {
                         return String.valueOf(robot.beaconDistAft);
                     }
                 })
-                .addData("RearColor", new Func<String>() {
-                    @Override public String value() {
-                        return Long.toString(robot.colorAft);
-                    }
-                })
+//                .addData("RearColor", new Func<String>() {
+//                    @Override public String value() {
+//                        return Long.toString(robot.ballColor);
+//                    }
+//                })
                 .addData("DistFore", new Func<String>() {
                     @Override public String value() {
                         return String.valueOf(robot.beaconDistFore);
@@ -950,7 +950,7 @@ public class MotorTests extends LinearOpMode {
                 })
                 .addData("ForeColor", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(robot.colorFore);
+                        return Long.toString(robot.beaconColor);
                     }
                 });
 
@@ -960,8 +960,8 @@ public class MotorTests extends LinearOpMode {
 //        //telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
 //        telemetry.addLine().addData("Normal", beaconPresentRear.getLightDetected());
 //
-//        telemetry.addLine().addData("ColorFore", colorForeCache[0] & 0xFF);
-//        telemetry.addData("ColorRear", colorRearCache[0] & 0xFF);
+//        telemetry.addLine().addData("ColorFore", beaconColorCache[0] & 0xFF);
+//        telemetry.addData("ColorRear", ballColorCache[0] & 0xFF);
 
     }
     String formatAngle(AngleUnit angleUnit, double angle) {

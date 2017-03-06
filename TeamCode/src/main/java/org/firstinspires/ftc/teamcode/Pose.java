@@ -65,15 +65,15 @@ public class Pose
     OpticalDistanceSensor beaconPresent;
 
 
-    byte[] colorForeCache = new byte[100];
-    byte[] colorRearCache = new byte[100];
+    byte[] beaconColorCache = new byte[100];
+    //byte[] ballColorCache = new byte[100];
 
-    I2cDevice beaconColor;
-    I2cDevice ballColor;
-    I2cDeviceSynch colorForeReader;
-    I2cDeviceSynch colorRearReader;
-    long colorFore;
-    long colorAft;
+    I2cDevice beaconColorSensor;
+    I2cDevice ballColorSensor;
+    I2cDeviceSynch beaconColorReader;
+    //I2cDeviceSynch ballColorReader;
+    long beaconColor;
+    //long ballColor;
     double beaconDistAft; //holds most recent linearized distance reading from ODS sensor
     double beaconDistFore;
 
@@ -207,7 +207,7 @@ public class Pose
     }
 
 
-    public void init(HardwareMap ahwMap) {
+    public void init(HardwareMap ahwMap, boolean isBlue) {
         // save reference to HW Map
         hwMap = ahwMap;
                /* eg: Initialize the hardware variables. Note that the strings used here as parameters
@@ -228,14 +228,14 @@ public class Pose
         beaconPresent = hwMap.opticalDistanceSensor.get("beaconPresentFore");
 
         // color sensors init
-        beaconColor = hwMap.i2cDevice.get("beaconColor");
-        ballColor = hwMap.i2cDevice.get("ballColor");
+        beaconColorSensor = hwMap.i2cDevice.get("beaconColorSensor");
+        ballColorSensor = hwMap.i2cDevice.get("ballColorSensor");
 
-        colorForeReader = new I2cDeviceSynchImpl(beaconColor, I2cAddr.create8bit(0x60), false);
-        colorRearReader = new I2cDeviceSynchImpl(ballColor, I2cAddr.create8bit(0x64), false);
+        beaconColorReader = new I2cDeviceSynchImpl(beaconColorSensor, I2cAddr.create8bit(0x60), false);
+        //ballColorReader = new I2cDeviceSynchImpl(ballColorSensor, I2cAddr.create8bit(0x64), false);
 
-        colorForeReader.engage();
-        colorRearReader.engage();
+        beaconColorReader.engage();
+        //ballColorReader.engage();
 
         //motor configurations
 
@@ -248,7 +248,7 @@ public class Pose
 
         moveMode = MoveMode.still;
 
-        this.particle = new ParticleSystem(flingSpeed, motorLauncher, motorConveyor, servoGate);
+        this.particle = new ParticleSystem(flingSpeed, motorLauncher, motorConveyor, servoGate, ballColorSensor, isBlue);
         this.cap = new CapTrap(motorLift);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
@@ -263,8 +263,8 @@ public class Pose
 
 
         //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
-        colorForeReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
-        colorRearReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+//        beaconColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+//        ballColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
 
     }
 
@@ -644,10 +644,10 @@ public class Pose
 
     public void updateSensors(){
         // read color sensors
-        colorForeCache = colorForeReader.read(0x04, 1);
-        colorRearCache = colorRearReader.read(0x04, 1);
-        colorAft  = (colorRearCache[0] & 0xFF);
-        colorFore = (colorForeCache[0] & 0xFF);
+        beaconColorCache = beaconColorReader.read(0x04, 1);
+        //ballColorCache = ballColorReader.read(0x04, 1);
+        //ballColor = (ballColorCache[0] & 0xFF);
+        beaconColor = (beaconColorCache[0] & 0xFF);
 
         //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
         beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
@@ -865,16 +865,16 @@ public class Pose
 
     public boolean onAllianceColor(boolean isBlue){ //is the robot looking at it's team's aliance color
         if(isBlue){
-            return colorFore == 3;
+            return beaconColor == 3;
         }
-        return (colorFore > 9 && colorFore < 12);
+        return (beaconColor > 9 && beaconColor < 12);
     }
 
     public boolean onOpposingColor(boolean isBlue){ //is the robot looking at it's team's aliance color
         if(isBlue){
-            return (colorFore > 9 && colorFore < 12);
+            return (beaconColor > 9 && beaconColor < 12);
         }
-        return colorFore == 3;
+        return beaconColor == 3;
     }
     public boolean findOpposingColor(boolean isBlue, boolean fromLeft, double pwr){
         if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-pwr, 0, 0); }

@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -12,6 +16,11 @@ public class ParticleSystem {
     DcMotor motorConveyor = null;
     Servo   servoGate     = null;
 
+    byte[] ballColorCache          = null;
+    I2cDevice ballColorSensor      = null;
+    I2cDeviceSynch ballColorReader = null;
+    long ballColor                 = 0;
+
     private int position           = 0; //range of 1-1120
     private int speed              = 0; //ticks per second
     private int backupSpeed        = -1;
@@ -21,10 +30,13 @@ public class ParticleSystem {
     private int collectSpeed       = 3500;
     static  int ticksPerRot        = 1680;
     private long flingTimer        = 0;
+    private long ejectTimer        = 0;
     private int launchState        = 0;
     private long prevTime          = 0;
     public  float flywheelSpeed    = 0;
     private long prevFlywheelTicks = 0;
+    private boolean isBlue         = true;
+    private boolean shouldEject    = false;
 
     private double gateClosed    = ServoNormalize(2150);
     private double gateOpen      = ServoNormalize(1150);
@@ -32,33 +44,48 @@ public class ParticleSystem {
     private double powerConveyor  = 1.0;
     private double launchPower   = 1;
 
-    public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate){
-        this.position      = 0;
-        this.motorLauncher = motorLauncher;
-        this.motorConveyor = motorConveyor;
-        this.servoGate     = servoGate;
+    public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate, I2cDevice ballColorSensor, boolean isBlue){
+        this.position        = 0;
+        this.motorLauncher   = motorLauncher;
+        this.motorConveyor   = motorConveyor;
+        this.servoGate       = servoGate;
+        this.ballColorSensor = ballColorSensor;
+        this.isBlue          = isBlue;
+        ballColorReader      = new I2cDeviceSynchImpl(ballColorSensor, I2cAddr.create8bit(0x64), false);
+        ballColorReader.engage();
+        ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
-    public ParticleSystem(int ticksPerSec, DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate){
-        this.position      = 0;
-        this.speed         = ticksPerSec;
-        this.motorLauncher = motorLauncher;
-        this.motorConveyor = motorConveyor;
-        this.servoGate     = servoGate;
+    public ParticleSystem(int ticksPerSec, DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate, I2cDevice ballColorSensor, boolean isBlue){
+        this.position        = 0;
+        this.speed           = ticksPerSec;
+        this.motorLauncher   = motorLauncher;
+        this.motorConveyor   = motorConveyor;
+        this.servoGate       = servoGate;
+        this.ballColorSensor = ballColorSensor;
+        this.isBlue          = isBlue;
+        ballColorReader      = new I2cDeviceSynchImpl(ballColorSensor, I2cAddr.create8bit(0x64), false);
+        ballColorReader.engage();
+        ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
-    public ParticleSystem(int ticksPerSec, int position, DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate){
-        this.speed         = ticksPerSec;
-        this.position      = position;
-        this.motorLauncher = motorLauncher;
-        this.motorConveyor = motorConveyor;
-        this.servoGate     = servoGate;
+    public ParticleSystem(int ticksPerSec, int position, DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate, I2cDevice ballColorSensor, boolean isBlue){
+        this.speed           = ticksPerSec;
+        this.position        = position;
+        this.motorLauncher   = motorLauncher;
+        this.motorConveyor   = motorConveyor;
+        this.servoGate       = servoGate;
+        this.ballColorSensor = ballColorSensor;
+        this.isBlue          = isBlue;
+        ballColorReader      = new I2cDeviceSynchImpl(ballColorSensor, I2cAddr.create8bit(0x64), false);
+        ballColorReader.engage();
+        ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorConveyor.setMaxSpeed(4000);
         resetFlinger();
@@ -81,6 +108,13 @@ public class ParticleSystem {
     public void halfCycle(){
         resetFlinger();
         setPosition(ticksPerRot/2);
+    }
+
+    public boolean ballWrongColor(){
+        if(isBlue){
+            return (ballColor > 9 && ballColor < 12);
+        }
+        return ballColor == 3;
     }
 
     public void resetFlinger(){
@@ -210,10 +244,27 @@ public class ParticleSystem {
     }
 
     public void updateCollection(){
+        if(ballWrongColor() && !shouldEject){
+            eject();
+            ejectTimer = System.nanoTime() + (long) 2e9;
+            shouldEject = true;
+            motorConveyor.setPower(powerConveyor);
+            motorConveyor.setMaxSpeed(speedConveyor);
+        }
+        else if(System.nanoTime() > ejectTimer && shouldEject){
+            stopConveyor();
+            shouldEject = false;
+            motorConveyor.setPower(powerConveyor);
+            motorConveyor.setMaxSpeed(speedConveyor);
+        }
+        else if(System.nanoTime() > ejectTimer && !shouldEject){
+            motorConveyor.setPower(powerConveyor);
+            motorConveyor.setMaxSpeed(speedConveyor);
+        }
         motorLauncher.setPower(powerLauncher);
-        motorConveyor.setPower(powerConveyor);
-        motorConveyor.setMaxSpeed(speedConveyor);
         servoGate.setPosition(servoPosition);
+        ballColorCache = ballColorReader.read(0x04, 1);
+        ballColor = (ballColorCache[0] & 0xFF);
         flywheelSpeed = (float)(motorLauncher.getCurrentPosition() - prevFlywheelTicks)/(((System.nanoTime() - prevTime)/(float)(1e9))); //returns ticks per second
         prevFlywheelTicks = motorLauncher.getCurrentPosition();
         prevTime = System.nanoTime();
@@ -235,6 +286,10 @@ public class ParticleSystem {
         setSpeed(backupSpeed);
         motorLauncher.setPower(1);
         backupSpeed = -1;
+    }
+
+    public long getBallColor() {
+        return ballColor;
     }
 
     public double ServoNormalize(int pulse){

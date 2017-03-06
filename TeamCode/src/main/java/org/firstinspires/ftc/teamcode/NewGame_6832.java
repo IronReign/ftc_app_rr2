@@ -35,7 +35,6 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.ftccommon.SoundPlayer;
-import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -46,18 +45,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 import java.util.Locale;
-import com.vuforia.CameraDevice;
-import com.vuforia.Image;
+
 import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.Vuforia;
 import com.vuforia.HINT;
-import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -124,7 +119,7 @@ public class NewGame_6832 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        robot.init(this.hardwareMap);
+        robot.init(this.hardwareMap, isBlue);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -434,7 +429,7 @@ public class NewGame_6832 extends LinearOpMode {
 
                     break;
                 case 1://drive forward for proper shot distance to vortex
-                    if(robot.driveForward(false, .15, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
+                    if(robot.driveForward(false, .2, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
                         robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                         launchTimer = futureTime(3.5f);
@@ -874,9 +869,9 @@ public class NewGame_6832 extends LinearOpMode {
                         return String.valueOf(robot.beaconDistAft);
                     }
                 })
-                .addData("RearColor", new Func<String>() {
+                .addData("ballColor", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(robot.colorAft);
+                        return Long.toString(robot.particle.getBallColor());
                     }
                 })
                 .addData("DistFore", new Func<String>() {
@@ -886,7 +881,7 @@ public class NewGame_6832 extends LinearOpMode {
                 })
                 .addData("ForeColor", new Func<String>() {
                     @Override public String value() {
-                        return Long.toString(robot.colorFore);
+                        return Long.toString(robot.beaconColor);
                     }
                 });
 
@@ -896,8 +891,8 @@ public class NewGame_6832 extends LinearOpMode {
 //        //telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
 //        telemetry.addLine().addData("Normal", beaconPresentRear.getLightDetected());
 //
-//        telemetry.addLine().addData("ColorFore", colorForeCache[0] & 0xFF);
-//        telemetry.addData("ColorRear", colorRearCache[0] & 0xFF);
+//        telemetry.addLine().addData("ColorFore", beaconColorCache[0] & 0xFF);
+//        telemetry.addData("ColorRear", ballColorCache[0] & 0xFF);
 
     }
     String formatAngle(AngleUnit angleUnit, double angle) {
