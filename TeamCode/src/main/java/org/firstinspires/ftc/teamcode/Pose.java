@@ -82,6 +82,7 @@ public class Pose
     private double powerBackLeft   = 0;
     private double powerBackRight  = 0;
     private double powerConveyor   = 0;
+    static  int ticksPerRot        = 1680;
 
     public ParticleSystem particle = null;
     public CapTrap cap = null;
@@ -243,7 +244,7 @@ public class Pose
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorLift.setDirection(DcMotorSimple.Direction.FORWARD);
         this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;

@@ -337,6 +337,14 @@ public class NewGame_6832 extends LinearOpMode {
             robot.particle.spinUpToggle();
 
         }
+
+        if(toggleAllowed(gamepad1.dpad_up, 5)){
+            robot.cap.cycleUp();
+        }
+        if(toggleAllowed(gamepad1.dpad_down, 4)){
+            robot.cap.cycleDown();
+        }
+
 //
 //        if(toggleAllowed(gamepad1.y,3)){
 //
@@ -383,14 +391,15 @@ public class NewGame_6832 extends LinearOpMode {
 //        }
 
 
-        if(gamepad1.dpad_up)
-            robot.cap.raise(1);
+//        if(gamepad1.dpad_up)
+//            robot.cap.raise(1);
+//
+//        else if(gamepad1.dpad_down)
+//            robot.cap.lower(1);
+//
+//        else
+//            robot.cap.stop();
 
-        else if(gamepad1.dpad_down)
-            robot.cap.lower(1);
-
-        else
-            robot.cap.stop();
 //        if(shouldLaunch){
 //            robot.particle.launchToggle();
 //        }

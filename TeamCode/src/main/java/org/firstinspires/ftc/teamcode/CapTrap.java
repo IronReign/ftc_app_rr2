@@ -1,12 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.hardware.Servo;
+
+import static org.firstinspires.ftc.teamcode.Pose.ticksPerRot;
 
 /**
  * Created by Tycho on 1/7/2017.
@@ -14,27 +10,86 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class CapTrap {
     DcMotor motorLift = null;
-    static int ticksPerM = 1000; //TODO: set number of ticks to reflect actual ticks per meter on the lift
+
+    static double spoolDiameter       = .05; //diameter of the spool in meters
+    private double spoolCircumference = spoolDiameter *Math.PI;
+    private int ticksPerM             = (int)(ticksPerRot*(1/spoolCircumference));
+
+    private double hSummit = 0.88;
+    private double hDeposit = 0.61;
+    private double hStarting = 0;
+    private double hPickup = -0.34;
+
     public CapTrap(DcMotor motorLift){
         this.motorLift = motorLift;
-        this.motorLift.setMaxSpeed(10000);
+        this.motorLift.setMaxSpeed(1000);
     }
     public void resetMotor(boolean runToPosition){
         motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         if(runToPosition) motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         else motorLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        this.motorLift.setMaxSpeed(10000);
+        this.motorLift.setMaxSpeed(1000);
     }
-    public void liftToScoringPosition(){
-        setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 10000, 1);
+    public void summit(){
+        setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 1000, 1);
         motorLift.setPower(1);
-        setPositionMeters(1.5); //TODO: set number of meters to reflect actual height needed to score the cap ball
+        setPositionMeters(hSummit); //TODO: set number of meters to reflect actual height needed to score the cap ball
     }
-    public void lowerToStartingPos(){
-        setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 10000, 1);
+    public void deposit(){
+        setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 1000, 1);
         motorLift.setPower(1);
-        setPositionMeters(0);
+        setPositionMeters(hDeposit); //TODO: set number of meters to reflect actual height needed to score the cap ball
     }
+    public void startingPos(){
+        setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 1000, 1);
+        motorLift.setPower(1);
+        setPositionMeters(hStarting);
+    }
+    public void pickupPos(){
+        setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 1000, 1);
+        motorLift.setPower(1);
+        setPositionMeters(hPickup);
+    }
+    public double getPositionMeters(){
+        return motorLift.getTargetPosition()/ticksPerM;
+    }
+
+    public void cycleUp(){
+        if(hPickup - 0.1 < getPositionMeters() && getPositionMeters() < hPickup + 0.1){
+            startingPos();
+        }
+        else if(hStarting - 0.1 < getPositionMeters() && getPositionMeters() < hStarting + 0.1){
+            deposit();
+        }
+        else if(hDeposit - 0.1 < getPositionMeters() && getPositionMeters() < hDeposit + 0.1){
+            summit();
+        }
+        else if(hSummit - 0.1 < getPositionMeters() && getPositionMeters() < hSummit + 0.1){
+
+        }
+        else{
+            startingPos();
+        }
+    }
+
+    public void cycleDown(){
+        if(hPickup - 0.1 < getPositionMeters() && getPositionMeters() < hPickup + 0.1){
+
+        }
+        else if(hStarting - 0.1 < getPositionMeters() && getPositionMeters() < hStarting + 0.1){
+            pickupPos();
+        }
+        else if(hDeposit - 0.1 < getPositionMeters() && getPositionMeters() < hDeposit + 0.1){
+            startingPos();
+        }
+        else if(hSummit - 0.1 < getPositionMeters() && getPositionMeters() < hSummit + 0.1){
+            deposit();
+        }
+        else{
+            startingPos();
+        }
+    }
+
     public void setPositionMeters(double m){
         if(!(motorLift.getMode().equals(DcMotor.RunMode.RUN_TO_POSITION))) motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         m *= ticksPerM;

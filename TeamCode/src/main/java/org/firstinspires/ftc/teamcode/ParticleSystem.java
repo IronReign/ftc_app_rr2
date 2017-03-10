@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import static org.firstinspires.ftc.teamcode.Pose.ticksPerRot;
+
 /**
  * Created by tycho on 11/18/2016.
  */
@@ -28,7 +30,7 @@ public class ParticleSystem {
     private int speedConveyor      = 0;
     private int loadSpeed          = 400;
     private int collectSpeed       = 3500;
-    static  int ticksPerRot        = 1680;
+
     private long flingTimer        = 0;
     private long ejectTimer        = 0;
     private int launchState        = 0;
