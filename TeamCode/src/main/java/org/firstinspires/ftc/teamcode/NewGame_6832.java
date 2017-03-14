@@ -37,6 +37,7 @@ import android.util.Log;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Func;
@@ -93,6 +94,11 @@ public class NewGame_6832 extends LinearOpMode {
     private int flingNumber = 0;
     private boolean shouldLaunch = false;
     private boolean isBlue = false;
+    private boolean capMode = false;
+    private double pwrDamper = 1.0;
+    private double pwrFwd = 0;
+    private double pwrStf = 0;
+    private double pwrRot = 0;
 
     Orientation angles;
 
@@ -117,6 +123,19 @@ public class NewGame_6832 extends LinearOpMode {
     double testableDouble = robot.KpDrive;
     double testableHeading = 0;
     boolean testableDirection = true;
+
+    private int a = 0; //collect (particle mode), manual cap lower (cap mode)
+    private int b = 1; //eject (particle mode)
+    private int x = 2; //launch (particle mode)
+    private int y = 3; //spin up (particle mode), manual cap raise (cap mode)
+    private int dpad_down = 4; //no function (particle mode), lowers cap to next lowest preset (cap mode)
+    private int dpad_up = 5; //no function (particle mode), raises cap to next highest preset (cap mode)
+    private int dpad_left = 6; //toggles between particle and cap mode (both modes)
+    private int dpad_right = 7; //no function
+    private int left_bumper = 8; //increment state down (always)
+    private int right_bumper = 9; //increment state up (always)
+    private int startBtn = 10; //toggle active (always)
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -186,18 +205,18 @@ public class NewGame_6832 extends LinearOpMode {
             if(gamepad1.y){
                 flingNumber = 3;
             }
-            if(toggleAllowed(gamepad1.x,2)) {
+            if(toggleAllowed(gamepad1.x,x)) {
 
                     isBlue = !isBlue;
 
             }
-            if(toggleAllowed(gamepad1.dpad_down,4)){
+            if(toggleAllowed(gamepad1.dpad_down,dpad_down)){
 
                 autoDelay--;
                 if(autoDelay < 0) autoDelay = 15;
 
             }
-            if(toggleAllowed(gamepad1.dpad_up, 5)){
+            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
 
                 autoDelay++;
                 if(autoDelay>15) autoDelay = 0;
@@ -240,31 +259,30 @@ public class NewGame_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 3:
-
-
-                        vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener());
-
                         break;
-                    case 4: //provides data for forwards/backwards calibration
+                    case 4:
+                        vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener(),500);
+                        break;
+                    case 5: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
                         if(robot.driveForward(false, 1, .5)) active = false;
                         break;
-                    case 5: //provides data for left/right calibration
+                    case 6: //provides data for left/right calibration
                         joystickDriveStarted = false;
                         if(robot.getAverageAbsTicks() < 2000){
                             robot.driveMixer(0,1,0);
                         }
                         else robot.driveMixer(0,0,0);
                         break;
-                    case 6: //demo mode
+                    case 7: //demo mode
                         demo();
                         break;
-                    case 7: //tertiaryAuto demo mode
+                    case 8: //tertiaryAuto demo mode
                         //tertiaryAuto(1.0);
                         //break;
                         testableHeading = robot.getHeading();
                         state++;
-                    case 8:
+                    case 9:
                         testableAuto(testableHeading);
                         break;
                 }
@@ -275,8 +293,8 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
-    public void vuTest(VuforiaTrackableDefaultListener  beacontarget){
-        robot.driveToBeacon(beacontarget, 60, .2, false);
+    public void vuTest(VuforiaTrackableDefaultListener  beacontarget, double distance){
+        robot.driveToBeacon(beacontarget, 500, 0.8, true);
     }
     public void demo(){
         robot.MaintainHeading(gamepad1.x);
@@ -318,48 +336,61 @@ public class NewGame_6832 extends LinearOpMode {
         9  = right bumper
         10 = start button
         */
+        if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+            capMode = !capMode;
+        }
+        if (capMode) pwrDamper = -0.25;
+        else pwrDamper = 1.0;
+
         if (!joystickDriveStarted) {
             robot.resetMotors(true);
             joystickDriveStarted = true;
         }
+        pwrFwd = pwrDamper * -gamepad1.left_stick_y;
+        pwrStf = pwrDamper * -gamepad1.left_stick_x;
+        pwrRot = pwrDamper * -gamepad1.right_stick_x;
 
-        if(!runDemo) robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
+        if (!runDemo)
+            robot.driveMixer(pwrFwd, pwrStf, pwrRot);
 
-        //toggle the particle conveyor on and off - quick and dirty
-        if (toggleAllowed(gamepad1.a,0))
-        {
-            robot.particle.collectToggle();
+        if(!capMode) {
+
+            //toggle the particle conveyor on and off - quick and dirty
+            if (toggleAllowed(gamepad1.a, a)) {
+                robot.particle.collectToggle();
+            }
+
+            if (toggleAllowed(gamepad1.b, b)) {
+                robot.particle.eject();
+            }
+            if (toggleAllowed(gamepad1.x, x)) {
+                robot.particle.launchToggle();
+            }
+            if (toggleAllowed(gamepad1.y, y)) {
+                robot.particle.spinUpToggle();
+            }
         }
-
-        if (toggleAllowed(gamepad1.b,1))
-        {
-            robot.particle.eject();
-
+        else{
+            if (toggleAllowed(gamepad1.dpad_up, dpad_up)) {
+                robot.cap.cycleUp();
+            }
+            if (toggleAllowed(gamepad1.dpad_down, dpad_down)) {
+                robot.cap.cycleDown();
+            }
+            if (gamepad1.y){
+                robot.cap.raise(.75);
+            }
+            else if (gamepad1.a){
+                robot.cap.lower(.75);
+            }
+            else{
+                robot.cap.stop();
+            }
         }
-
-        if(toggleAllowed(gamepad1.x,2)) {
-
-//            shouldLaunch = !shouldLaunch;
-//            robot.particle.toggleGate(shouldLaunch);
-//            if(!shouldLaunch){
-//                robot.particle.stopConveyor();
-//            }
-            robot.particle.launchToggle();
-
-        }
-
-        if(toggleAllowed(gamepad1.y,3)) {
-
-            robot.particle.spinUpToggle();
-
-        }
-
-        if(toggleAllowed(gamepad1.dpad_up, 5)){
-            robot.cap.cycleUp();
-        }
-        if(toggleAllowed(gamepad1.dpad_down, 4)){
-            robot.cap.cycleDown();
-        }
+//        if(capMode){
+//            if (!runDemo)
+//                robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x
+//        }
 
 //
 //        if(toggleAllowed(gamepad1.y,3)){
@@ -613,11 +644,11 @@ public class NewGame_6832 extends LinearOpMode {
         10 = start button
         */
 
-        if(toggleAllowed(gamepad1.left_bumper,8)) {
+        if(toggleAllowed(gamepad1.left_bumper,left_bumper)) {
 
             state--;
             if (state < 0) {
-                state = 8 ;
+                state = 9 ;
             }
             robot.resetMotors(true);
             active = false;
@@ -625,10 +656,10 @@ public class NewGame_6832 extends LinearOpMode {
 
         }
 
-        if (toggleAllowed(gamepad1.right_bumper,9)) {
+        if (toggleAllowed(gamepad1.right_bumper,right_bumper)) {
 
             state++;
-            if (state > 8) {
+            if (state > 9) {
                 state = 0;
             }
             robot.resetMotors(true);
@@ -637,7 +668,7 @@ public class NewGame_6832 extends LinearOpMode {
 
         }
 
-        if(toggleAllowed(gamepad1.start,10)) {
+        if(toggleAllowed(gamepad1.start, startBtn)) {
             robot.resetMotors(true);
             active = !active;
 
@@ -684,6 +715,21 @@ public class NewGame_6832 extends LinearOpMode {
                 }
             default:
                 break;
+        }
+    }
+
+    public void calibrateLift(){
+        if(gamepad1.dpad_up){
+            robot.cap.raise(.75);
+        }
+        else if(gamepad1.dpad_down){
+            robot.cap.lower(.75);
+        }
+        else{
+            robot.cap.stop();
+        }
+        if(toggleAllowed(gamepad1.x, x)){
+            robot.cap.setZero(DcMotor.RunMode.RUN_USING_ENCODER, 1000, 0);
         }
     }
 
@@ -769,7 +815,12 @@ public class NewGame_6832 extends LinearOpMode {
             return "Auto will run";
         return "Auto will not run";
     }
-
+    public String getTeleopMode(){
+        if(capMode){
+            return "Cap Mode";
+        }
+        return "Particle Mode";
+    }
     public double ServoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on 0 - 1 scale
@@ -805,12 +856,17 @@ public class NewGame_6832 extends LinearOpMode {
                         return Integer.toString(state);
                     }
                 })
-                .addData("Flywheel Speed", new Func<String>() {
+                .addData("", new Func<String>() {
                     @Override public String value() {
-
-                        return Float.toString(robot.particle.flywheelSpeed);
+                        return getTeleopMode();
                     }
                 });
+//                .addData("Flywheel Speed", new Func<String>() {
+//                    @Override public String value() {
+//
+//                        return Float.toString(robot.particle.flywheelSpeed);
+//                    }
+//                });
 
         telemetry.addLine()
                 .addData("status", new Func<String>() {

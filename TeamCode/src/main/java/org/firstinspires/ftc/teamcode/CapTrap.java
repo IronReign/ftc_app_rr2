@@ -40,6 +40,10 @@ public class CapTrap {
         motorLift.setPower(1);
         setPositionMeters(hDeposit); //TODO: set number of meters to reflect actual height needed to score the cap ball
     }
+    public void setZero(DcMotor.RunMode runMode,int tps, double pwr){
+        motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        setRunmode(runMode, tps, pwr);
+    }
     public void startingPos(){
         setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 1000, 1);
         motorLift.setPower(1);

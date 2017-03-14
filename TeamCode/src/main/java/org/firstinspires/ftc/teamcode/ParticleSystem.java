@@ -39,6 +39,7 @@ public class ParticleSystem {
     private long prevFlywheelTicks = 0;
     private boolean isBlue         = true;
     private boolean shouldEject    = false;
+    private float minFlywheelSpeed = 750;
 
     private double gateClosed    = ServoNormalize(2150);
     private double gateOpen      = ServoNormalize(1150);
@@ -202,10 +203,15 @@ public class ParticleSystem {
     }
 
     public void launchToggle() {
-        if (servoPosition == gateClosed) {
-            launchBegin();
-        } else {
-            launchEnd();
+        if(flywheelSpeed > minFlywheelSpeed) {
+            if (servoPosition == gateClosed) {
+                launchBegin();
+            } else {
+                launchEnd();
+            }
+        }
+        else{
+            spinUp();
         }
     }
 
