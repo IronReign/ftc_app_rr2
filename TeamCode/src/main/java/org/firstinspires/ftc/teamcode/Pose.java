@@ -130,6 +130,10 @@ public class Pose
 
     long flingerTimer;
 
+
+    private VectorF vuTrans;
+    private double vuAngle;
+
     public enum MoveMode{
         forward,
         backward,
@@ -174,7 +178,7 @@ public class Pose
      *
      * @param x     The position relative to the x axis of the field
      * @param y     The position relative to the y axis of the field
-     * @param angle The angle of the robot
+     * @param angle The vuAngle of the robot
      */
     public Pose(double x, double y, double angle)
     {
@@ -187,7 +191,7 @@ public class Pose
     }
 
     /**
-     * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 angle.
+     * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 vuAngle.
      * Useful for determining the Pose of the robot relative to the origin.
      */
     public Pose()
@@ -382,6 +386,7 @@ public class Pose
         }
         return false;
     }
+
     public void MaintainHeading(boolean buttonState){
         if(buttonState) {
             if (!maintainHeadingInit) {
@@ -400,7 +405,7 @@ public class Pose
     }
     public void setHeading(double angle){
         poseHeading = angle;
-        initialized = false;
+        initialized = false; //triggers recalc of heading offset at next IMU update cycle
     }
 
     public void driveMixer(double forward,double strafe ,double rotate){
@@ -500,22 +505,22 @@ public class Pose
             return true;
         }
     }
-    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
-        moveMode = moveMode.rotate;
-        if(!clockwise){
-            targetAngle = -targetAngle;
-            power = -power;
-        }
-        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
-        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
-            driveMixer(0, 0, power);
-            return false;
-        }
-        else {
-            driveMixer(0, 0, 0);
-            return true;
-        }
-    }
+//    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
+//        moveMode = moveMode.rotate;
+//        if(!clockwise){
+//            targetAngle = -targetAngle;
+//            power = -power;
+//        }
+//        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
+//        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
+//            driveMixer(0, 0, power);
+//            return false;
+//        }
+//        else {
+//            driveMixer(0, 0, 0);
+//            return true;
+//        }
+//    }
 
     public boolean driveStrafe(boolean left, double targetMeters, double power){
 
@@ -601,9 +606,9 @@ public class Pose
     }
 
     /**
-     * Returns the angle of the robot
+     * Returns the vuAngle of the robot
      *
-     * @return The current angle of the robot
+     * @return The current vuAngle of the robot
      */
     public double getHeading()
     {
@@ -796,7 +801,7 @@ public class Pose
 
 
     /**
-     * Apply and angular adjustment to a base angle with result wrapping around at 360 degress
+     * Apply and angular adjustment to a base vuAngle with result wrapping around at 360 degress
      *
      * @param angle1
      * @param angle2
@@ -871,7 +876,7 @@ public class Pose
         return (beaconColor > 9 && beaconColor < 12);
     }
 
-    public boolean onOpposingColor(boolean isBlue){ //is the robot looking at it's team's aliance color
+    public boolean onOpposingColor(boolean isBlue){ //is the robot looking at its team's aliance color
         if(isBlue){
             return (beaconColor > 9 && beaconColor < 12);
         }
@@ -902,52 +907,59 @@ public class Pose
     public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe) {
 
         if (beacon.getPose() != null) {
-            VectorF trans = beacon.getPose().getTranslation();
+            vuTrans = beacon.getRawPose().getTranslation();
 
-            double angle = Math.toDegrees(Math.atan2(trans.get(0), -trans.get(2)));
-            Log.i("Beacon Angle", String.valueOf(angle));
+            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            Log.i("Beacon Angle", String.valueOf(vuAngle));
 
             if (strafe) {
-                //track(angle, Math.hypot(trans.get(0), trans.get(2) - bufferDistance), speed);
+                //track(vuAngle, Math.hypot(vuTrans.get(0), vuTrans.get(2) - bufferDistance), speed);
                 //driveMixer()
             } else {  //turn first, then drive
-                RotateIMU(angle, 1.0);
-                //track(0, Math.hypot(trans.get(0), trans.get(2)) - bufferDistance, speed);
+                //RotateIMU(vuAngle, 5.0);
+
+
+
+                MovePID(KpDrive, KiDrive, KdDrive, clampDouble(-0.8, 0.8,(double)(500 - vuTrans.get(2))/-800.0), -vuAngle, 0);
+                //track(0, Math.hypot(vuTrans.get(0), vuTrans.get(2)) - bufferDistance, speed);
             }//else
 
         } else {
-            Log.i("VISION", "drive To Beacon failed: Beacon not visible");
+            driveMixer(0,0,0);
         }//else
 
     }//driveToBeacon
 
+    public double getVuAngle(){
+        return vuAngle;
+    }
 //    public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe,
 //                               double robotAngle, VectorF coordinate) {
 //
 //        if (beacon.getPose() != null) {
-//            VectorF trans = beacon.getPose().getTranslation();
+//            VectorF vuTrans = beacon.getPose().getTranslation();
 //
-//            Log.i(TAG, "strafeToBeacon: " + trans);
+//            Log.i(TAG, "strafeToBeacon: " + vuTrans);
 //
-//            trans = VortexUtils.navOffWall(trans, robotAngle, coordinate);
+//            vuTrans = VortexUtils.navOffWall(vuTrans, robotAngle, coordinate);
 //
-//            Log.i(TAG, "strafeToBeacon: " + trans);
+//            Log.i(TAG, "strafeToBeacon: " + vuTrans);
 //
-//            double angle = Math.toDegrees(Math.atan2(trans.get(0), trans.get(2)));
+//            double vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
 //
-//            Log.i(TAG, "strafeToBeacon: " + angle);
+//            Log.i(TAG, "strafeToBeacon: " + vuAngle);
 //
 //
 //            if (strafe) {
-//                //track(angle, Math.hypot(trans.get(0), trans.get(2)) - bufferDistance, speed);
+//                //track(vuAngle, Math.hypot(vuTrans.get(0), vuTrans.get(2)) - bufferDistance, speed);
 //            } else {
-//                if (angle < 0) {
-//                    imuTurnL(-angle, speed);
+//                if (vuAngle < 0) {
+//                    imuTurnL(-vuAngle, speed);
 //                } else {
-//                    imuTurnR(angle, speed);
+//                    imuTurnR(vuAngle, speed);
 //                }//else
 //
-//                track(0, Math.hypot(trans.get(0), trans.get(2) - bufferDistance), speed);
+//                track(0, Math.hypot(vuTrans.get(0), vuTrans.get(2) - bufferDistance), speed);
 //            }//else
 //
 //        } else {

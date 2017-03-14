@@ -46,7 +46,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 
 import java.util.Locale;
 
@@ -134,7 +136,7 @@ public class NewGame_6832 extends LinearOpMode {
         locale.setFrameQueueCapacity(1);
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
 
-        Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
+        Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 
 //        VuforiaTrackables beacons = locale.loadTrackablesFromAsset("FTC_2016-17");
 //        VuforiaTrackableDefaultListener wheels = (VuforiaTrackableDefaultListener) beacons.get(0).getListener();
@@ -145,6 +147,19 @@ public class NewGame_6832 extends LinearOpMode {
         beaconTargets.get(1).setName("Tools");
         beaconTargets.get(2).setName("Lego");
         beaconTargets.get(3).setName("Gears");
+
+
+        VuforiaTrackable redNearTarget = beaconTargets.get(3);
+        redNearTarget.setName("redNear");  // Gears
+
+        VuforiaTrackable blueNearTarget  = beaconTargets.get(0);
+        blueNearTarget.setName("blueNear");  // Wheels
+
+        VuforiaTrackable redFarTarget = beaconTargets.get(1);
+        redFarTarget.setName("redFar");  // Tools
+
+        VuforiaTrackable blueFarTarget  = beaconTargets.get(2);
+        blueFarTarget.setName("blueFar");  // Legos
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
@@ -225,12 +240,10 @@ public class NewGame_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 3:
-                        //half-cycles the flinger
-//                        joystickDriveStarted = false;
-//                        robot.particle.halfCycle();
-//                        active = false;
 
-//                        vuTest();
+
+                        vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener());
+
                         break;
                     case 4: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
@@ -262,6 +275,9 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
+    public void vuTest(VuforiaTrackableDefaultListener  beacontarget){
+        robot.driveToBeacon(beacontarget, 60, .2, false);
+    }
     public void demo(){
         robot.MaintainHeading(gamepad1.x);
 
@@ -813,6 +829,12 @@ public class NewGame_6832 extends LinearOpMode {
                     @Override public String value() {
                         //return formatAngle(angles.angleUnit, angles.firstAngle);
                         return Double.toString(robot.getHeading());
+                    }
+                })
+                .addData("vuAngle", new Func<String>() {
+                    @Override public String value() {
+                        //return formatAngle(angles.angleUnit, angles.firstAngle);
+                        return Double.toString(robot.getVuAngle());
                     }
                 })
                 .addData("headingRaw", new Func<String>() {
