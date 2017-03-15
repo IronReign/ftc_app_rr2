@@ -262,7 +262,7 @@ public class NewGame_6832 extends LinearOpMode {
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
                         joystickDriveStarted = false;
-                        secondaryAuto();
+                        vuAutonomous(1.0);
                         break;
                     case 2: //code for tele-op control
                         joystickDrive();
@@ -357,7 +357,7 @@ public class NewGame_6832 extends LinearOpMode {
         }
         pwrFwd = pwrDamper * -gamepad1.left_stick_y;
         pwrStf = pwrDamper * -gamepad1.left_stick_x;
-        pwrRot = pwrDamper * -gamepad1.right_stick_x - gamepad1.right_trigger/3 + gamepad1.left_trigger/3;
+        pwrRot = Math.abs(pwrDamper) * (-gamepad1.right_stick_x - gamepad1.right_trigger/3 + gamepad1.left_trigger/3);
 
         if (!runDemo)
             robot.driveMixer(pwrFwd, pwrStf, pwrRot);
@@ -522,7 +522,7 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
                 case 10: //drive up next to the second beacon
                     if(isBlue){
-                        if(robot.DriveIMUDistance(.01, .5, 90, false, .85)){
+                        if(robot.DriveIMUDistance(.01, .5, 90, true, .85)){
                             robot.resetMotors(true);
                             autoState++;
                         }

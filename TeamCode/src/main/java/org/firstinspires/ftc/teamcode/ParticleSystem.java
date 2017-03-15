@@ -26,9 +26,11 @@ public class ParticleSystem {
     private int position           = 0; //range of 1-1120
     private int speed              = 0; //ticks per second
     private int backupSpeed        = -1;
-    private double powerLauncher   = 0;
+    private double powerFlywheel   = 1;
+    private int speedFlywheel      = 0;
+    private int launchSpeed        = 900;
     private int speedConveyor      = 0;
-    private int loadSpeed          = 400;
+    private int loadSpeed          = 750;
     private int collectSpeed       = 3500;
 
     private long flingTimer        = 0;
@@ -58,6 +60,7 @@ public class ParticleSystem {
         ballColorReader.engage();
         ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
@@ -74,6 +77,7 @@ public class ParticleSystem {
         ballColorReader.engage();
         ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
@@ -90,6 +94,7 @@ public class ParticleSystem {
         ballColorReader.engage();
         ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
@@ -122,14 +127,14 @@ public class ParticleSystem {
 
     public void resetFlinger(){
         motorLauncher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLauncher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLauncher.setMaxSpeed(speed);
         setPosition(0);
         motorLauncher.setPower(0);
     }
 
     public void fling(){
-        motorConveyor.setPower(-powerLauncher);
+        motorConveyor.setPower(-powerFlywheel);
         flingTimer = System.nanoTime() + 200000000;
         while(flingTimer > System.nanoTime()){ speedConveyor = -1; }
         motorConveyor.setPower(0);
@@ -146,25 +151,25 @@ public class ParticleSystem {
         motorConveyor.setPower(0);
         flingTimer = System.nanoTime() + 500000000;
         while(flingTimer > System.nanoTime()){ speedConveyor = 0; }
-        motorConveyor.setPower(powerLauncher);
+        motorConveyor.setPower(powerFlywheel);
         flingTimer = System.nanoTime() + 1000000000;
         while(flingTimer > System.nanoTime()){ speedConveyor = collectSpeed; }
         speedConveyor = 0;
     }
 
     public void spinUpToggle(){
-        if(powerLauncher == 0)
+        if(speedFlywheel == 0)
             spinUp();
         else
             spinDown();
     }
 
     public void spinUp(){
-            powerLauncher = launchPower;
+            speedFlywheel = launchSpeed;
             }
 
     public void spinDown(){
-        powerLauncher = 0;
+        speedFlywheel = 0;
     }
 
     public void collectToggle() {
@@ -203,12 +208,12 @@ public class ParticleSystem {
     }
 
     public void launchToggle() {
-        if(flywheelSpeed > minFlywheelSpeed) {
-            if (servoPosition == gateClosed) {
-                launchBegin();
-            } else {
-                launchEnd();
-            }
+        if (flywheelSpeed > minFlywheelSpeed && servoPosition == gateClosed) {
+            launchBegin();
+        }
+        else if (servoPosition == gateOpen){
+            launchEnd();
+            spinDown();
         }
         else{
             spinUp();
@@ -269,7 +274,8 @@ public class ParticleSystem {
             motorConveyor.setPower(powerConveyor);
             motorConveyor.setMaxSpeed(speedConveyor);
         }
-        motorLauncher.setPower(powerLauncher);
+        motorLauncher.setPower(launchPower);
+        motorLauncher.setMaxSpeed(speedFlywheel);
         servoGate.setPosition(servoPosition);
         ballColorCache = ballColorReader.read(0x04, 1);
         ballColor = (ballColorCache[0] & 0xFF);
