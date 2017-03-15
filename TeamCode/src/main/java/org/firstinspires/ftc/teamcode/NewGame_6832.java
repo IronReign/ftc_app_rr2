@@ -294,7 +294,7 @@ public class NewGame_6832 extends LinearOpMode {
     }
 
     public void vuTest(VuforiaTrackableDefaultListener  beacontarget, double distance){
-        robot.driveToBeacon(beacontarget, 500, 0.8, true);
+        robot.driveToBeacon(beacontarget, 500, 0.8, false);
     }
     public void demo(){
         robot.MaintainHeading(gamepad1.x);

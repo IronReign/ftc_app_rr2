@@ -923,7 +923,7 @@ public class Pose
                 pwr = 0;
             else
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
-                pwr = clampDouble(-maxSpeed, maxSpeed,(double)(bufferDistance-vuDist/-800.0));//but this should be equivalent
+                pwr = clampDouble(-maxSpeed, maxSpeed, (bufferDistance-vuDist/-1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
             MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0);
 
