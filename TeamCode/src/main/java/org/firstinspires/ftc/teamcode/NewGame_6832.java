@@ -100,6 +100,8 @@ public class NewGame_6832 extends LinearOpMode {
     private double pwrStf = 0;
     private double pwrRot = 0;
 
+    private double vuPwr = 0;
+
     Orientation angles;
 
     private int state = 0;
@@ -136,6 +138,13 @@ public class NewGame_6832 extends LinearOpMode {
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
 
+    public VuforiaTrackables beaconTargets;
+    VuforiaTrackable redNearTarget;
+    VuforiaTrackable blueNearTarget;
+    VuforiaTrackable redFarTarget;
+    VuforiaTrackable blueFarTarget;
+
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -161,23 +170,23 @@ public class NewGame_6832 extends LinearOpMode {
 //        VuforiaTrackableDefaultListener wheels = (VuforiaTrackableDefaultListener) beacons.get(0).getListener();
 //        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
 
-        VuforiaTrackables beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
+        beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
         beaconTargets.get(0).setName("Wheels");
         beaconTargets.get(1).setName("Tools");
         beaconTargets.get(2).setName("Lego");
         beaconTargets.get(3).setName("Gears");
 
 
-        VuforiaTrackable redNearTarget = beaconTargets.get(3);
+        redNearTarget = beaconTargets.get(3);
         redNearTarget.setName("redNear");  // Gears
 
-        VuforiaTrackable blueNearTarget  = beaconTargets.get(0);
+        blueNearTarget  = beaconTargets.get(0);
         blueNearTarget.setName("blueNear");  // Wheels
 
-        VuforiaTrackable redFarTarget = beaconTargets.get(1);
+        redFarTarget = beaconTargets.get(1);
         redFarTarget.setName("redFar");  // Tools
 
-        VuforiaTrackable blueFarTarget  = beaconTargets.get(2);
+        blueFarTarget  = beaconTargets.get(2);
         blueFarTarget.setName("blueFar");  // Legos
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
@@ -293,8 +302,8 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
-    public void vuTest(VuforiaTrackableDefaultListener  beacontarget, double distance){
-        robot.driveToBeacon(beacontarget, 500, 0.8, false);
+    public void vuTest(VuforiaTrackableDefaultListener beacontarget, double distance){
+        vuPwr = robot.driveToBeacon(beacontarget, 500, 0.8, false);
     }
     public void demo(){
         robot.MaintainHeading(gamepad1.x);
@@ -348,7 +357,7 @@ public class NewGame_6832 extends LinearOpMode {
         }
         pwrFwd = pwrDamper * -gamepad1.left_stick_y;
         pwrStf = pwrDamper * -gamepad1.left_stick_x;
-        pwrRot = pwrDamper * -gamepad1.right_stick_x;
+        pwrRot = pwrDamper * -gamepad1.right_stick_x - gamepad1.right_trigger/3 + gamepad1.left_trigger/3;
 
         if (!runDemo)
             robot.driveMixer(pwrFwd, pwrStf, pwrRot);
@@ -387,69 +396,7 @@ public class NewGame_6832 extends LinearOpMode {
                 robot.cap.stop();
             }
         }
-//        if(capMode){
-//            if (!runDemo)
-//                robot.driveMixer(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x
-//        }
 
-//
-//        if(toggleAllowed(gamepad1.y,3)){
-//
-//            if (robot.particle.isStopped()) {
-//                robot.particle.restart();
-//            } else {
-//                robot.particle.emergencyStop();
-//            }
-//        }
-
-//        if(toggleAllowed(gamepad1.dpad_down,4)){
-//
-//            robot.particle.halfCycle();
-//
-//        }
-
-//        if(toggleAllowed(gamepad1.dpad_up, 5)){
-//            runDemo = !runDemo;
-//            robot.resetBeaconPresserState();
-//        }
-//        if(toggleAllowed(gamepad1.dpad_left, 6) && !runDemo){
-//            isBlue = !isBlue;
-//        }
-//        if(toggleAllowed(gamepad1.dpad_right, 7) && !runDemo){
-//            runBeaconTestLeft = !runBeaconTestLeft;
-//        }
-//
-//        if(runDemo) {
-//            if(robot.pressAllianceBeacon(isBlue, runBeaconTestLeft))
-//                runDemo = false;
-//            telemetry.addData("Status", "Test beacon on left Side: " + runBeaconTestLeft);
-//            telemetry.addData("Status", "Side: " + getAlliance());
-//        }
-//        if(toggleAllowed(gamepad1.dpad_up, 5)) {
-//            robot.setHeading(90);
-//        }
-//
-//        if(toggleAllowed(gamepad1.dpad_left, 6)) {
-//            runDemo = !runDemo;
-//        }
-//
-//        if(runDemo){
-//            robot.RotateIMU(.01, 0, 0, Integer.MAX_VALUE, 0);
-//        }
-
-
-//        if(gamepad1.dpad_up)
-//            robot.cap.raise(1);
-//
-//        else if(gamepad1.dpad_down)
-//            robot.cap.lower(1);
-//
-//        else
-//            robot.cap.stop();
-
-//        if(shouldLaunch){
-//            robot.particle.launchToggle();
-//        }
         robot.particle.updateCollection();
     }
 
@@ -457,6 +404,189 @@ public class NewGame_6832 extends LinearOpMode {
         autoState = 0;
         autoTimer = 0;
         robot.ResetTPM();
+    }
+
+    public void vuAutonomous(double scaleFactor){
+        if (autoState == 0 && autoTimer == 0) autoTimer = futureTime(30f);
+        if ( autoTimer > System.nanoTime()) {
+            switch (autoState) {
+                case -1: //sit and spin - do nothing
+                    break;
+
+                case 0: //reset all the motors before starting autonomous
+
+
+                    robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
+                    robot.setTPM_Strafe((long) (robot.getTPM_Strafe() * scaleFactor));
+                    robot.resetMotors(true);
+
+                    autoState++;
+
+
+                    //launchTimer = futureTime(0.75f);
+                    deadShotSays.play(hardwareMap.appContext, R.raw.a0);
+                    if(!isBlue) robot.setHeading(180);
+                    else robot.setHeading(270);
+                    robot.particle.spinUp();
+                    robot.particle.launchEnd(); //gate should remain closed
+
+                    break;
+                case 1://drive forward for proper shot distance to vortex
+                    //if(robot.driveForward(false, .2, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
+                        robot.resetMotors(true);
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a01);
+                        launchTimer = futureTime(3.5f);
+                        robot.particle.launchBegin();
+                        autoState++;
+                    //}
+                    break;
+
+                case 2:
+                    if(System.nanoTime() >launchTimer){ //particles should have launched, shut down launching
+                        robot.particle.launchEnd();
+                        robot.particle.spinDown();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a02);
+                        autoState++;
+                    }
+                    break;
+
+                case 3:
+                    //if(robot.driveForward(false, .0, .5)) { //back up a bit for a better turn to wall
+                        robot.resetMotors(true);
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a03);
+                        autoState++;
+                    //}
+                    break;
+
+                case 4:
+                    if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
+                        robot.resetMotors(true);
+                        robot.particle.collectStart();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a04);
+                        autoState++;
+                    }
+                    break;
+                case 5:
+                    if(robot.driveForward(!isBlue, .5, .75)) { //drive to middle of beacon wall
+                        //robot.resetMotors(true);
+                        robot.particle.collectStop();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a05);
+                        autoState++;
+                    }
+                    break;
+                case 6:
+                    if(isBlue) {
+                        if (robot.driveToBeacon((VuforiaTrackableDefaultListener)blueNearTarget.getListener(), 450, 0.8, false) < 500) { //drive to middle of beacon wall
+                            robot.resetMotors(true);
+                            robot.particle.collectStop();
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a06);
+                            autoState++;
+                        }
+                    }
+                    else{
+                        if (robot.driveToBeacon((VuforiaTrackableDefaultListener)redNearTarget.getListener(), 450, 0.8, false) < 500) { //drive to middle of beacon wall
+                            robot.resetMotors(true);
+                            robot.particle.collectStop();
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a06);
+                            autoState++;
+                        }
+                    }
+                    break;
+                case 7:
+
+                    if(isBlue){ //align with blue beacon wall
+                        if(robot.RotateIMU(90, 1.5)) {
+                            robot.resetMotors(true);
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
+                            autoState++;
+                        }
+                    }
+                    else{ //align with red beacon wall
+                        if(robot.RotateIMU(0, 1.5)) {
+                            robot.resetMotors(true);
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
+                            autoState++;
+                        }
+                    }
+                    break;
+                case 8:
+                    if(robot.driveStrafe(true, .5, .5)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                case 9: //press the first beacon
+                    if (robot.pressAllianceBeacon(isBlue, false)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 10: //drive up next to the second beacon
+                    if(isBlue){
+                        if(robot.DriveIMUDistance(.01, .5, 90, false, .85)){
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                    }
+                    else{
+                        if(robot.DriveIMUDistance(.01, .5, 0, true, .85)){
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                    }
+                    break;
+                case 11: //press the second beacon
+                    if (robot.pressAllianceBeacon(isBlue, true)) {
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                    break;
+                case 12: //turn back to 45 to point to vortex
+                    if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
+                        robot.resetMotors(true);
+                        robot.particle.collectStart();
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a11);
+                        autoState++;
+                    }
+                    break;
+                case 13: //drive back to push cap ball and park
+                    if(robot.driveForward(isBlue, 1.5, .75)) { //to center vortex
+
+                        robot.particle.collectStop();
+                        robot.resetMotors(true);
+                        deadShotSays.play(hardwareMap.appContext, R.raw.a12);
+                        autoState++;
+                    }
+                    break;
+//                case 13:
+//                    if(isBlue){
+//                        if(robot.RotateIMU(180, .25)) autoState++;
+//                    }
+//                    else{
+//                        if(robot.RotateIMU(90, .25)) autoState++;
+//                    }
+//                    break;
+//                case 14:
+//                    if(robot.driveForward(true, .25, .5)){
+//                        robot.resetMotors(true);
+//                        for (int n = 0; n < flingNumber; n++)
+//                            robot.particle.fling();
+//                        autoState++;
+//                    }
+//                    break;
+                default:
+                    robot.ResetTPM();
+                    break;
+            }
+            robot.particle.updateCollection();
+        }
+        else{
+            robot.particle.emergencyStop();
+            robot.driveMixer(0, 0, 0);
+            //switch to teleop
+            autoTimer = 0;
+            state = 2;
+            active = true;
+        }
     }
 
     public void autonomous(double scaleFactor){ //this auto starts pointed towards the space between the beacons
@@ -887,10 +1017,16 @@ public class NewGame_6832 extends LinearOpMode {
                         return Double.toString(robot.getHeading());
                     }
                 })
-                .addData("vuAngle", new Func<String>() {
+                .addData("vuPwr", new Func<String>() {
                     @Override public String value() {
                         //return formatAngle(angles.angleUnit, angles.firstAngle);
-                        return Double.toString(robot.getVuAngle());
+                        return Double.toString(vuPwr);
+                    }
+                })
+                .addData("vuDist", new Func<String>() {
+                    @Override public String value() {
+                        //return formatAngle(angles.angleUnit, angles.firstAngle);
+                        return Double.toString(robot.getVuDist());
                     }
                 })
                 .addData("headingRaw", new Func<String>() {

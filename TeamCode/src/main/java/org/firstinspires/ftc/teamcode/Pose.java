@@ -133,6 +133,7 @@ public class Pose
 
     private VectorF vuTrans;
     private double vuAngle;
+    private double vuDist = 0;
 
     public enum MoveMode{
         forward,
@@ -606,9 +607,9 @@ public class Pose
     }
 
     /**
-     * Returns the vuAngle of the robot
+     * Returns the angle of the robot
      *
-     * @return The current vuAngle of the robot
+     * @return The current angle of the robot
      */
     public double getHeading()
     {
@@ -801,7 +802,7 @@ public class Pose
 
 
     /**
-     * Apply and angular adjustment to a base vuAngle with result wrapping around at 360 degress
+     * Apply and angular adjustment to a base angle with result wrapping around at 360 degress
      *
      * @param angle1
      * @param angle2
@@ -908,7 +909,7 @@ public class Pose
 
     public double driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double maxSpeed, boolean turnOnly) {
 
-        double vuDist = 0;
+        //double vuDist = 0;
         double pwr = 0;
 
         if (beacon.getPose() != null) {
@@ -920,14 +921,15 @@ public class Pose
             vuDist = vuTrans.get(2);
 
             if (turnOnly)
-                pwr = 0;
+                pwr = 0; //(vuDist - bufferDistance/1200.0);
             else
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
-                pwr = clampDouble(-maxSpeed, maxSpeed, (bufferDistance-vuDist/-1200.0));//but this should be equivalent
+                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDist - bufferDistance)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
             MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0);
 
         } else { //disable motors if given target not visible
+            vuDist = 0;
             driveMixer(0,0,0);
         }//else
 
@@ -937,6 +939,10 @@ public class Pose
     public double getVuAngle(){
         return vuAngle;
     }
+    public double getVuDist(){
+        return vuDist;
+    }
+
 //    public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe,
 //                               double robotAngle, VectorF coordinate) {
 //

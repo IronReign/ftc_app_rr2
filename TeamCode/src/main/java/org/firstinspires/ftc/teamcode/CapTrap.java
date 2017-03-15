@@ -54,6 +54,9 @@ public class CapTrap {
         motorLift.setPower(1);
         setPositionMeters(hPickup);
     }
+    public void deploy(){
+        //servoDeploy.setPosition();
+    }
     public double getPositionMeters(){
         return motorLift.getTargetPosition()/ticksPerM;
     }
