@@ -133,7 +133,8 @@ public class Pose
 
     private VectorF vuTrans;
     private double vuAngle;
-    private double vuDist = 0;
+    private double vuDepth = 0;
+    private double vuXOffset = 0;
 
     public enum MoveMode{
         forward,
@@ -274,7 +275,7 @@ public class Pose
 
     }
 
-    public void DrivePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
+    public void DrivePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
         drivePID.setOutputRange(-.5,.5);
@@ -306,12 +307,13 @@ public class Pose
         motorLeft.setPower(pwr + correction);
         motorRight.setPower(pwr - correction);
 */
-        driveMixer(pwr, 0, correction);
+        if(strafe) driveMixer(0, pwr, correction);
+        else driveMixer(pwr, 0, correction);
     }
 
 
 
-    public void MovePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
+    public void MovePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
         drivePID.setOutputRange(-.5,.5);
@@ -344,10 +346,11 @@ public class Pose
         motorRight.setPower(pwr - correction);
 
 */
-        driveMixer(pwr, 0, correction);
+        if(strafe) driveMixer(0, pwr, correction);
+        else driveMixer(pwr, 0, correction);
     }
-    public void DriveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle){
-        MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
+    public void DriveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
+        MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
 
     public boolean DriveIMUDistance(double Kp, double pwr, double targetAngle,boolean forward, double targetMeters){
@@ -360,7 +363,7 @@ public class Pose
 
         long targetPos = (long)(targetMeters * TPM_Forward);
         if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
-            DriveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle);
+            DriveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle, false);
             return false;
         }
         else { //destination achieved
@@ -374,7 +377,7 @@ public class Pose
             turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
             turnTimerInit = true;
         }
-        DriveIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle); //if the robot turns within a threshold of the target
+        DriveIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle, false); //if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
             driveMixer(0,0,0);
@@ -394,7 +397,7 @@ public class Pose
                 poseSavedHeading = poseHeading;
                 maintainHeadingInit = true;
             }
-            DriveIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading);
+            DriveIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading, false);
         }
         if(!buttonState){
             maintainHeadingInit = false;
@@ -909,7 +912,7 @@ public class Pose
 
     public double driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double maxSpeed, boolean turnOnly) {
 
-        //double vuDist = 0;
+        //double vuDepth = 0;
         double pwr = 0;
 
         if (beacon.getPose() != null) {
@@ -918,29 +921,58 @@ public class Pose
             //todo - add a new transform that will shift our target left or right depending on beacon analysis
 
             vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
-            vuDist = vuTrans.get(2);
+            vuDepth = vuTrans.get(2);
 
             if (turnOnly)
-                pwr = 0; //(vuDist - bufferDistance/1200.0);
+                pwr = 0; //(vuDepth - bufferDistance/1200.0);
             else
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
-                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDist - bufferDistance)/1200.0));//but this should be equivalent
+                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
-            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0);
+            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
 
         } else { //disable motors if given target not visible
-            vuDist = 0;
+            vuDepth = 0;
             driveMixer(0,0,0);
         }//else
 
-    return vuDist; // 0 indicates there was no good vuforia pose - target likely not visible
+    return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
+    }//driveToBeacon
+
+    public double strafeBeacon(VuforiaTrackableDefaultListener beacon, double offsetDistance, double maxSpeed, double iWishForThisToBeOurHeading) {
+
+        //double vuDepth = 0;
+        double pwr = 0;
+
+        if (beacon.getPose() != null) {
+            vuTrans = beacon.getRawPose().getTranslation();
+
+            //todo - add a new transform that will shift our target left or right depending on beacon analysis
+
+            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            vuXOffset = vuTrans.get(0);
+
+                            // this is a very simple proportional on the distance to target - todo - convert to PID control
+            pwr = clampDouble(-maxSpeed, maxSpeed, ((vuXOffset - offsetDistance)/1200.0));//but this should be equivalent
+            Log.i("Beacon Angle", String.valueOf(vuAngle));
+            DriveIMU(KpDrive, KiDrive, KdDrive, pwr, iWishForThisToBeOurHeading, true);
+
+        } else { //disable motors if given target not visible
+            vuDepth = 0;
+            driveMixer(0,0,0);
+        }//else
+
+        return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
     }//driveToBeacon
 
     public double getVuAngle(){
         return vuAngle;
     }
-    public double getVuDist(){
-        return vuDist;
+    public double getVuDepth(){
+        return vuDepth;
+    }
+    public double getVuXOffset(){
+        return vuXOffset;
     }
 
 //    public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe,

@@ -302,8 +302,9 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
-    public void vuTest(VuforiaTrackableDefaultListener beacontarget, double distance){
-        vuPwr = robot.driveToBeacon(beacontarget, 500, 0.8, false);
+    public void vuTest(VuforiaTrackableDefaultListener beaconTarget, double distance){
+        //vuPwr = robot.driveToBeacon(beaconTarget, 500, 0.8, false);
+        robot.strafeBeacon(beaconTarget, 0, .8, 0);
     }
     public void demo(){
         robot.MaintainHeading(gamepad1.x);
@@ -1028,7 +1029,7 @@ public class NewGame_6832 extends LinearOpMode {
                 .addData("vuDist", new Func<String>() {
                     @Override public String value() {
                         //return formatAngle(angles.angleUnit, angles.firstAngle);
-                        return Double.toString(robot.getVuDist());
+                        return Double.toString(robot.getVuDepth());
                     }
                 })
                 .addData("headingRaw", new Func<String>() {
