@@ -459,7 +459,7 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
 
                 case 4:
-                    if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
+                    if(robot.RotateIMU(30, 2.5)) { //should now be pointing at the target beacon wall
                         robot.resetMotors(true);
                         robot.particle.collectStart();
                         deadShotSays.play(hardwareMap.appContext, R.raw.a04);
@@ -467,7 +467,7 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 5:
-                    if(robot.driveForward(!isBlue, .5, .75)) { //drive to middle of beacon wall
+                    if(robot.driveForward(!isBlue, 1.5,.75)) { //drive to middle of beacon wall
                         //robot.resetMotors(true);
                         robot.particle.collectStop();
                         deadShotSays.play(hardwareMap.appContext, R.raw.a05);
@@ -475,8 +475,25 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 6:
+
+                    if(isBlue){ //align with blue beacon wall
+                        if(robot.RotateIMU(0, 1.5)) {
+                            robot.resetMotors(true);
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
+                            autoState++;
+                        }
+                    }
+                    else{ //align with red beacon wall
+                        if(robot.RotateIMU(90, 1.5)) {
+                            robot.resetMotors(true);
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
+                            autoState++;
+                        }
+                    }
+                    break;
+                case 7:
                     if(isBlue) {
-                        if (robot.driveToBeacon((VuforiaTrackableDefaultListener)blueNearTarget.getListener(), 450, 0.8, false) < 500) { //drive to middle of beacon wall
+                        if (robot.driveToBeacon((VuforiaTrackableDefaultListener)blueNearTarget.getListener(), 200, 0.8, false) < 250) { //drive to middle of beacon wall
                             robot.resetMotors(true);
                             robot.particle.collectStop();
                             deadShotSays.play(hardwareMap.appContext, R.raw.a06);
@@ -488,27 +505,12 @@ public class NewGame_6832 extends LinearOpMode {
                             robot.resetMotors(true);
                             robot.particle.collectStop();
                             deadShotSays.play(hardwareMap.appContext, R.raw.a06);
-                            autoState++;
+                            active = false;
+                            robot.driveMixer(0,0,0);
                         }
                     }
                     break;
-                case 7:
 
-                    if(isBlue){ //align with blue beacon wall
-                        if(robot.RotateIMU(90, 1.5)) {
-                            robot.resetMotors(true);
-                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
-                            autoState++;
-                        }
-                    }
-                    else{ //align with red beacon wall
-                        if(robot.RotateIMU(0, 1.5)) {
-                            robot.resetMotors(true);
-                            deadShotSays.play(hardwareMap.appContext, R.raw.a07);
-                            autoState++;
-                        }
-                    }
-                    break;
                 case 8:
                     if(robot.driveStrafe(true, .5, .5)){
                         robot.resetMotors(true);
