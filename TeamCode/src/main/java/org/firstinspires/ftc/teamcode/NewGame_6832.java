@@ -50,12 +50,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
 
 import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.Vuforia;
 import com.vuforia.HINT;
+
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -205,11 +208,11 @@ public class NewGame_6832 extends LinearOpMode {
 
             stateSwitch();
 
-            if(gamepad1.a){
-                flingNumber = 1;
+            if(toggleAllowed(gamepad1.a, a)){
+                robot.particle.collectToggle();
             }
-            if(gamepad1.b){
-                flingNumber = 2;
+            if(toggleAllowed(gamepad1.b, b)){
+                robot.particle.eject();
             }
             if(gamepad1.y){
                 flingNumber = 3;
@@ -271,6 +274,15 @@ public class NewGame_6832 extends LinearOpMode {
                         break;
                     case 4:
                         vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener(),500);
+                        int beaconConfig = VisionUtils.NOT_VISIBLE;
+                        beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener)redNearTarget.getListener(), locale.getCameraCalibration());
+                        if (beaconConfig == VisionUtils.BEACON_RED_BLUE) {
+                            Log.i("RED", "BLUE");
+                        } else if (beaconConfig != VisionUtils.NOT_VISIBLE) {
+                            Log.i("BLUE", "RED");
+                        } else {
+                            Log.i("BEAC", "== -1");
+                        }
                         break;
                     case 5: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;

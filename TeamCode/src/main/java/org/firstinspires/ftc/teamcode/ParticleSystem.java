@@ -30,7 +30,7 @@ public class ParticleSystem {
     private int speedFlywheel      = 0;
     private int launchSpeed        = 900;
     private int speedConveyor      = 0;
-    private int loadSpeed          = 750;
+    private int loadSpeed          = 600;
     private int collectSpeed       = 3500;
 
     private long flingTimer        = 0;
