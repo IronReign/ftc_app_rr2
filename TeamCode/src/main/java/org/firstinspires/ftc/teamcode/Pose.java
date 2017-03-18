@@ -43,7 +43,7 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    protected double KpDrive = 0.007;
+    public  double KpDrive = 0.007;
     private double KiDrive = 0.00;
     private double KdDrive = 0.001;
     private double driveIMUBasePower = .5;
@@ -349,21 +349,61 @@ public class Pose
         if(strafe) driveMixer(0, pwr, correction);
         else driveMixer(pwr, 0, correction);
     }
+    public void MovePIDMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double currentAngle, double targetAngle) {
+        //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
+        //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
+        drivePID.setOutputRange(-.5,.5);
+        drivePID.setPID(Kp, Ki, Kd);
+        drivePID.setSetpoint(targetAngle);
+        drivePID.enable();
+
+        drivePID.setInputRange(0, 360);
+        drivePID.setContinuous();
+        drivePID.setInput(currentAngle);
+        double correction = drivePID.performPID();
+        /*ArrayList toUpdate = new ArrayList();
+        toUpdate.add((PID.m_deltaTime));
+        toUpdate.add(Double.valueOf(PID.m_error));
+        toUpdate.add(new Double(PID.m_totalError));
+        toUpdate.add(new Double(PID.pwrP));
+        toUpdate.add(new Double(PID.pwrI));
+        toUpdate.add(new Double(PID.pwrD));*/
+/*
+        logger.UpdateLog(Long.toString(System.nanoTime()) + ","
+                + Double.toString(PID.m_deltaTime) + ","
+                + Double.toString(pose.getOdometer()) + ","
+                + Double.toString(PID.m_error) + ","
+                + Double.toString(PID.m_totalError) + ","
+                + Double.toString(PID.pwrP) + ","
+                + Double.toString(PID.pwrI) + ","
+                + Double.toString(PID.pwrD) + ","
+                + Double.toString(correction));
+        motorLeft.setPower(pwr + correction);
+        motorRight.setPower(pwr - correction);
+
+*/
+        driveMixer(pwrFwd, pwrStf, correction);
+    }
     public void DriveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
         MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
 
-    public boolean DriveIMUDistance(double Kp, double pwr, double targetAngle,boolean forward, double targetMeters){
-        if(!forward){
+    public void DriveIMUMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double targetAngle){
+        MovePIDMixer(Kp, Ki, Kd, pwrFwd, pwrStf, poseHeading, targetAngle);
+    }
+
+    public boolean DriveIMUDistance(double Kp, double pwr, double targetAngle,boolean forwardOrLeft, double targetMeters, boolean strafe){
+        if(!forwardOrLeft){
             moveMode = moveMode.backward;
             targetMeters = -targetMeters;
             pwr = -pwr;
         }
         else moveMode = moveMode.forward;
-
-        long targetPos = (long)(targetMeters * TPM_Forward);
-        if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
-            DriveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle, false);
+        long targetPos;
+        if(strafe) targetPos = (long) targetMeters * TPM_Strafe;
+        else targetPos = (long)(targetMeters * TPM_Forward);
+        if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){//we've not arrived yet
+            DriveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle, strafe);
             return false;
         }
         else { //destination achieved
@@ -939,7 +979,7 @@ public class Pose
     return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
     }//driveToBeacon
 
-    public double strafeBeacon(VuforiaTrackableDefaultListener beacon, double offsetDistance, double maxSpeed, double iWishForThisToBeOurHeading) {
+    public double strafeBeacon(VuforiaTrackableDefaultListener beacon, double offsetDistance, double pwrMax, double iWishForThisToBeOurHeading) {
 
         //double vuDepth = 0;
         double pwr = 0;
@@ -953,7 +993,7 @@ public class Pose
             vuXOffset = vuTrans.get(0);
 
                             // this is a very simple proportional on the distance to target - todo - convert to PID control
-            pwr = clampDouble(-maxSpeed, maxSpeed, ((vuXOffset - offsetDistance)/1200.0));//but this should be equivalent
+            pwr = clampDouble(-pwrMax, pwrMax, ((vuXOffset - offsetDistance)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
             DriveIMU(KpDrive, KiDrive, KdDrive, pwr, iWishForThisToBeOurHeading, true);
 
@@ -964,6 +1004,41 @@ public class Pose
 
         return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
     }//driveToBeacon
+
+    public double strafeBeaconPress(VuforiaTrackableDefaultListener beacon, int beaconConfig, double pwrMax, double pwrFwd, boolean isBlue, double iWishForThisToBeOurHeading) {
+
+        //double vuDepth = 0;
+        double pwrStf = 0;
+        double offsetDistance;
+        if((beaconConfig == 1 && isBlue) || (beaconConfig == 2 && !isBlue)){
+            offsetDistance = 150;
+        }
+        else {
+            offsetDistance = -150;
+        }
+
+
+
+        if (beacon.getPose() != null) {
+            vuTrans = beacon.getRawPose().getTranslation();
+
+            //todo - add a new transform that will shift our target left or right depending on beacon analysis
+
+            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            vuXOffset = vuTrans.get(0);
+
+            // this is a very simple proportional on the distance to target - todo - convert to PID control
+            pwrStf = clampDouble(-pwrMax, pwrMax, ((vuXOffset - offsetDistance)/800.0));//but this should be equivalent
+            Log.i("Beacon Angle", String.valueOf(vuAngle));
+            DriveIMUMixer(KpDrive, KiDrive, KdDrive, pwrFwd, pwrStf, iWishForThisToBeOurHeading);
+
+        } else { //disable motors if given target not visible
+            vuDepth = 0;
+            driveMixer(0,0,0);
+        }//else
+
+        return vuXOffset; // 0 indicates there was no good vuforia pose - target likely not visible
+    }
 
     public double getVuAngle(){
         return vuAngle;

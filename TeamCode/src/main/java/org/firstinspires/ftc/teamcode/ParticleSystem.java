@@ -28,9 +28,9 @@ public class ParticleSystem {
     private int backupSpeed        = -1;
     private double powerFlywheel   = 1;
     private int speedFlywheel      = 0;
-    private int launchSpeed        = 900;
+    private int launchSpeed        = 750;
     private int speedConveyor      = 0;
-    private int loadSpeed          = 600;
+    private int loadSpeed          = 500;
     private int collectSpeed       = 3500;
 
     private long flingTimer        = 0;
@@ -47,7 +47,7 @@ public class ParticleSystem {
     private double gateOpen      = ServoNormalize(1150);
     private double servoPosition = gateClosed;
     private double powerConveyor  = 1.0;
-    private double launchPower   = .8  ;
+    private double launchPower   = 1.0  ;
 
     public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate, I2cDevice ballColorSensor, boolean isBlue){
         this.position        = 0;

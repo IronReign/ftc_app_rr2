@@ -207,7 +207,7 @@ public class VisionUtils {
             //Note: for some reason, we end up with a image that is rotated 90 degrees
             //if centroid is in the bottom half of the image, the blue beacon is on the left
             //if the centroid is in the top half, the blue beacon is on the right
-            if ((mmnts.get_m01() / mmnts.get_m00()) < cropped.rows() / 2) {
+            if ((mmnts.get_m10() / mmnts.get_m00()) < cropped.cols() / 2) {
                 return VisionUtils.BEACON_RED_BLUE;
             } else {
                 return VisionUtils.BEACON_BLUE_RED;
