@@ -915,7 +915,7 @@ public class Pose
 
     public boolean onAllianceColor(boolean isBlue){ //is the robot looking at it's team's aliance color
         if(isBlue){
-            return beaconColor == 3;
+            return beaconColor == 3 || beaconColor == 2;
         }
         return (beaconColor > 9 && beaconColor < 12);
     }
@@ -924,7 +924,7 @@ public class Pose
         if(isBlue){
             return (beaconColor > 9 && beaconColor < 12);
         }
-        return beaconColor == 3;
+        return beaconColor == 3 || beaconColor == 2;
     }
     public boolean findOpposingColor(boolean isBlue, boolean fromLeft, double pwr){
         if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-pwr, 0, 0); }
@@ -1002,7 +1002,7 @@ public class Pose
             driveMixer(0,0,0);
         }//else
 
-        return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
+        return vuDepth - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
     }//driveToBeacon
 
     public double strafeBeaconPress(VuforiaTrackableDefaultListener beacon, int beaconConfig, double pwrMax, double pwrFwd, boolean isBlue, double iWishForThisToBeOurHeading) {
@@ -1011,10 +1011,10 @@ public class Pose
         double pwrStf = 0;
         double offsetDistance;
         if((beaconConfig == 1 && isBlue) || (beaconConfig == 2 && !isBlue)){
-            offsetDistance = 150;
+            offsetDistance = 60;
         }
         else {
-            offsetDistance = -150;
+            offsetDistance = -60;
         }
 
 
@@ -1037,7 +1037,7 @@ public class Pose
             driveMixer(0,0,0);
         }//else
 
-        return vuXOffset; // 0 indicates there was no good vuforia pose - target likely not visible
+        return vuXOffset - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
     }
 
     public double getVuAngle(){

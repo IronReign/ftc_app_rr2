@@ -385,7 +385,7 @@ public class MotorTests extends LinearOpMode {
                 case -1: //sit and spin - do nothing
                     break;
 
-                case 0: //reset all the motors before starting autonomous
+                case 0: //reset all the motors before starting pureClassicAutonomous
                     autoTimer = futureTime(30f);
 
                     robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
