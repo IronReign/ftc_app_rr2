@@ -17,7 +17,6 @@ public class ParticleSystem {
     DcMotor motorLauncher = null;
     DcMotor motorConveyor = null;
     Servo   servoGate     = null;
-
     byte[] ballColorCache          = null;
     I2cDevice ballColorSensor      = null;
     I2cDeviceSynch ballColorReader = null;
@@ -45,7 +44,7 @@ public class ParticleSystem {
     private double gateOpen      = ServoNormalize(1150);
     private double servoPosition = gateClosed;
     private double powerConveyor = 1.0;
-    private double launchPower   = 0.65;
+    private double launchPower   = 0.6;
 
     public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate, I2cDevice ballColorSensor, boolean isBlue){
         this.position        = 0;
