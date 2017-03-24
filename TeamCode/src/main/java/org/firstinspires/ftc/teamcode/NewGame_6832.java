@@ -92,7 +92,7 @@ public class NewGame_6832 extends LinearOpMode {
     private boolean active = true;
     boolean joystickDriveStarted = false;
 
-    private int autoState = -1;
+    private int autoState = 0;
     private int beaconConfig = 0;
 
     private int flingNumber = 0;
@@ -276,6 +276,7 @@ public class NewGame_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 3:
+                        vuBeaconSequence(redNearTarget);
                         break;
                     case 4:
                         vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener(),500);
@@ -328,7 +329,7 @@ public class NewGame_6832 extends LinearOpMode {
             case 0: //do nothing
                 break;
             case 1: // drive to center of beacon target
-                vuPwr = robot.driveToBeacon(beaconTarget,0,500, 0.8, false);
+                vuPwr = robot.driveToBeacon(beaconTarget,isBlue, beaconConfig,500, 0.8, false);
                 break;
             case 2:
                 robot.strafeBeacon(beaconTarget, 0, .8, 0);
@@ -443,31 +444,27 @@ public class NewGame_6832 extends LinearOpMode {
             switch (autoState) {
                 case -1: //sit and spin - do nothing
 
-                    autoState=7;
-
                     break;
 
                 case 0: //reset all the motors before starting pureClassicAutonomous
-                    autoState=7;
-break;
-//                    robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
-//                    robot.setTPM_Strafe((long) (robot.getTPM_Strafe() * scaleFactor));
-//                    robot.resetMotors(true);
-//
-//                   autoState++;
-//                    launchTimer = futureTime(1.75f);
-//                    deadShotSays.play(hardwareMap.appContext, R.raw.a0);
-//                    if(!isBlue) robot.setHeading(180);
-//                    else robot.setHeading(270);
-//                    robot.particle.spinUp();
-//                    robot.particle.launchEnd(); //gate should remain closed
-//
-//                    break;
+                    robot.setTPM_Forward((long) (robot.getTPM_Forward() * scaleFactor));
+                    robot.setTPM_Strafe((long) (robot.getTPM_Strafe() * scaleFactor));
+                    robot.resetMotors(true);
+
+                   autoState++;
+                    launchTimer = futureTime(3.5f);
+                    deadShotSays.play(hardwareMap.appContext, R.raw.a0);
+                    if(!isBlue) robot.setHeading(180);
+                    else robot.setHeading(270);
+                    robot.particle.spinUp();
+                    robot.particle.launchEnd(); //gate should remain closed
+
+                    break;
                 case 1://drive forward for proper shot distance to vortex
                     //if(robot.driveForward(false, .2, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
                     robot.resetMotors(true);
                     deadShotSays.play(hardwareMap.appContext, R.raw.a01);
-                    launchTimer = futureTime(3.5f);
+                    launchTimer = futureTime(2.0f);
                     robot.particle.launchBegin();
                     autoState++;
                     //}
@@ -550,9 +547,9 @@ break;
                 case 9:
                         do {
                     if (beaconConfig == 1) {
-                        vuPwr = robot.driveToBeacon((VuforiaTrackableDefaultListener) blueNearTarget.getListener(), 100, 250, 0.8, false);
+                        vuPwr = robot.driveToBeacon((VuforiaTrackableDefaultListener) redNearTarget.getListener(), isBlue, beaconConfig, 250, 0.8, false);
                     } else {
-                        vuPwr = robot.driveToBeacon((VuforiaTrackableDefaultListener) blueNearTarget.getListener(), -100, 250, 0.8, false);
+                        vuPwr = robot.driveToBeacon((VuforiaTrackableDefaultListener) redNearTarget.getListener(), isBlue, beaconConfig, 250, 0.8, false);
                     }
                     idle();
                     } while(vuPwr>250);
@@ -562,7 +559,7 @@ break;
                 case 10:
                     autoState++;
                     break;
-                case 11:// drive froward .3 m
+                case 11:// drive forward to press the beacon
                     if(robot.driveForward(true, .3, .5)){
                         robot.resetMotors(true);
                         autoState++;
@@ -712,7 +709,7 @@ break;
         switch(autoState) {
             case 0:
                 autoState++;
-                launchTimer = futureTime(30.0f);
+                launchTimer = futureTime(5.0f);
                 if (isBlue)
                     beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) beacon.getListener(), locale.getCameraCalibration());
                 else
@@ -721,20 +718,24 @@ break;
 
             case 1:
                 double vuXOffset;
-                if (isBlue) {
-                    vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener) beacon.getListener(), beaconConfig, 0.8, 0, isBlue, 0);
+
+                vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener) beacon.getListener(), beaconConfig, 0.8, 0, isBlue, 0);
                     if ((vuXOffset < 20 && vuXOffset > -20) || launchTimer < System.nanoTime()) {
                         robot.resetMotors(true);
                         autoState++;
                     }
-                } else {
-                    vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener) beacon.getListener(), beaconConfig, 0.8, 0, isBlue, 0);
-                    if ((vuXOffset < 20 && vuXOffset > -20) || launchTimer < System.nanoTime()) {
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                }
+
                 telemetry.addLine("Vuforia offset: " + vuXOffset);
+                break;
+            case 2:
+                double vuDist;
+
+                vuDist = robot.driveToBeacon((VuforiaTrackableDefaultListener) beacon.getListener(), isBlue, beaconConfig, 250, 0.8, false);
+                if ((vuDist < 255 && vuDist > 245) /*|| launchTimer < System.nanoTime()*/) {
+                    robot.resetMotors(true);
+                    autoState++;
+                }
+
                 break;
 //            case 2:
 //                if (robot.driveForward(true, 1.35, .5)) {

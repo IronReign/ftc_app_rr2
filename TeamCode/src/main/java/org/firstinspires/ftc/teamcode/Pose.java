@@ -950,7 +950,7 @@ public class Pose
 //    }
 
 
-    public double driveToBeacon(VuforiaTrackableDefaultListener beacon, double xoffset, double bufferDistance, double maxSpeed, boolean turnOnly) {
+    public double driveToBeacon(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly) {
 
         //double vuDepth = 0;
         double pwr = 0;
@@ -960,7 +960,7 @@ public class Pose
 
             //todo - add a new transform that will shift our target left or right depending on beacon analysis
 
-            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + xoffset, vuTrans.get(2)));
+            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
 
             if (turnOnly)
@@ -1010,6 +1010,7 @@ public class Pose
         //double vuDepth = 0;
         double pwrStf = 0;
         double offsetDistance;
+
         if((beaconConfig == 1 && isBlue) || (beaconConfig == 2 && !isBlue)){
             offsetDistance = 60;
         }
@@ -1038,6 +1039,17 @@ public class Pose
         }//else
 
         return vuXOffset - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
+    }
+
+    public double getBeaconOffset(boolean isBlue, int beaconConfig){
+        double offset;
+        if((isBlue && beaconConfig == 1) || (!isBlue && beaconConfig == 2)){
+            offset = -80;
+        }
+        else {
+            offset = 80;
+        }
+        return offset;
     }
 
     public double getVuAngle(){
