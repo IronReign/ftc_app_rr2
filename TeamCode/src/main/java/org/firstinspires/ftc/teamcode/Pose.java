@@ -950,7 +950,7 @@ public class Pose
 //    }
 
 
-    public double driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double maxSpeed, boolean turnOnly) {
+    public double driveToBeacon(VuforiaTrackableDefaultListener beacon, double xoffset, double bufferDistance, double maxSpeed, boolean turnOnly) {
 
         //double vuDepth = 0;
         double pwr = 0;
@@ -960,7 +960,7 @@ public class Pose
 
             //todo - add a new transform that will shift our target left or right depending on beacon analysis
 
-            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + xoffset, vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
 
             if (turnOnly)

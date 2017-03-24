@@ -34,8 +34,8 @@ public class VisionUtils {
 
     public final static int NOT_VISIBLE = 0;
 
-    public final static int BEACON_BLUE_RED = 1;
-    public final static int BEACON_RED_BLUE = 2;
+    public final static int BEACON_BLUE_RED = 1;//blue left, red right
+    public final static int BEACON_RED_BLUE = 2;//blue right, red left
     public final static int BEACON_ALL_BLUE = 3;
     public final static int BEACON_NO_BLUE = 4;
 
