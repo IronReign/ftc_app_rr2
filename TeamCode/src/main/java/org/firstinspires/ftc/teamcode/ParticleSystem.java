@@ -44,7 +44,7 @@ public class ParticleSystem {
     private double gateOpen      = ServoNormalize(1150);
     private double servoPosition = gateClosed;
     private double powerConveyor = 1.0;
-    private double launchPower   = 0.6;
+    private double launchPower   = 0.55;
 
     public ParticleSystem(DcMotor motorLauncher, DcMotor motorConveyor, Servo servoGate, I2cDevice ballColorSensor, boolean isBlue){
         this.position        = 0;

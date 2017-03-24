@@ -120,6 +120,7 @@ public class NewGame_6832 extends LinearOpMode {
 
     private boolean runDemo = false;
     private boolean runBeaconTestLeft = true;
+    private int beaconState = 0;
 
 
 
@@ -264,13 +265,13 @@ public class NewGame_6832 extends LinearOpMode {
             if(active) {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
-                        joystickDriveStarted = false;
-                        pureClassicAutonomous(1);
+                        //joystickDriveStarted = false;
+                        pureVuAutonomous(1);
                         //vuBeaconSequence(redNearTarget);
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
                         joystickDriveStarted = false;
-                        pureVuAutonomous(1.0);
+                        secondaryAuto();
                         break;
                     case 2: //code for tele-op control
                         joystickDrive();
@@ -523,55 +524,26 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 7:
-                    autoState++;
-                    if(isBlue) beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) blueNearTarget.getListener(), locale.getCameraCalibration());
-                    else beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) redNearTarget.getListener(), locale.getCameraCalibration());
-                    break;
-
-                case 8:
-                    if(isBlue){
-                        double vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener) blueNearTarget.getListener() , beaconConfig, 0.8, 0, isBlue, 90);
-                        if((vuXOffset < 30 && vuXOffset > -30) || launchTimer < System.nanoTime()){
+                    if(isBlue) {
+                        if(vuBeaconSequence(blueNearTarget)){
                             robot.resetMotors(true);
                             autoState++;
                         }
                     }
                     else {
-                        double vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener)redNearTarget.getListener() , beaconConfig, 0.8, 0, isBlue, 90);
-                        if((vuXOffset < 30 && vuXOffset > -30) || launchTimer < System.nanoTime()){
+                        if(vuBeaconSequence(redNearTarget)){
                             robot.resetMotors(true);
                             autoState++;
                         }
                     }
                     break;
-                case 9:
-                        do {
-                    if (beaconConfig == 1) {
-                        vuPwr = robot.driveToBeacon((VuforiaTrackableDefaultListener) redNearTarget.getListener(), isBlue, beaconConfig, 250, 0.8, false);
-                    } else {
-                        vuPwr = robot.driveToBeacon((VuforiaTrackableDefaultListener) redNearTarget.getListener(), isBlue, beaconConfig, 250, 0.8, false);
-                    }
-                    idle();
-                    } while(vuPwr>250);
-
-                    autoState++;
-                     break;
-                case 10:
-                    autoState++;
-                    break;
-                case 11:// drive forward to press the beacon
-                    if(robot.driveForward(true, .3, .5)){
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                    break;
-                case 12:// drive backwards .15 m to clear beacon
+                case 8:// drive backwards .15 m to clear beacon
                     if(robot.driveForward(false, .15, .5)){
                         robot.resetMotors(true);
                         autoState= 5000; // so that we exit cases
                     }
                     break;
-                case 13:
+                case 9:
                     if(isBlue){ //align with blue beacon wall
                         if(robot.RotateIMU(88, 1.5)) {
                             robot.resetMotors(true);
@@ -588,7 +560,7 @@ public class NewGame_6832 extends LinearOpMode {
                         }
                     }
                     break;
-                case 14: //drive up next to the second beacon
+                case 10: //drive up next to the second beacon
                     if(isBlue){
                         if(robot.DriveIMUDistance(.01, .5, 88, true, 1.4, false)){
                             robot.resetMotors(true);
@@ -602,7 +574,7 @@ public class NewGame_6832 extends LinearOpMode {
                         }
                     }
                     break;
-                case 15:
+                case 11:
 
                     if(isBlue){ //align with blue beacon wall
                         if(robot.RotateIMU(0, 1.5)) {
@@ -621,41 +593,27 @@ public class NewGame_6832 extends LinearOpMode {
                         }
                     }
                     break;
-                case 16:
-                    autoState++;
-                    if(isBlue) beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) blueFarTarget.getListener(), locale.getCameraCalibration());
-                    else beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) redFarTarget.getListener(), locale.getCameraCalibration());
-                    break;
-
-                case 17:
+                case 12:
                     if(isBlue){
-                        double vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener)blueFarTarget.getListener() , beaconConfig, 0.8, 0, isBlue, 90);
-                        if((vuXOffset < 30 && vuXOffset > -30) || launchTimer < System.nanoTime()){
+                        if(vuBeaconSequence(blueFarTarget)){
                             robot.resetMotors(true);
                             autoState++;
                         }
                     }
-                    else {
-                        double vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener)redFarTarget.getListener() , beaconConfig, 0.8, 0, isBlue, 90);
-                        if((vuXOffset < 30 && vuXOffset > -30) || launchTimer < System.nanoTime()){
+                    else{
+                        if(vuBeaconSequence(redFarTarget)){
                             robot.resetMotors(true);
                             autoState++;
                         }
                     }
                     break;
-                case 18:
-                    if(robot.driveForward(true, .35, .5)){
-                        robot.resetMotors(true);
-                        autoState++;
-                    }
-                    break;
-                case 19:
+                case 13:
                     if(robot.driveForward(false, .15, .5)){
                         robot.resetMotors(true);
                         autoState++;
                     }
                     break;
-                case 20: //turn back to 45 to point to vortex
+                case 14: //turn back to 45 to point to vortex
                     if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
                         robot.resetMotors(true);
                         robot.particle.collectStart();
@@ -663,7 +621,7 @@ public class NewGame_6832 extends LinearOpMode {
                         autoState++;
                     }
                     break;
-                case 21: //drive back to push cap ball and park
+                case 15: //drive back to push cap ball and park
                     if(robot.driveForward(isBlue, 1.5, .75)) { //to center vortex
 
                         robot.particle.collectStop();
@@ -705,11 +663,11 @@ public class NewGame_6832 extends LinearOpMode {
         }
     }
 
-    public void vuBeaconSequence(VuforiaTrackable beacon) throws InterruptedException{
-        switch(autoState) {
+    public boolean vuBeaconSequence(VuforiaTrackable beacon) throws InterruptedException{
+        switch(beaconState) {
             case 0:
-                autoState++;
-                launchTimer = futureTime(5.0f);
+                beaconState=2; //fix later
+                launchTimer = futureTime(2.0f);
                 if (isBlue)
                     beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) beacon.getListener(), locale.getCameraCalibration());
                 else
@@ -722,21 +680,25 @@ public class NewGame_6832 extends LinearOpMode {
                 vuXOffset = robot.strafeBeaconPress((VuforiaTrackableDefaultListener) beacon.getListener(), beaconConfig, 0.8, 0, isBlue, 0);
                     if ((vuXOffset < 20 && vuXOffset > -20) || launchTimer < System.nanoTime()) {
                         robot.resetMotors(true);
-                        autoState++;
+                        beaconState++;
                     }
 
                 telemetry.addLine("Vuforia offset: " + vuXOffset);
                 break;
             case 2:
                 double vuDist;
-
                 vuDist = robot.driveToBeacon((VuforiaTrackableDefaultListener) beacon.getListener(), isBlue, beaconConfig, 250, 0.8, false);
                 if ((vuDist < 255 && vuDist > 245) /*|| launchTimer < System.nanoTime()*/) {
                     robot.resetMotors(true);
-                    autoState++;
+                    beaconState++;
                 }
-
                 break;
+            case 3:
+                if(robot.driveForward(true, 0.3, .35)){
+                    beaconState = 0;
+                    robot.resetMotors(true);
+                    return true;
+                }
 //            case 2:
 //                if (robot.driveForward(true, 1.35, .5)) {
 //                    robot.resetMotors(true);
@@ -754,6 +716,7 @@ public class NewGame_6832 extends LinearOpMode {
                 robot.particle.emergencyStop();
                 break;
         }
+        return false;
     }
 
     public void vuClassicAutonomous(double scaleFactor) throws InterruptedException {
@@ -1039,7 +1002,7 @@ public class NewGame_6832 extends LinearOpMode {
 
                     break;
                 case 1://drive forward for proper shot distance to vortex
-                    if(robot.driveForward(false, .2, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
+                    if(robot.driveForward(false, .3, .5)) { //drive away from wall for a clear turn (formerly .35m, now .65m)
                         robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a01);
                         launchTimer = futureTime(3.5f);
@@ -1058,7 +1021,7 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
 
                 case 3:
-                    if(robot.driveForward(false, .0, .5)) { //back up a bit for a better turn to wall
+                    if(robot.driveForward(false, 0, .5)) { //back up a bit for a better turn to wall
                         robot.resetMotors(true);
                         deadShotSays.play(hardwareMap.appContext, R.raw.a03);
                         autoState++;
@@ -1066,11 +1029,21 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
 
                 case 4:
-                    if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
-                        robot.resetMotors(true);
-                        robot.particle.collectStart();
-                        deadShotSays.play(hardwareMap.appContext, R.raw.a04);
-                        autoState++;
+                    if(isBlue) {
+                        if(robot.RotateIMU(40, 2.5)) { //should now be pointing at the target beacon wall
+                            robot.resetMotors(true);
+                            robot.particle.collectStart();
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a04);
+                            autoState++;
+                        }
+                    }
+                    else {
+                        if (robot.RotateIMU(50, 2.5)) { //should now be pointing at the target beacon wall
+                            robot.resetMotors(true);
+                            robot.particle.collectStart();
+                            deadShotSays.play(hardwareMap.appContext, R.raw.a04);
+                            autoState++;
+                        }
                     }
                     break;
                 case 5:
@@ -1082,7 +1055,7 @@ public class NewGame_6832 extends LinearOpMode {
                     }
                     break;
                 case 6:
-                    if(robot.driveForward(!isBlue, 2.80, .35)) { //drive to middle of beacon wall
+                    if(robot.driveForward(!isBlue, 2.30, .35)) { //drive to middle of beacon wall
                         robot.resetMotors(true);
                         robot.particle.collectStop();
                         deadShotSays.play(hardwareMap.appContext, R.raw.a06);
@@ -1092,20 +1065,21 @@ public class NewGame_6832 extends LinearOpMode {
                 case 7:
 
                     if(isBlue){ //align with blue beacon wall
-                        if(robot.RotateIMU(90, 1.5)) {
+                        if(robot.RotateIMU(91, 1.5)) {
                             robot.resetMotors(true);
                             deadShotSays.play(hardwareMap.appContext, R.raw.a07);
                             autoState++;
                         }
                     }
                     else{ //align with red beacon wall
-                        if(robot.RotateIMU(0, 1.5)) {
+                        if(robot.RotateIMU(2, 1.5)) {
                             robot.resetMotors(true);
                             deadShotSays.play(hardwareMap.appContext, R.raw.a07);
                             autoState++;
                         }
                     }
                     break;
+
                 case 8: //press the first beacon
                     if (robot.pressAllianceBeacon(isBlue, false)) {
                         robot.resetMotors(true);
@@ -1114,7 +1088,7 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
                 case 9: //drive up next to the second beacon
                     if(isBlue){
-                        if(robot.DriveIMUDistance(.01, .5, 90, false, .85, false)){
+                        if(robot.DriveIMUDistance(.01, .5, 91, false, .85, false)){
                             robot.resetMotors(true);
                             autoState++;
                         }
@@ -1207,7 +1181,7 @@ public class NewGame_6832 extends LinearOpMode {
             robot.resetMotors(true);
             active = false;
             resetAuto();
-
+            beaconState = 0;
         }
 
         if (toggleAllowed(gamepad1.right_bumper,right_bumper)) {
@@ -1219,13 +1193,13 @@ public class NewGame_6832 extends LinearOpMode {
             robot.resetMotors(true);
             active = false;
             resetAuto();
-
+            beaconState = 0;
         }
 
         if(toggleAllowed(gamepad1.start, startBtn)) {
             robot.resetMotors(true);
             active = !active;
-
+            beaconState = 0;
         }
     }
 
@@ -1245,7 +1219,7 @@ public class NewGame_6832 extends LinearOpMode {
                 }
                 break;
             case 2:
-                if(robot.driveForward(false, .85, 1)){
+                if(robot.driveForward(false, .70, 1)){
                     robot.resetMotors(true);
                     launchTimer = futureTime((float)2.5);
                     robot.particle.launchBegin();
@@ -1261,7 +1235,7 @@ public class NewGame_6832 extends LinearOpMode {
                 //robot.motorConveyor.setPower(90);
                 break;
             case 4:
-                if(robot.driveForward(false, .8, 1)){
+                if(robot.driveForward(false, .95, 1)){
                     robot.resetMotors(true);
                     robot.motorConveyor.setPower(0);
                     autoState++;
@@ -1269,7 +1243,9 @@ public class NewGame_6832 extends LinearOpMode {
                 }
             default:
                 break;
+
         }
+        robot.particle.updateCollection();
     }
 
     public void calibrateLift(){
