@@ -209,7 +209,7 @@ public class NewGame_6832 extends LinearOpMode {
                 }
             }
             //beacons.activate();
-            beaconTargets.activate();
+            ///beaconTargets.activate();
 
             stateSwitch();
 
@@ -266,7 +266,7 @@ public class NewGame_6832 extends LinearOpMode {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
                         //joystickDriveStarted = false;
-                        pureVuAutonomous(1);
+                        pureClassicAutonomous(1);
                         //vuBeaconSequence(redNearTarget);
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
@@ -1030,7 +1030,7 @@ public class NewGame_6832 extends LinearOpMode {
 
                 case 4:
                     if(isBlue) {
-                        if(robot.RotateIMU(40, 2.5)) { //should now be pointing at the target beacon wall
+                        if(robot.RotateIMU(50, 2.5)) { //should now be pointing at the target beacon wall
                             robot.resetMotors(true);
                             robot.particle.collectStart();
                             deadShotSays.play(hardwareMap.appContext, R.raw.a04);
@@ -1088,25 +1088,25 @@ public class NewGame_6832 extends LinearOpMode {
                     break;
                 case 9: //drive up next to the second beacon
                     if(isBlue){
-                        if(robot.DriveIMUDistance(.01, .5, 91, false, .85, false)){
+                        if(robot.DriveIMUDistance(.01, 1, 95, false, 1.75, false)){
                             robot.resetMotors(true);
                             autoState++;
                         }
                     }
                     else{
-                        if(robot.DriveIMUDistance(.01, .5, 0, true, .85, false)){
+                        if(robot.DriveIMUDistance(.01, 1, 0, true, .85, false)){
                             robot.resetMotors(true);
                             autoState++;
                         }
                     }
                     break;
                 case 10: //press the second beacon
-                    if (robot.pressAllianceBeacon(isBlue, true)) {
+                    if (robot.pressAllianceBeacon(isBlue, false)) {
                         robot.resetMotors(true);
                         autoState++;
                     }
                     break;
-                case 11: //turn back to 45 to point to vortex
+               /* case 11: //turn back to 45 to point to vortex
                     if(robot.RotateIMU(45, 2.5)) { //should now be pointing at the target beacon wall
                         robot.resetMotors(true);
                         robot.particle.collectStart();
@@ -1123,6 +1123,7 @@ public class NewGame_6832 extends LinearOpMode {
                         autoState++;
                     }
                     break;
+                    */
 //                case 13:
 //                    if(isBlue){
 //                        if(robot.RotateIMU(180, .25)) autoState++;

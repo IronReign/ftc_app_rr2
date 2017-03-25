@@ -1159,11 +1159,11 @@ public class Pose
                 }
                 break;
             case 8:
-                if(driveStrafe(false, .03, .35)) { beaconState++; }
+                if(driveStrafe(false, .06, .35)) { beaconState++; }
                 break;
             case 9:     //re-align with wall
                 if(isBlue){
-                    if(RotateIMU(90.5, 1)) beaconState++;
+                    if(RotateIMU(94, 1)) beaconState++;
                 }
                 else{
                     if(RotateIMU(0, 1)) beaconState++;
