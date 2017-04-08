@@ -56,6 +56,8 @@ public class Pose
     DcMotor motorConveyor   = null;
     DcMotor motorLauncher   = null;
     DcMotor motorLift       = null;
+    DcMotor headLamp  = null;
+    DcMotor redLamps = null;
     Servo servoGate         = null;
 
     BNO055IMU imu;
@@ -228,6 +230,8 @@ public class Pose
         this.motorConveyor   = this.hwMap.dcMotor.get("motorConveyor");
         this.motorLauncher   = this.hwMap.dcMotor.get("motorLauncher");
         this.motorLift       = this.hwMap.dcMotor.get("motorLift");
+        this.headLamp   = this.hwMap.dcMotor.get("headLamp");
+        this.redLamps       = this.hwMap.dcMotor.get("redLamps");
         this.servoGate       = this.hwMap.servo.get("servoGate");
 
         // get a reference to our distance sensors
@@ -268,11 +272,25 @@ public class Pose
         imu = (BNO055IMU)hwMap.get("imu");
         imu.initialize(parametersIMU);
 
-
+        HeadLampOn();
+        RedLampOn();
         //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
 //        beaconColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
 //        ballColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
 
+    }
+
+    public void HeadLampOn(){
+        headLamp.setPower(1);
+    }
+    public void HeadLampOff(){
+        headLamp.setPower(0);
+    }
+    public void RedLampOn(){
+        redLamps.setPower(1);
+    }
+    public void RedLampOff(){
+        redLamps.setPower(0);
     }
 
     public void DrivePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
