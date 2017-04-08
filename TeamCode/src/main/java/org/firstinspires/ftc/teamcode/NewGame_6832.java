@@ -209,7 +209,7 @@ public class NewGame_6832 extends LinearOpMode {
                 }
             }
             //beacons.activate();
-            ///beaconTargets.activate();
+            beaconTargets.activate();
 
             stateSwitch();
 
@@ -330,7 +330,7 @@ public class NewGame_6832 extends LinearOpMode {
             case 0: //do nothing
                 break;
             case 1: // drive to center of beacon target
-                vuPwr = robot.driveToBeacon(beaconTarget,isBlue, beaconConfig,500, 0.8, false);
+                vuPwr = robot.driveToBeacon(beaconTarget,isBlue, beaconConfig,500, 0.8, false, false);
                 break;
             case 2:
                 robot.strafeBeacon(beaconTarget, 0, .8, 0);
@@ -687,7 +687,7 @@ public class NewGame_6832 extends LinearOpMode {
                 break;
             case 2:
                 double vuDist;
-                vuDist = robot.driveToBeacon((VuforiaTrackableDefaultListener) beacon.getListener(), isBlue, beaconConfig, 250, 0.8, false);
+                vuDist = robot.driveToBeacon((VuforiaTrackableDefaultListener) beacon.getListener(), isBlue, beaconConfig, 250, 0.8, false, true);
                 if ((vuDist < 255 && vuDist > 245) /*|| launchTimer < System.nanoTime()*/) {
                     robot.resetMotors(true);
                     beaconState++;
