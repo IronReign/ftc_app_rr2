@@ -106,6 +106,8 @@ public class NewGame_6832 extends LinearOpMode {
 
     private double vuPwr = 0;
 
+    private ColorBlobDetector mDetector;
+
     Orientation angles;
 
     private int state = 0;
@@ -199,6 +201,10 @@ public class NewGame_6832 extends LinearOpMode {
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
+        beaconTargets.activate();
+
+        mDetector = new ColorBlobDetector();
+
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
                 try {
@@ -209,7 +215,7 @@ public class NewGame_6832 extends LinearOpMode {
                 }
             }
             //beacons.activate();
-            beaconTargets.activate();
+
 
             stateSwitch();
 
@@ -1352,10 +1358,7 @@ public class NewGame_6832 extends LinearOpMode {
         }
         return "Particle Mode";
     }
-    public double ServoNormalize(int pulse){
-        double normalized = (double)pulse;
-        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on 0 - 1 scale
-    }
+
 
 
 

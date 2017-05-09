@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.qualcomm.ftccommon.SoundPlayer;
@@ -13,13 +14,31 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
+import com.vuforia.Image;
+import com.vuforia.PIXEL_FORMAT;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.bitmapToMat;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 
 /**
@@ -43,9 +62,9 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public  double KpDrive = 0.007;
-    private double KiDrive = 0.00;
-    private double KdDrive = 0.001;
+    public  double KpDrive = 0.007; //proportional constant multiplier
+    private double KiDrive = 0.000; //integral constant multiplier
+    private double KdDrive = 0.001; //derivative constant multiplier
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
@@ -53,28 +72,28 @@ public class Pose
     DcMotor motorFrontRight = null;
     DcMotor motorBackLeft   = null;
     DcMotor motorBackRight  = null;
-    DcMotor motorConveyor   = null;
-    DcMotor motorLauncher   = null;
-    DcMotor motorLift       = null;
-    DcMotor headLamp  = null;
-    DcMotor redLamps = null;
-    Servo servoGate         = null;
+    DcMotor motorConveyor   = null; //particle conveyor
+    DcMotor motorLauncher   = null; //flywheel motor
+    DcMotor motorLift       = null; //cap ball lift motor
+    DcMotor headLamp        = null; //front white LED string
+    DcMotor redLamps        = null; //side red highlight LED strings
+    Servo servoGate         = null; //gate for the particle launcher
 
-    BNO055IMU imu;
-    Orientation angles;
+    BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
+    Orientation angles; //feedback from the IMU
 
     OpticalDistanceSensor beaconPresentRear;
     OpticalDistanceSensor beaconPresent;
 
 
-    byte[] beaconColorCache = new byte[100];
+    byte[] beaconColorCache = new byte[100]; //
     //byte[] ballColorCache = new byte[100];
 
     I2cDevice beaconColorSensor;
     I2cDevice ballColorSensor;
-    I2cDeviceSynch beaconColorReader;
+    I2cDeviceSynch beaconColorReader; //senses the color of the
     //I2cDeviceSynch ballColorReader;
-    long beaconColor;
+    long beaconColor; //numerical feedback from the beacon color sensor (2-3 = blue, 9-12 = red)
     //long ballColor;
     double beaconDistAft; //holds most recent linearized distance reading from ODS sensor
     double beaconDistFore;
@@ -96,8 +115,8 @@ public class Pose
 
     private double poseX;
     private double poseY;
-    private double poseHeading;
-    private double poseHeadingRad; //current heading converted to radians. Might be rotated by 90 degrees from imu's heading when strafing
+    private double poseHeading; //current heading in degrees. Might be rotated by 90 degrees from imu's heading when strafing
+    private double poseHeadingRad; //current heading converted to radians
     private double poseSpeed;
     private double posePitch;
     private double poseRoll;
@@ -119,7 +138,7 @@ public class Pose
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
 
-    SoundPlayer deadShotSays = SoundPlayer.getInstance();
+    SoundPlayer deadShotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
     private long ticksLeftPrev;
     private long ticksRightPrev;
@@ -133,10 +152,10 @@ public class Pose
     long flingerTimer;
 
 
-    private VectorF vuTrans;
-    private double vuAngle;
-    private double vuDepth = 0;
-    private double vuXOffset = 0;
+    private VectorF vuTrans; //vector that calculates the position of the vuforia target relative to the phone (mm)
+    private double vuAngle; //angle of the vuforia target from the center of the phone camera (degrees)
+    private double vuDepth = 0; //calculated distance from the vuforia target on the z axis (mm)
+    private double vuXOffset = 0; //calculated distance from the vuforia target on the x axis (mm)
 
     public enum MoveMode{
         forward,
@@ -151,9 +170,9 @@ public class Pose
 
 
 
-    Orientation imuAngles;
+    Orientation imuAngles; //pitch, roll and yaw from the IMU
     protected boolean targetAngleInitialized = false;
-    private int beaconState = 0;
+    private int beaconState = 0; //switch variable that controls progress through the beacon pressing sequence
 
 
     /**
@@ -215,7 +234,12 @@ public class Pose
         TPM_Strafe = 3145;
     }
 
-
+    /**
+     * Initializes motors, servos, lights and sensors from a given hardware map
+     *
+     * @param ahwMap   Given hardware map
+     * @param isBlue   Tells the robot which alliance to initialize for
+     */
     public void init(HardwareMap ahwMap, boolean isBlue) {
         // save reference to HW Map
         hwMap = ahwMap;
@@ -293,44 +317,17 @@ public class Pose
         redLamps.setPower(0);
     }
 
-    public void DrivePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
-        //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
-        //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
-        drivePID.setOutputRange(-.5,.5);
-        drivePID.setPID(Kp, Ki, Kd);
-        drivePID.setSetpoint(targetAngle);
-        drivePID.enable();
-
-        drivePID.setInputRange(0, 360);
-        drivePID.setContinuous();
-        drivePID.setInput(currentAngle);
-        double correction = drivePID.performPID();
-        /*ArrayList toUpdate = new ArrayList();
-        toUpdate.add((PID.m_deltaTime));
-        toUpdate.add(Double.valueOf(PID.m_error));
-        toUpdate.add(new Double(PID.m_totalError));
-        toUpdate.add(new Double(PID.pwrP));
-        toUpdate.add(new Double(PID.pwrI));
-        toUpdate.add(new Double(PID.pwrD));*/
-/*
-        logger.UpdateLog(Long.toString(System.nanoTime()) + ","
-                + Double.toString(PID.m_deltaTime) + ","
-                + Double.toString(pose.getOdometer()) + ","
-                + Double.toString(PID.m_error) + ","
-                + Double.toString(PID.m_totalError) + ","
-                + Double.toString(PID.pwrP) + ","
-                + Double.toString(PID.pwrI) + ","
-                + Double.toString(PID.pwrD) + ","
-                + Double.toString(correction));
-        motorLeft.setPower(pwr + correction);
-        motorRight.setPower(pwr - correction);
-*/
-        if(strafe) driveMixer(0, pwr, correction);
-        else driveMixer(pwr, 0, correction);
-    }
-
-
-
+    /**
+     * Moves the mecanum platform under PID control applied to the rotation of the robot. This version can either drive forwards/backwards or strafe.
+     *
+     * @param Kp   proportional constant multiplier
+     * @param Ki   integral constant multiplier
+     * @param Kd   derivative constant multiplier
+     * @param pwr  base motor power before correction is applied
+     * @param currentAngle   current angle of the robot in the coordinate system of the sensor that provides it- should be updated every cycle
+     * @param targetAngle   the target angle of the robot in the coordinate system of the sensor that provides the current angle
+     * @param strafe   if true, the robot will drive left/right. if false, the robot will drive forwards/backwards.
+     */
     public void MovePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
@@ -367,6 +364,18 @@ public class Pose
         if(strafe) driveMixer(0, pwr, correction);
         else driveMixer(pwr, 0, correction);
     }
+
+    /**
+     * Moves the mecanum platform under PID control applied to the rotation of the robot. This version can drive forwards/backwards and strafe simultaneously.
+     *
+     * @param Kp   proportional constant multiplier
+     * @param Ki   integral constant multiplier
+     * @param Kd   derivative constant multiplier
+     * @param pwrFwd  base forwards/backwards motor power before correction is applied
+     * @param pwrStf  base left/right motor power before correction is applied
+     * @param currentAngle   current angle of the robot in the coordinate system of the sensor that provides it- should be updated every cycle
+     * @param targetAngle   the target angle of the robot in the coordinate system of the sensor that provides the current angle
+     */
     public void MovePIDMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double currentAngle, double targetAngle) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
@@ -402,6 +411,8 @@ public class Pose
 */
         driveMixer(pwrFwd, pwrStf, correction);
     }
+
+
     public void DriveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
         MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
@@ -897,7 +908,7 @@ public class Pose
     }
 
 
-    public double ServoNormalize(int pulse){
+    public static double ServoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
@@ -997,6 +1008,110 @@ public class Pose
 
     return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
     }//driveToBeacon
+
+    public double driveToParticle( VuforiaLocalizer locale, boolean isBlue, double bufferDistance, double maxSpeed, boolean turnOnly) {
+
+        //double vuDepth = 0;
+        double pwr = 0;
+        int blobx; //current x value of the centroid (center of mass) of the largest tracked blob contour
+        int bloby; //current y value of the centroid of the largest tracked blob
+        org.opencv.core.Rect blobBox;
+        int blobHeight;
+        int blobWidth;
+        double maxContour = 0;
+        double minContour = 1000; //smallest contour area that we will pay attention to
+        double targetContour = -1; //what is the size of the maximum contour just after it is selected by touch? - serves as the target size (distance to maintain from the object)
+        boolean               mIsColorSelected = false;
+        Mat                   mRgba;
+        Scalar mBlobColorRgba;
+        Scalar mBlobColorHsv;
+        ColorBlobDetector     mDetector;
+        Image img;
+        mDetector = new ColorBlobDetector();
+
+        try {
+            img = getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565);
+        } catch (InterruptedException e) {
+            img = null;
+            e.printStackTrace();
+        }
+
+        //copy image into intermediate stage android bitmap which can then be used to create an opencv native Mat
+        Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
+        bm.copyPixelsFromBuffer(img.getPixels());
+
+        mRgba = bitmapToMat(bm, CvType.CV_8UC3);
+
+        Scalar targetHue = RC.a().getTargetBlobColor();
+
+
+        if (mIsColorSelected) {
+            mDetector.setHsvColor(targetHue);
+            mDetector.process(mRgba);
+            List<MatOfPoint> contours = mDetector.getContours();
+            Log.e("OpenCV", "Contours count: " + contours.size());
+            //Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 3);
+
+            //get the centroid (center of mass) and area for each contour
+
+            List<Moments> mu = new ArrayList<Moments>(contours.size());
+            maxContour=0;
+            blobWidth = 0;
+            blobHeight = 0;
+            blobBox = null;
+
+            for (int i = 0; i < contours.size(); i++) {
+                mu.add(i, Imgproc.moments(contours.get(i), false));
+                Moments p = mu.get(i);
+                int x = (int) (p.get_m10() / p.get_m00()); //centroid in x
+                int y = (int) (p.get_m01() / p.get_m00());
+
+                //Core.circle(mRgba, new Point(x, y), 5, CONTOUR_COLOR, -1);
+                double area = Imgproc.contourArea(contours.get(i));
+                if (area > minContour && area > maxContour) //we have a new largest contour in the set
+                {
+                    maxContour=area;
+                    blobx=x;
+                    bloby=y;
+                    blobBox=Imgproc.boundingRect(contours.get(i));
+                    blobWidth=blobBox.width;
+                    blobHeight = blobBox.height;
+                }
+            }
+
+            if (targetContour == -1 && maxContour > 0 )
+            {
+                targetContour = maxContour; //new target size, thus distance to object
+            }
+
+        }
+        /*
+        if (beacon.getPose() != null) {
+            vuTrans = beacon.getRawPose().getTranslation();
+
+            //todo - add a new transform that will shift our target left or right depending on beacon analysis
+
+            if(offset){vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));}
+            else vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            vuDepth = vuTrans.get(2);
+
+            if (turnOnly)
+                pwr = 0; //(vuDepth - bufferDistance/1200.0);
+            else
+                // this is a very simple proportional on the distance to target - todo - convert to PID control
+                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
+            Log.i("Particle Angle", String.valueOf(vuAngle));
+            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
+
+        } else { //disable motors if given target not visible
+            vuDepth = 0;
+            driveMixer(0,0,0);
+        }//else
+
+*/
+
+        return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
+    }
 
     public double strafeBeacon(VuforiaTrackableDefaultListener beacon, double offsetDistance, double pwrMax, double iWishForThisToBeOurHeading) {
 
@@ -1201,6 +1316,7 @@ public class Pose
         }
         return false;
     }
+
     public void resetBeaconPresserState(){
         beaconState = 0;
     }

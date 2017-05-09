@@ -5,8 +5,10 @@ package org.firstinspires.ftc.teamcode.util;
  */
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.View;
 
 import com.vuforia.CameraCalibration;
 import com.vuforia.Image;
@@ -218,6 +220,15 @@ public class VisionUtils {
     }//getBeaconConfig
 
 
+    Bitmap getBitmapFromView(View v)
+    {
+        Bitmap b = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        v.draw(c);
+        return b;
+    }
+
+
 
     public static int isBlueOrRed(Image img) {
 
@@ -275,5 +286,22 @@ public class VisionUtils {
                 trans.get(1),
                 (float) (-trans.get(2) + offWall.get(0) * Math.cos(Math.toRadians(robotAngle)) - offWall.get(2) * Math.sin(Math.toRadians(robotAngle)))
         );
+    }
+
+    private double ErrorPixToDeg(int blobx){
+        int ViewWidth = 800;
+        int ScreenCenterPix;
+        int ErrorPix;
+        double PixPerDegree;
+        double errorDegrees;
+
+        ScreenCenterPix = ViewWidth/2;
+        ErrorPix = ScreenCenterPix - blobx;
+        PixPerDegree = ViewWidth / 75; //FOV
+        errorDegrees = ErrorPix/PixPerDegree;
+        if (errorDegrees < 0) {
+            errorDegrees += 360;
+        }
+        return errorDegrees;
     }
 }

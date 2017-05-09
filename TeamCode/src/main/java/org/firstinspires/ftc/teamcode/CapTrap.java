@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import static org.firstinspires.ftc.teamcode.Pose.ticksPerRot;
 
@@ -10,6 +11,7 @@ import static org.firstinspires.ftc.teamcode.Pose.ticksPerRot;
 
 public class CapTrap {
     DcMotor motorLift = null;
+    Servo servoLatch = null;
 
     static double spoolDiameter       = .05; //diameter of the spool in meters
     private double spoolCircumference = spoolDiameter *Math.PI;
@@ -19,6 +21,8 @@ public class CapTrap {
     private double hDeposit = 0.61;
     private double hStarting = 0;
     private double hPickup = -0.34;
+    private int latchEngaged = 1880;
+    private int latchReleased = 940;
 
     public CapTrap(DcMotor motorLift){
         this.motorLift = motorLift;
@@ -54,9 +58,15 @@ public class CapTrap {
         motorLift.setPower(1);
         setPositionMeters(hPickup);
     }
+
     public void deploy(){
-        //servoDeploy.setPosition();
+        servoLatch.setPosition(Pose.ServoNormalize(latchReleased));
     }
+
+    public void latch(){
+        servoLatch.setPosition(Pose.ServoNormalize(latchEngaged));
+    }
+
     public double getPositionMeters(){
         return motorLift.getTargetPosition()/ticksPerM;
     }

@@ -40,8 +40,10 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -56,6 +58,7 @@ import android.webkit.WebView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 
 import com.google.blocks.ftcrobotcontroller.BlocksActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeActivity;
@@ -87,6 +90,7 @@ import com.qualcomm.robotcore.util.Dimmer;
 import com.qualcomm.robotcore.util.ImmersiveMode;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 import com.qualcomm.robotcore.util.RobotLog;
+import com.qualcomm.robotcore.wifi.NetworkConnection;
 import com.qualcomm.robotcore.wifi.NetworkConnectionFactory;
 import com.qualcomm.robotcore.wifi.NetworkType;
 import com.qualcomm.robotcore.wifi.WifiDirectAssistant;
@@ -154,6 +158,15 @@ public class FtcRobotControllerActivity extends Activity {
   protected FtcEventLoop eventLoop;
   protected Queue<UsbDevice> receivedUsbAttachmentNotifications;
 
+  protected static volatile Scalar TargetBlobColor;
+
+
+  public static Scalar getTargetBlobColor() {
+    return TargetBlobColor;
+  }
+
+
+
   protected class RobotRestarter implements Restarter {
 
     public void requestRestart() {
@@ -195,14 +208,13 @@ public class FtcRobotControllerActivity extends Activity {
 
   protected void passReceivedUsbAttachmentsToEventLoop() {
     if (this.eventLoop != null) {
-      for (;;) {
+      for (; ; ) {
         UsbDevice usbDevice = receivedUsbAttachmentNotifications.poll();
         if (usbDevice == null)
           break;
         this.eventLoop.onUsbDeviceAttached(usbDevice);
       }
-    }
-    else {
+    } else {
       // Paranoia: we don't want the pending list to grow without bound when we don't
       // (yet) have an event loop
       while (receivedUsbAttachmentNotifications.size() > 100) {
@@ -265,7 +277,7 @@ public class FtcRobotControllerActivity extends Activity {
     dimmer.longBright();
 
     programmingModeController = new ProgrammingModeControllerImpl(
-        this, (TextView) findViewById(R.id.textRemoteProgrammingMode));
+            this, (TextView) findViewById(R.id.textRemoteProgrammingMode));
 
     updateUI = createUpdateUI();
     callback = createUICallback(updateUI);
@@ -277,12 +289,15 @@ public class FtcRobotControllerActivity extends Activity {
 
     hittingMenuButtonBrightensScreen();
 
-    if (USE_DEVICE_EMULATION) { HardwareFactory.enableDeviceEmulation(); }
+    if (USE_DEVICE_EMULATION) {
+      HardwareFactory.enableDeviceEmulation();
+    }
 
     wifiLock.acquire();
     callback.networkConnectionUpdate(WifiDirectAssistant.Event.DISCONNECTED);
     readNetworkType(NETWORK_TYPE_FILENAME);
     bindToService();
+
   }
 
   protected UpdateUI createUpdateUI() {
@@ -302,6 +317,7 @@ public class FtcRobotControllerActivity extends Activity {
   @Override
   protected void onStart() {
     super.onStart();
+
     RobotLog.vv(TAG, "onStart()");
 
     // Undo the effects of shutdownRobot() that we might have done in onStop()
@@ -313,9 +329,61 @@ public class FtcRobotControllerActivity extends Activity {
       @Override
       public boolean onTouch(View v, MotionEvent event) {
         dimmer.handleDimTimer();
+
+        Scalar mBlobColorRgba;
+        Scalar mBlobColorHsv;
+
+        //mRgba = new Mat(v.getHeight(), v.getWidth(), CvType.CV_8UC4);
+        //get the bitmap from the motion event
+        Bitmap bm = VisionUtils.getBitmapCopyFromView(v);
+        //convert it into an OpenCV image
+        Mat mRgba = VisionUtils.bitmapToMat(bm, CvType.CV_8UC3);
+        int cols = mRgba.cols();
+        int rows = mRgba.rows();
+
+        int xOffset = 0; //(mOpenCvCameraView.getWidth() - cols) / 2;
+        int yOffset = 0; //(mOpenCvCameraView.getHeight() - rows) / 2;
+
+        int x = (int) event.getX() - xOffset;
+        int y = (int) event.getY() - yOffset;
+
+        Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
+
+        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+
+        Rect touchedRect = new Rect();
+
+        touchedRect.x = (x > 4) ? x - 4 : 0;
+        touchedRect.y = (y > 4) ? y - 4 : 0;
+
+        touchedRect.width = (x + 4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
+        touchedRect.height = (y + 4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
+
+        Mat touchedRegionRgba = mRgba.submat(touchedRect);
+
+        Mat touchedRegionHsv = new Mat();
+        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+
+        // Calculate average color of touched region
+        mBlobColorHsv = Core.sumElems(touchedRegionHsv);
+        int pointCount = touchedRect.width * touchedRect.height;
+        for (int i = 0; i < mBlobColorHsv.val.length; i++)
+          mBlobColorHsv.val[i] /= pointCount;
+
+        mBlobColorRgba = VisionUtils.convertScalarHsv2Rgba(mBlobColorHsv);
+
+        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
+                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
+
+        //targetContour = -1; //reset target contour so we get a fresh target size on each touch event
+
+        touchedRegionRgba.release();
+        touchedRegionHsv.release();
+
         return false;
       }
     });
+
   }
 
   @Override
@@ -342,6 +410,7 @@ public class FtcRobotControllerActivity extends Activity {
 
     // We *do* shutdown the robot even when we go into configuration editing
     controllerService.shutdownRobot();
+
   }
 
   @Override
@@ -367,7 +436,7 @@ public class FtcRobotControllerActivity extends Activity {
     }
   }
 
-  public void writeNetworkTypeFile(String fileName, String fileContents){
+  public void writeNetworkTypeFile(String fileName, String fileContents) {
     ReadWriteFile.writeFile(AppUtil.FIRST_FOLDER, fileName, fileContents);
   }
 
@@ -400,13 +469,13 @@ public class FtcRobotControllerActivity extends Activity {
   }
 
   @Override
-  public void onWindowFocusChanged(boolean hasFocus){
+  public void onWindowFocusChanged(boolean hasFocus) {
     super.onWindowFocusChanged(hasFocus);
     // When the window loses focus (e.g., the action overflow is shown),
     // cancel any pending hide action. When the window gains focus,
     // hide the system UI.
     if (hasFocus) {
-      if (ImmersiveMode.apiOver19()){
+      if (ImmersiveMode.apiOver19()) {
         // Immersive flag only works on API 19 and above.
         immersion.hideSystemUI();
       }
@@ -430,11 +499,11 @@ public class FtcRobotControllerActivity extends Activity {
       if (cfgFileMgr.getActiveConfig().isNoConfig()) {
         // Tell the user they must configure the robot before starting programming mode.
         AppUtil.getInstance().showToast(
-            context, context.getString(R.string.toastConfigureRobotBeforeProgrammingMode));
+                context, context.getString(R.string.toastConfigureRobotBeforeProgrammingMode));
       } else {
         Intent programmingModeIntent = new Intent(ProgrammingModeActivity.launchIntent);
         programmingModeIntent.putExtra(
-            LaunchActivityConstantsList.PROGRAMMING_MODE_ACTIVITY_NETWORK_TYPE, networkType);
+                LaunchActivityConstantsList.PROGRAMMING_MODE_ACTIVITY_NETWORK_TYPE, networkType);
         startActivity(programmingModeIntent);
       }
       return true;
@@ -442,41 +511,35 @@ public class FtcRobotControllerActivity extends Activity {
       Intent inspectionModeIntent = new Intent(RcInspectionActivity.rcLaunchIntent);
       startActivity(inspectionModeIntent);
       return true;
-    }
-    else if (id == R.id.action_blocks) {
+    } else if (id == R.id.action_blocks) {
       Intent blocksIntent = new Intent(BlocksActivity.launchIntent);
       startActivity(blocksIntent);
       return true;
-    }
-    else if (id == R.id.action_restart_robot) {
+    } else if (id == R.id.action_restart_robot) {
       dimmer.handleDimTimer();
       AppUtil.getInstance().showToast(context, context.getString(R.string.toastRestartingRobot));
       requestRobotRestart();
       return true;
-    }
-    else if (id == R.id.action_configure_robot) {
+    } else if (id == R.id.action_configure_robot) {
       EditParameters parameters = new EditParameters();
       Intent intentConfigure = new Intent(FtcLoadFileActivity.launchIntent);
       parameters.putIntent(intentConfigure);
       startActivityForResult(intentConfigure, LaunchActivityConstantsList.FTC_CONFIGURE_REQUEST_CODE_ROBOT_CONTROLLER);
-    }
-    else if (id == R.id.action_settings) {
+    } else if (id == R.id.action_settings) {
       Intent settingsIntent = new Intent(FtcRobotControllerSettingsActivity.launchIntent);
       startActivityForResult(settingsIntent, LaunchActivityConstantsList.FTC_CONFIGURE_REQUEST_CODE_ROBOT_CONTROLLER);
       return true;
-    }
-    else if (id == R.id.action_about) {
+    } else if (id == R.id.action_about) {
       Intent intent = new Intent(AboutActivity.launchIntent);
       intent.putExtra(LaunchActivityConstantsList.ABOUT_ACTIVITY_CONNECTION_TYPE, networkType);
       startActivity(intent);
       return true;
-    }
-    else if (id == R.id.action_exit_app) {
+    } else if (id == R.id.action_exit_app) {
       finish();
       return true;
     }
 
-   return super.onOptionsItemSelected(item);
+    return super.onOptionsItemSelected(item);
   }
 
   @Override
