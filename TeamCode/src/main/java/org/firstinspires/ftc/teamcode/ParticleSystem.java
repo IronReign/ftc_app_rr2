@@ -27,7 +27,7 @@ public class ParticleSystem {
     private int backupSpeed        = -1;
     private double powerFlywheel   = 0;
     private int speedConveyor      = 0;
-    private int loadSpeed          = 450;
+    private int loadSpeed          = 350;
     private int collectSpeed       = 3500;
 
     private long flingTimer        = 0;

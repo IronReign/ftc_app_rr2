@@ -11,7 +11,7 @@ import static org.firstinspires.ftc.teamcode.Pose.ticksPerRot;
 
 public class CapTrap {
     DcMotor motorLift = null;
-    Servo servoLatch = null;
+    Servo servoLiftLatch = null;
 
     static double spoolDiameter       = .05; //diameter of the spool in meters
     private double spoolCircumference = spoolDiameter *Math.PI;
@@ -23,9 +23,11 @@ public class CapTrap {
     private double hPickup = -0.34;
     private int latchEngaged = 1880;
     private int latchReleased = 940;
+    private int latchPosition = latchEngaged;
 
-    public CapTrap(DcMotor motorLift){
+    public CapTrap(DcMotor motorLift, Servo servoLiftLatch){
         this.motorLift = motorLift;
+        this.servoLiftLatch = servoLiftLatch;
         this.motorLift.setMaxSpeed(1000);
     }
     public void resetMotor(boolean runToPosition){
@@ -58,14 +60,13 @@ public class CapTrap {
         motorLift.setPower(1);
         setPositionMeters(hPickup);
     }
-
-    public void deploy(){
-        servoLatch.setPosition(Pose.ServoNormalize(latchReleased));
+    public void updateLift(){
+        servoLiftLatch.setPosition(ServoNormalize(latchPosition));
     }
 
-    public void latch(){
-        servoLatch.setPosition(Pose.ServoNormalize(latchEngaged));
-    }
+    public void deploy(){ latchPosition = latchReleased; }
+
+    public void latch(){ latchPosition = latchEngaged; }
 
     public double getPositionMeters(){
         return motorLift.getTargetPosition()/ticksPerM;
@@ -118,12 +119,17 @@ public class CapTrap {
         motorLift.setPower(pwr);
     }
     public void raise(double pwr){
-        setRunmode(DcMotor.RunMode.RUN_USING_ENCODER, 10000, 1);
+        setRunmode(DcMotor.RunMode.RUN_USING_ENCODER, 10000, pwr);
     }
     public void lower(double pwr){
-        setRunmode(DcMotor.RunMode.RUN_USING_ENCODER, 10000, -1);
+        setRunmode(DcMotor.RunMode.RUN_USING_ENCODER, 10000, -pwr);
     }
     public void stop(){
         motorLift.setPower(0);
+    }
+
+    public static double ServoNormalize(int pulse){
+        double normalized = (double)pulse;
+        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
 }

@@ -78,6 +78,7 @@ public class Pose
     DcMotor headLamp        = null; //front white LED string
     DcMotor redLamps        = null; //side red highlight LED strings
     Servo servoGate         = null; //gate for the particle launcher
+    Servo servoLiftLatch    = null;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
     Orientation angles; //feedback from the IMU
@@ -254,9 +255,10 @@ public class Pose
         this.motorConveyor   = this.hwMap.dcMotor.get("motorConveyor");
         this.motorLauncher   = this.hwMap.dcMotor.get("motorLauncher");
         this.motorLift       = this.hwMap.dcMotor.get("motorLift");
-        this.headLamp   = this.hwMap.dcMotor.get("headLamp");
-        this.redLamps       = this.hwMap.dcMotor.get("redLamps");
+        this.headLamp        = this.hwMap.dcMotor.get("headLamp");
+        this.redLamps        = this.hwMap.dcMotor.get("redLamps");
         this.servoGate       = this.hwMap.servo.get("servoGate");
+        this.servoLiftLatch  = this.hwMap.servo.get("servoLiftLatch");
 
         // get a reference to our distance sensors
         beaconPresentRear = hwMap.opticalDistanceSensor.get("beaconPresentRear");
@@ -284,7 +286,7 @@ public class Pose
         moveMode = MoveMode.still;
 
         this.particle = new ParticleSystem(flingSpeed, motorLauncher, motorConveyor, servoGate, ballColorSensor, isBlue);
-        this.cap = new CapTrap(motorLift);
+        this.cap = new CapTrap(motorLift, servoLiftLatch);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;

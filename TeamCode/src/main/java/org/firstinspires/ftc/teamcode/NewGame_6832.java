@@ -425,17 +425,25 @@ public class NewGame_6832 extends LinearOpMode {
                 robot.cap.cycleDown();
             }
             if (gamepad1.y){
-                robot.cap.raise(.75);
+                robot.cap.raise(1);
             }
             else if (gamepad1.a){
-                robot.cap.lower(.3);
+                robot.cap.lower(.5);
             }
             else{
                 robot.cap.stop();
             }
+            if(gamepad1.b){
+                robot.cap.deploy();
+            }
+            if(gamepad1.x){
+                robot.cap.latch();
+            }
+
         }
 
         robot.particle.updateCollection();
+        robot.cap.updateLift();
     }
 
     public void resetAuto(){
