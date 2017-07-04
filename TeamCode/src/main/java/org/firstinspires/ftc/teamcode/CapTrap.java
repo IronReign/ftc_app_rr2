@@ -28,13 +28,13 @@ public class CapTrap {
     public CapTrap(DcMotor motorLift, Servo servoLiftLatch){
         this.motorLift = motorLift;
         this.servoLiftLatch = servoLiftLatch;
-        this.motorLift.setMaxSpeed(1000);
+        //this.motorLift.setMaxSpeed(1000);
     }
     public void resetMotor(boolean runToPosition){
         motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         if(runToPosition) motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         else motorLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        this.motorLift.setMaxSpeed(1000);
+        //this.motorLift.setMaxSpeed(1000);
     }
     public void summit(){
         setRunmode(DcMotor.RunMode.RUN_TO_POSITION, 1000, 1);
@@ -115,7 +115,7 @@ public class CapTrap {
     }
     public void setRunmode(DcMotor.RunMode runMode, int tps, double pwr){
         motorLift.setMode(runMode);
-        motorLift.setMaxSpeed(tps);
+        //motorLift.setMaxSpeed(tps);
         motorLift.setPower(pwr);
     }
     public void raise(double pwr){

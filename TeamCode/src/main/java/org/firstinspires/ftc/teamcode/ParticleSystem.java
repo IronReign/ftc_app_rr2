@@ -58,7 +58,7 @@ public class ParticleSystem {
         ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLauncher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorConveyor.setMaxSpeed(4000);
+        //motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
@@ -75,7 +75,7 @@ public class ParticleSystem {
         ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLauncher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorConveyor.setMaxSpeed(4000);
+        //motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
@@ -92,7 +92,7 @@ public class ParticleSystem {
         ballColorReader.write8(3, 0);    //Set the mode of the color sensor using LEDState (0 = active, 1 = passive)
         motorConveyor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLauncher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorConveyor.setMaxSpeed(4000);
+        //motorConveyor.setMaxSpeed(4000);
         resetFlinger();
     }
 
@@ -103,7 +103,7 @@ public class ParticleSystem {
 
     public void setSpeed(int ticksPerSec){
         this.speed = ticksPerSec;
-        this.motorLauncher.setMaxSpeed(speed);
+        //this.motorLauncher.setMaxSpeed(speed);
     }
 
     public void runToPosition(){
@@ -125,7 +125,7 @@ public class ParticleSystem {
     public void resetFlinger(){
         motorLauncher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorLauncher.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorLauncher.setMaxSpeed(speed);
+        //motorLauncher.setMaxSpeed(speed);
         setPosition(0);
         motorLauncher.setPower(0);
     }
@@ -135,7 +135,7 @@ public class ParticleSystem {
         flingTimer = System.nanoTime() + 200000000;
         while(flingTimer > System.nanoTime()){ speedConveyor = -1; }
         motorConveyor.setPower(0);
-        motorLauncher.setMaxSpeed(ticksPerRot);
+        //motorLauncher.setMaxSpeed(ticksPerRot);
         if(Math.abs(position) > Math.abs(motorLauncher.getCurrentPosition()) - 15            //prevents incrementing target pos
            && Math.abs(position) < Math.abs((motorLauncher.getCurrentPosition()) + 15)){     //if the flinger is stuck
             position += ticksPerRot * 1;
@@ -255,17 +255,17 @@ public class ParticleSystem {
             ejectTimer = System.nanoTime() + (long) 2e9;
             shouldEject = true;
             motorConveyor.setPower(powerConveyor);
-            motorConveyor.setMaxSpeed(speedConveyor);
+            //motorConveyor.setMaxSpeed(speedConveyor);
         }
         else if(System.nanoTime() > ejectTimer && shouldEject){
             stopConveyor();
             shouldEject = false;
             motorConveyor.setPower(powerConveyor);
-            motorConveyor.setMaxSpeed(speedConveyor);
+            //motorConveyor.setMaxSpeed(speedConveyor);
         }
         else if(System.nanoTime() > ejectTimer && !shouldEject){
             motorConveyor.setPower(powerConveyor);
-            motorConveyor.setMaxSpeed(speedConveyor);
+            //motorConveyor.setMaxSpeed(speedConveyor);
         }
         motorLauncher.setPower(powerFlywheel);
         //motorLauncher.setMaxSpeed(speedFlywheel);

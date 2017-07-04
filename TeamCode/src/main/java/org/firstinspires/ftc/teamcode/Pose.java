@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.hardware.adafruit.BNO055IMU;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.vuforia.Image;
 import com.vuforia.PIXEL_FORMAT;
 
