@@ -439,7 +439,7 @@ public class Pose
 
         //the wheels on argos can't turn more than 45 degrees, so crop the excess
         wheelAngle = clampDouble(-45,45,steerAngle); //
-        wheelAngle   = wheelAngle / -45; //convert to range needed for servo control
+        wheelAngle   = (wheelAngle / -45 /2)+.5; //convert to range needed for servo control
 
         powerFront = forward;
         powerBack = forward;

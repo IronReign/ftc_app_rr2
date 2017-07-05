@@ -95,7 +95,7 @@ public class Argos extends LinearOpMode {
     private boolean shouldLaunch = false;
     private boolean isBlue = false;
     private boolean capMode = false;
-    private double pwrDamper = .6;
+    private double pwrDamper = .1;
     private double pwrFwd = 0;
     private double pwrStf = 0;
     private double degreeRot = 0;
@@ -363,7 +363,7 @@ public class Argos extends LinearOpMode {
             joystickDriveStarted = true;
         }
         pwrFwd = pwrDamper * -gamepad1.left_stick_y;
-        degreeRot = gamepad1.left_stick_x * 45; //hard right maps to 45 degree steering
+        degreeRot = gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 
         if (!runDemo)
             robot.driveMixer(pwrFwd, degreeRot);
