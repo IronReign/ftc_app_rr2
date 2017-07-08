@@ -135,6 +135,9 @@ public class Pose
     private double minTurnError = 1.0;
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
+    private int[] headPosition = new int[2];
+    private int headZeroPan = 750;
+    private int headZeroTilt = 750;
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
@@ -185,6 +188,9 @@ public class Pose
         poseSpeed = speed;
         posePitch = 0;
         poseRoll = 0;
+        headPosition[0] = headZeroPan;
+        headPosition[1] = headZeroTilt;
+
     }
 
     /**
@@ -202,6 +208,8 @@ public class Pose
         poseY     = y;
         poseHeading = angle;
         poseSpeed = 0;
+        headPosition[0] = headZeroPan;
+        headPosition[1] = headZeroTilt;
 
     }
 
@@ -218,6 +226,8 @@ public class Pose
         poseSpeed = 0;
         posePitch=0;
         poseRoll=0;
+        headPosition[0] = headZeroPan;
+        headPosition[1] = headZeroTilt;
 
     }
 
@@ -449,6 +459,10 @@ public class Pose
 
         servoSteerBack.setPosition(wheelAngle);
         servoSteerFront.setPosition(wheelAngle);
+
+    }
+
+    public void zeroHead(){
 
     }
 
