@@ -95,7 +95,7 @@ public class Argos extends LinearOpMode {
     private boolean shouldLaunch = false;
     private boolean isBlue = false;
     private boolean capMode = false;
-    private double pwrDamper = .1;
+    private double pwrDamper = .05;
     private double pwrFwd = 0;
     private double pwrStf = 0;
     private double degreeRot = 0;
@@ -263,6 +263,7 @@ public class Argos extends LinearOpMode {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
                         joystickDriveStarted = false;
+                        robot.trackVuTarget((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
 
 
                         break;
@@ -363,7 +364,7 @@ public class Argos extends LinearOpMode {
             joystickDriveStarted = true;
         }
         pwrFwd = pwrDamper * -gamepad1.left_stick_y;
-        degreeRot = gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
+        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 
         if (!runDemo)
             robot.driveMixer(pwrFwd, degreeRot);

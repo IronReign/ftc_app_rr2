@@ -7,10 +7,8 @@ import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -59,9 +57,9 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public  double KpDrive = 0.007; //proportional constant multiplier
+    public  double KpDrive = 0.01; //proportional constant multiplier
     private double KiDrive = 0.000; //integral constant multiplier
-    private double KdDrive = 0.001; //derivative constant multiplier
+    private double KdDrive = 0.01; //derivative constant multiplier
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
@@ -135,9 +133,9 @@ public class Pose
     private double minTurnError = 1.0;
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
-    private int[] headPosition = new int[2];
-    private int headZeroPan = 750;
-    private int headZeroTilt = 750;
+    private double[] headPosition = new double[2];
+    private double headZeroPan = .5;//1500;
+    private double headZeroTilt = .5;//1500;
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
@@ -148,7 +146,8 @@ public class Pose
     private double wheelbase; //the width between the wheels
 
     private VectorF vuTrans; //vector that calculates the position of the vuforia target relative to the phone (mm)
-    private double vuAngle; //angle of the vuforia target from the center of the phone camera (degrees)
+    private double vuPanAngle; //angle of the vuforia target from the center of the phone camera (degrees)
+    private double vuTiltAngle;
     private double vuDepth = 0; //calculated distance from the vuforia target on the z axis (mm)
     private double vuXOffset = 0; //calculated distance from the vuforia target on the x axis (mm)
 
@@ -199,7 +198,7 @@ public class Pose
      *
      * @param x     The position relative to the x axis of the field
      * @param y     The position relative to the y axis of the field
-     * @param angle The vuAngle of the robot
+     * @param angle The vuPanAngle of the robot
      */
     public Pose(double x, double y, double angle)
     {
@@ -214,7 +213,7 @@ public class Pose
     }
 
     /**
-     * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 vuAngle.
+     * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 vuPanAngle.
      * Useful for determining the Pose of the robot relative to the origin.
      */
     public Pose()
@@ -282,6 +281,7 @@ public class Pose
         this.motorFront.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBack.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorNeck.setDirection(DcMotorSimple.Direction.FORWARD);
+        this.servoSteerFront.setDirection(Servo.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
@@ -367,6 +367,44 @@ public class Pose
         driveMixer(pwr, correction);
     }
 
+    public double DistancePID(double Kp, double Ki, double Kd, double pwr, double currentDistance, double targetDistance) {
+        //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
+        //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
+        drivePID.setOutputRange(-.1,.1);
+        drivePID.setPID(Kp, Ki, Kd);
+        drivePID.setSetpoint(targetDistance);
+        drivePID.enable();
+
+        //drivePID.setInputRange(0, 360);
+        //drivePID.setContinuous();
+        drivePID.setInput(currentDistance);
+        double correction = drivePID.performPID();
+
+        /*ArrayList toUpdate = new ArrayList();
+        toUpdate.add((PID.m_deltaTime));
+        toUpdate.add(Double.valueOf(PID.m_error));
+        toUpdate.add(new Double(PID.m_totalError));
+        toUpdate.add(new Double(PID.pwrP));
+        toUpdate.add(new Double(PID.pwrI));
+        toUpdate.add(new Double(PID.pwrD));*/
+/*
+        logger.UpdateLog(Long.toString(System.nanoTime()) + ","
+                + Double.toString(PID.m_deltaTime) + ","
+                + Double.toString(pose.getOdometer()) + ","
+                + Double.toString(PID.m_error) + ","
+                + Double.toString(PID.m_totalError) + ","
+                + Double.toString(PID.pwrP) + ","
+                + Double.toString(PID.pwrI) + ","
+                + Double.toString(PID.pwrD) + ","
+                + Double.toString(correction));
+        motorLeft.setPower(pwr + correction);
+        motorRight.setPower(pwr - correction);
+
+*/
+
+        return -correction;
+    }
+
     /**
      * Moves the platform under PID control applied to the rotation of the robot. This version can drive forwards/backwards and uses ackerman steering
      *
@@ -394,7 +432,7 @@ public class Pose
         if(strafe) targetPos = (long) targetMeters * TPM_Strafe;
         else targetPos = (long)(targetMeters * TPM_Forward);
         if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){//we've not arrived yet
-            DriveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle);
+            DriveIMU(KdDrive, KiDrive, KdDrive, pwr, targetAngle);
             return false;
         }
         else { //destination achieved
@@ -443,6 +481,19 @@ public class Pose
         initialized = false; //triggers recalc of heading offset at next IMU update cycle
     }
 
+    public void setHeadPan(double pan){
+        headPosition[0] = pan;
+    }
+
+    public void setHeadTilt(double tilt){
+        headPosition[0] = tilt;
+    }
+
+    public void setHeadPos(double pan, double tilt){
+        headPosition[0] = pan;
+        headPosition[1] = tilt;
+    }
+
     public void driveMixer(double forward,double steerAngle){
 
         double wheelAngle;
@@ -459,10 +510,6 @@ public class Pose
 
         servoSteerBack.setPosition(wheelAngle);
         servoSteerFront.setPosition(wheelAngle);
-
-    }
-
-    public void zeroHead(){
 
     }
 
@@ -695,6 +742,9 @@ public class Pose
         }
 
 
+        servoPan.setPosition((headPosition[0]));
+        servoTilt.setPosition((headPosition[1]));
+
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
@@ -874,6 +924,32 @@ public class Pose
 //
 //    }
 
+    public void trackVuTarget(VuforiaTrackableDefaultListener beacon, double maxSpeed, int bufferDistance){
+        double pwr = 0;
+        maxSpeed = maxSpeed/10; //debug
+        if(beacon.getPose() != null) {
+
+            vuTrans = beacon.getRawPose().getTranslation();
+            vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            vuTiltAngle = Math.toDegrees(Math.atan2(vuTrans.get(1), vuTrans.get(2)));
+            vuDepth = vuTrans.get(2);
+            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] + vuPanAngle / 1500), clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
+            servoSteerBack.setPosition(headPosition[0]);
+            servoSteerFront.setPosition(headPosition[0]);
+            //pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/2000.0));
+            pwr=DistancePID(.05, 0, -.03, pwr, vuDepth/1000,1); //pre-converted distances to meters to get into a similar range as the output
+
+        }
+        else{
+
+            motorFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motorBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            pwr = 0;
+        }
+        motorFront.setPower(pwr);
+        motorBack.setPower(pwr);
+
+    }
 
     public double driveToBeacon(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
 
@@ -885,8 +961,9 @@ public class Pose
 
             //todo - add a new transform that will shift our target left or right depending on beacon analysis
 
-            if(offset){vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) , vuTrans.get(2)));}
-            else vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            if(offset){
+                vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) , vuTrans.get(2)));}
+            else vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
 
             if (turnOnly)
@@ -894,8 +971,8 @@ public class Pose
             else
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
                 pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
-            Log.i("Beacon Angle", String.valueOf(vuAngle));
-            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0);
+            Log.i("Beacon Angle", String.valueOf(vuPanAngle));
+            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuPanAngle, 0);
 
         } else { //disable motors if given target not visible
             vuDepth = 0;
@@ -987,8 +1064,8 @@ public class Pose
 
             //todo - add a new transform that will shift our target left or right depending on beacon analysis
 
-            if(offset){vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));}
-            else vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            if(offset){vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));}
+            else vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
 
             if (turnOnly)
@@ -996,8 +1073,8 @@ public class Pose
             else
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
                 pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
-            Log.i("Particle Angle", String.valueOf(vuAngle));
-            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
+            Log.i("Particle Angle", String.valueOf(vuPanAngle));
+            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuPanAngle, 0, false);
 
         } else { //disable motors if given target not visible
             vuDepth = 0;
@@ -1012,8 +1089,8 @@ public class Pose
 
 
 
-    public double getVuAngle(){
-        return vuAngle;
+    public double getVuPanAngle(){
+        return vuPanAngle;
     }
     public double getVuDepth(){
         return vuDepth;
