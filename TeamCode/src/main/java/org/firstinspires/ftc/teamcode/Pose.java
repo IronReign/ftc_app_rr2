@@ -57,9 +57,9 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public  double KpDrive = 0.01; //proportional constant multiplier
+    public  double KpDrive = 0.05; //proportional constant multiplier
     private double KiDrive = 0.000; //integral constant multiplier
-    private double KdDrive = 0.01; //derivative constant multiplier
+    private double KdDrive = 0.03; //derivative constant multiplier
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
@@ -282,6 +282,11 @@ public class Pose
         this.motorBack.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorNeck.setDirection(DcMotorSimple.Direction.FORWARD);
         this.servoSteerFront.setDirection(Servo.Direction.REVERSE);
+        this.headLamp.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        motorFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        headLamp.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         moveMode = MoveMode.still;
 
@@ -924,7 +929,7 @@ public class Pose
 //
 //    }
 
-    public void trackVuTarget(VuforiaTrackableDefaultListener beacon, double maxSpeed, int bufferDistance){
+    public boolean trackVuTarget(VuforiaTrackableDefaultListener beacon, double maxSpeed, int bufferDistance){
         double pwr = 0;
         maxSpeed = maxSpeed/10; //debug
         if(beacon.getPose() != null) {
@@ -937,18 +942,36 @@ public class Pose
             servoSteerBack.setPosition(headPosition[0]);
             servoSteerFront.setPosition(headPosition[0]);
             //pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/2000.0));
-            pwr=DistancePID(.05, 0, -.03, pwr, vuDepth/1000,1); //pre-converted distances to meters to get into a similar range as the output
+            pwr=DistancePID(KpDrive, KiDrive, KdDrive, pwr, vuDepth/1000,1); //pre-converted distances to meters to get into a similar range as the output
+            motorFront.setPower(pwr);
+            motorBack.setPower(pwr);
+            return true;
 
         }
         else{
-
-            motorFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            motorBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//            motorFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//            motorBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             pwr = 0;
+            return false;
         }
-        motorFront.setPower(pwr);
-        motorBack.setPower(pwr);
 
+
+    }
+
+    public void setKpDrive(double Kp){
+        KpDrive = Kp;
+    }
+
+    public void setKdDrive(double Kd){
+        KdDrive = Kd;
+    }
+
+    public double getKpDrive(){
+        return KpDrive;
+    }
+
+    public double getKdDrive(){
+        return KdDrive;
     }
 
     public double driveToBeacon(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {

@@ -262,9 +262,9 @@ public class Argos extends LinearOpMode {
             if(active) {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
-                        joystickDriveStarted = false;
-                        robot.trackVuTarget((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
-
+                        if(!robot.trackVuTarget((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000)) {
+                            joystickDrive();
+                        }
 
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
@@ -365,6 +365,22 @@ public class Argos extends LinearOpMode {
         }
         pwrFwd = pwrDamper * -gamepad1.left_stick_y;
         degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
+
+        if(toggleAllowed(gamepad1.y, y)){
+            robot.setKdDrive(robot.getKdDrive() + 0.005);
+        }
+
+        if(toggleAllowed(gamepad1.a, a)){
+            robot.setKdDrive(robot.getKdDrive() - 0.005);
+        }
+
+        if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+            robot.setKpDrive(robot.getKpDrive() + 0.005);
+        }
+
+        if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+            robot.setKpDrive(robot.getKpDrive() - 0.005);
+        }
 
         if (!runDemo)
             robot.driveMixer(pwrFwd, degreeRot);
@@ -524,6 +540,17 @@ public class Argos extends LinearOpMode {
 //                        return Float.toString(robot.particle.flywheelSpeed);
 //                    }
 //                });
+        telemetry.addLine()
+                .addData("Kp", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.getKpDrive();
+                    }
+                })
+                .addData("Kd", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.getKdDrive();
+                    }
+                });
 
         telemetry.addLine()
                 .addData("status", new Func<String>() {
