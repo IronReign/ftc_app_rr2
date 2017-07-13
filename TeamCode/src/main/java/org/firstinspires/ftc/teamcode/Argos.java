@@ -262,9 +262,10 @@ public class Argos extends LinearOpMode {
             if(active) {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
-                        if(!robot.trackVuTarget((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000)) {
-                            joystickDrive();
+                        if(gamepad1.x){
+                            robot.trackVuTarget((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
                         }
+                        else joystickDrive();
 
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
@@ -367,11 +368,11 @@ public class Argos extends LinearOpMode {
         degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 
         if(toggleAllowed(gamepad1.y, y)){
-            robot.setKdDrive(robot.getKdDrive() + 0.005);
+            robot.setKdDrive(robot.getKdDrive() + 10);
         }
 
         if(toggleAllowed(gamepad1.a, a)){
-            robot.setKdDrive(robot.getKdDrive() - 0.005);
+            robot.setKdDrive(robot.getKdDrive() - 10);
         }
 
         if(toggleAllowed(gamepad1.dpad_up, dpad_up)){

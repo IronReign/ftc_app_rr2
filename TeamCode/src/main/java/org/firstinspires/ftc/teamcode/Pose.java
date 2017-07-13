@@ -57,9 +57,9 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public  double KpDrive = 0.05; //proportional constant multiplier
+    public  double KpDrive = 0.10; //proportional constant multiplier
     private double KiDrive = 0.000; //integral constant multiplier
-    private double KdDrive = 0.03; //derivative constant multiplier
+    private double KdDrive = 30; //derivative constant multiplier
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
@@ -938,7 +938,7 @@ public class Pose
             vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
             vuTiltAngle = Math.toDegrees(Math.atan2(vuTrans.get(1), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
-            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] + vuPanAngle / 1500), clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
+            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] - vuPanAngle / 1500), .5);//clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
             servoSteerBack.setPosition(headPosition[0]);
             servoSteerFront.setPosition(headPosition[0]);
             //pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/2000.0));
