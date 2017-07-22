@@ -59,7 +59,7 @@ public class Pose
 
     public  double KpDrive = 0.10; //proportional constant multiplier
     private double KiDrive = 0.000; //integral constant multiplier
-    private double KdDrive = 30; //derivative constant multiplier
+    private double KdDrive = 150; //derivative constant multiplier
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
@@ -282,7 +282,7 @@ public class Pose
         this.motorBack.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorNeck.setDirection(DcMotorSimple.Direction.FORWARD);
         this.servoSteerFront.setDirection(Servo.Direction.REVERSE);
-        this.headLamp.setDirection(DcMotorSimple.Direction.REVERSE);
+        //this.headLamp.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -929,7 +929,16 @@ public class Pose
 //
 //    }
 
-    public boolean trackVuTarget(VuforiaTrackableDefaultListener beacon, double maxSpeed, int bufferDistance){
+    public void reverseHeadServo(){
+        if(servoPan.getDirection().equals(Servo.Direction.REVERSE)){
+            servoPan.setDirection(Servo.Direction.FORWARD);
+        }
+        else{
+            servoPan.setDirection(Servo.Direction.REVERSE);
+        }
+    }
+
+    public boolean moveArgos(VuforiaTrackableDefaultListener beacon, double maxSpeed, int bufferDistance){
         double pwr = 0;
         maxSpeed = maxSpeed/10; //debug
         if(beacon.getPose() != null) {
@@ -938,7 +947,7 @@ public class Pose
             vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
             vuTiltAngle = Math.toDegrees(Math.atan2(vuTrans.get(1), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
-            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] - vuPanAngle / 1500), .5);//clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
+            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] + vuPanAngle / 1200), .5);//clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
             servoSteerBack.setPosition(headPosition[0]);
             servoSteerFront.setPosition(headPosition[0]);
             //pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/2000.0));
@@ -956,6 +965,20 @@ public class Pose
         }
 
 
+    }
+
+    public void vuTargetTracker(VuforiaTrackableDefaultListener beacon){
+        if(beacon.getPose() != null) {
+            vuTrans = beacon.getRawPose().getTranslation();
+            vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            vuTiltAngle = Math.toDegrees(Math.atan2(vuTrans.get(1), vuTrans.get(2)));
+            vuDepth = vuTrans.get(2);
+            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] + vuPanAngle / 1200), .5);
+        }
+    }
+
+    public void zeroHead() {
+        setHeadPos(0.5, 0.5);
     }
 
     public void setKpDrive(double Kp){

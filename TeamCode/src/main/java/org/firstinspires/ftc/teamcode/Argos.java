@@ -177,23 +177,23 @@ public class Argos extends LinearOpMode {
 //        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
 
         beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
-        beaconTargets.get(0).setName("Wheels");
-        beaconTargets.get(1).setName("Tools");
-        beaconTargets.get(2).setName("Lego");
+        //beaconTargets.get(0).setName("Wheels");
+        //beaconTargets.get(1).setName("Tools");
+        //beaconTargets.get(2).setName("Lego");
         beaconTargets.get(3).setName("Gears");
 
 
         redNearTarget = beaconTargets.get(3);
         redNearTarget.setName("redNear");  // Gears
 
-        blueNearTarget  = beaconTargets.get(0);
-        blueNearTarget.setName("blueNear");  // Wheels
-
-        redFarTarget = beaconTargets.get(1);
-        redFarTarget.setName("redFar");  // Tools
-
-        blueFarTarget  = beaconTargets.get(2);
-        blueFarTarget.setName("blueFar");  // Legos
+//        blueNearTarget  = beaconTargets.get(0);
+//        blueNearTarget.setName("blueNear");  // Wheels
+//
+//        redFarTarget = beaconTargets.get(1);
+//        redFarTarget.setName("redFar");  // Tools
+//
+//        blueFarTarget  = beaconTargets.get(2);
+//        blueFarTarget.setName("blueFar");  // Legos
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
@@ -262,10 +262,19 @@ public class Argos extends LinearOpMode {
             if(active) {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
-                        if(gamepad1.x){
-                            robot.trackVuTarget((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
+                        if(toggleAllowed(gamepad1.b, b)){
+                            robot.zeroHead();
                         }
-                        else joystickDrive();
+                        if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+                            robot.reverseHeadServo();
+                        }
+                        if(gamepad1.x){
+                            robot.moveArgos((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
+                        }
+                        else {
+                            joystickDrive();
+                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)redNearTarget.getListener());
+                        }
 
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
