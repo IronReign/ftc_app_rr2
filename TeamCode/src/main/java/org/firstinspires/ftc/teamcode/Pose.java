@@ -947,7 +947,7 @@ public class Pose
             vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
             vuTiltAngle = Math.toDegrees(Math.atan2(vuTrans.get(1), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
-            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] + vuPanAngle / 1200), .5);//clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
+            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] - vuPanAngle / 1200), .5);//clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
             servoSteerBack.setPosition(headPosition[0]);
             servoSteerFront.setPosition(headPosition[0]);
             //pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/2000.0));
@@ -967,13 +967,22 @@ public class Pose
 
     }
 
+    public void toggleDriftMode(){
+        if(servoSteerBack.getDirection().equals(Servo.Direction.REVERSE)){
+            servoSteerBack.setDirection(Servo.Direction.FORWARD);
+        }
+        else{
+            servoSteerBack.setDirection(Servo.Direction.REVERSE);
+        }
+    }
+
     public void vuTargetTracker(VuforiaTrackableDefaultListener beacon){
         if(beacon.getPose() != null) {
             vuTrans = beacon.getRawPose().getTranslation();
             vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
             vuTiltAngle = Math.toDegrees(Math.atan2(vuTrans.get(1), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
-            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] + vuPanAngle / 1200), .5);
+            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] - vuPanAngle / 1200), .5);
         }
     }
 

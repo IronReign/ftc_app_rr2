@@ -266,7 +266,7 @@ public class Argos extends LinearOpMode {
                             robot.zeroHead();
                         }
                         if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                            robot.reverseHeadServo();
+                            robot.toggleDriftMode();
                         }
                         if(gamepad1.x){
                             robot.moveArgos((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
