@@ -197,9 +197,9 @@ public class Argos extends LinearOpMode {
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
-        beaconTargets.activate();
+        //beaconTargets.activate();
 
-        mDetector = new ColorBlobDetector();
+        //mDetector = new ColorBlobDetector();
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
@@ -392,7 +392,7 @@ public class Argos extends LinearOpMode {
             robot.setKpDrive(robot.getKpDrive() - 0.005);
         }
 
-        if (!runDemo)
+        if (!runDemo && !robot.isBalanceMode())
             robot.driveMixer(pwrFwd, degreeRot);
 
     }
@@ -449,6 +449,30 @@ public class Argos extends LinearOpMode {
             active = !active;
             beaconState = 0;
         }
+
+        //auto switch into balance mode when angle climbs over 70 degrees
+        if (robot.getRoll()>robot.staticBalance - robot.balanceWindow && robot.getRoll()<robot.staticBalance+robot.balanceWindow) {
+            if (!robot.isBalanceMode()) // we are transitioning into balance mode
+            {
+                robot.nod = .9;
+                // this is a tighter requirement, won't enter full balance mode until robot
+                // has climbed past balance point
+                if (robot.getRoll()>robot.staticBalance)robot.setBalanceMode(true);
+            }
+
+        }
+        else {
+            if (robot.isBalanceMode()) // we are transitioning out of balance mode
+            {
+                robot.nod = .5;
+                robot.setHeadTilt(robot.nod);
+                robot.motorFront.setPower(0);
+            }
+            robot.setBalanceMode(false);
+
+        }
+
+
     }
 
 
@@ -613,7 +637,8 @@ public class Argos extends LinearOpMode {
 
                 .addData("rollRaw", new Func<String>() {
                     @Override public String value() {
-                        return formatAngle(angles.angleUnit, angles.secondAngle);
+                        //return formatAngle(angles.angleUnit, angles.secondAngle);
+                        return Double.toString(robot.getRoll());
                     }
                 })
                 .addData("pitchRaw", new Func<String>() {

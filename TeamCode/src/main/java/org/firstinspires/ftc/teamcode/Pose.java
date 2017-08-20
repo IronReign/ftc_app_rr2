@@ -55,13 +55,30 @@ public class Pose
 
     //motors
 
+    public CsvLogKeeper logger;
+
     PIDController drivePID = new PIDController(0, 0, 0);
+    PIDController balancePID = new PIDController(0,0,0);
 
     public  double KpDrive = 0.10; //proportional constant multiplier
     private double KiDrive = 0.000; //integral constant multiplier
     private double KdDrive = 150; //derivative constant multiplier
+    public  double KpBalance = 0.02; //proportional constant multiplier
+    private double KiBalance = 0.005; //integral constant multiplier
+    private double KdBalance = .07; //derivative constant multiplier
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
+
+    public boolean isBalanceMode() {
+        return balanceMode;
+    }
+
+    public void setBalanceMode(boolean balanceMode) {
+        this.balanceMode = balanceMode;
+    }
+
+    private boolean balanceMode = false;
+
 
     DcMotor motorFront = null;
 
@@ -136,6 +153,9 @@ public class Pose
     private double[] headPosition = new double[2];
     private double headZeroPan = .5;//1500;
     private double headZeroTilt = .5;//1500;
+    public double nod = .5; //desired angle of head tilt - this can affect the balance point
+    public double staticBalance = 67; //balance angle when the robot is not moving
+    public double balanceWindow = 16; // +/- limits around staticBalance where we try to maintain balanceMode
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
@@ -303,6 +323,7 @@ public class Pose
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
 
+        logger = new CsvLogKeeper("test",10,"NanoTime, DeltaTime, Angle, Err, TotalErr, DeltaErr, P, I, D, Pwr");
         HeadLampOn();
 //        RedLampOn();
         //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
@@ -324,6 +345,48 @@ public class Pose
         redLamps.setPower(0);
     }*/
 
+public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle)
+{
+    //sanity check - exit balance mode if we are out of recovery range
+
+
+
+    if (isBalanceMode()){ //only balance in the right mode
+
+        setHeadTilt(nod);
+
+        //servo steering should be locked straight ahead
+        servoSteerFront.setPosition(.5);
+        servoSteerBack.setPosition(0.5);
+
+        //double pwr = clampMotor((roll-staticBalance)*-.05);
+
+        balancePID.setOutputRange(-.5,.5);
+        balancePID.setPID(Kp, Ki, Kd);
+        balancePID.setSetpoint(staticBalance);
+        balancePID.enable();
+        balancePID.setInput(currentAngle);
+        double correction = balancePID.performPID();
+
+        logger.UpdateLog(Long.toString(System.nanoTime()) + ","
+                + Double.toString(balancePID.getDeltaTime()) + ","
+                + Double.toString(currentAngle) + ","
+                + Double.toString(balancePID.getError()) + ","
+                + Double.toString(balancePID.getTotalError()) + ","
+                + Double.toString(balancePID.getDeltaError()) + ","
+                + Double.toString(balancePID.getPwrP()) + ","
+                + Double.toString(balancePID.getPwrI()) + ","
+                + Double.toString(balancePID.getPwrD()) + ","
+                + Double.toString(correction));
+
+        timeStamp=System.nanoTime();
+        motorFront.setPower(correction);
+
+
+
+}
+
+}
     /**
      * Moves the mecanum platform under PID control applied to the rotation of the robot. This version can either drive forwards/backwards or strafe.
      *
@@ -491,7 +554,7 @@ public class Pose
     }
 
     public void setHeadTilt(double tilt){
-        headPosition[0] = tilt;
+        headPosition[1] = tilt;
     }
 
     public void setHeadPos(double pan, double tilt){
@@ -710,6 +773,7 @@ public class Pose
         //beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
         //beaconDistFore = Math.pow(beaconPresent.getLightDetected(), 0.5); //calculate linear value
         Update(imu, 0, 0);
+        BalanceArgos(KpBalance,KiBalance,KdBalance,0,getRoll(),staticBalance);
     }
 
     /**
@@ -947,7 +1011,7 @@ public class Pose
             vuPanAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
             vuTiltAngle = Math.toDegrees(Math.atan2(vuTrans.get(1), vuTrans.get(2)));
             vuDepth = vuTrans.get(2);
-            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] - vuPanAngle / 1200), .5);//clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
+            setHeadPos(clampDouble(0.0, 1.0, headPosition[0] - vuPanAngle / 1200), nod);//clampDouble(0.0, 0.8, headPosition[1] + vuTiltAngle / 1000));
             servoSteerBack.setPosition(headPosition[0]);
             servoSteerFront.setPosition(headPosition[0]);
             //pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/2000.0));

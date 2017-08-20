@@ -46,17 +46,18 @@ public class PIDController {
     private boolean m_continuous = false;       // do the endpoints wrap around? eg. Absolute encoder
     private boolean m_enabled = false;                  //is the pid controller enabled
     private double m_prevError = 0.0;   // the prior sensor input (used to compute velocity)
-    public double m_totalError = 0.0; //the sum of the errors for use in the integral calc
+    private double m_totalError = 0.0; //the sum of the errors for use in the integral calc
+    private double m_deltaError = 0.0; //the latest change in error
     private double m_tolerance = 0.05;  //the percentage error that is considered on target
     private double m_setpoint = 0.0;
-    public double m_error = 0.0;
+    private double m_error = 0.0;
     private double m_result = 0.0;
     private long m_prevTime; //time of previous calculate() in nanoseconds from the current epoch
-    public double m_deltaTime; // time between calls to calculate() in fractional seconds
+    private double m_deltaTime; // time between calls to calculate() in fractional seconds
     private long m_currentTime;
-    public double pwrP = 0.0;
-    public double pwrI = 0.0;
-    public double pwrD = 0.0;
+    private double pwrP = 0.0;
+    private double pwrI = 0.0;
+    private double pwrD = 0.0;
 
 
     /**
@@ -119,16 +120,20 @@ public class PIDController {
                 Log.e("", "Laggy Loop! " + m_deltaTime  + "  sec");
                 //m_deltaTime = 0;
             }
+
+            //integral calculation factored for time
             m_totalError += (m_error * m_deltaTime);
+
+            //derivative calculation factored for time
+            m_deltaError = (m_error - m_prevError) * m_deltaTime;
 
             // Perform the primary PID calculation
 
             pwrP = m_P * m_error;
             pwrI = m_I * m_totalError;
-            pwrD = m_D * (m_error - m_prevError) * m_deltaTime;
+            pwrD = m_D * m_deltaError;
 
             m_result = pwrP + pwrI + pwrD;
-
 
             // Set the current error to the previous error for the next cycle
             m_prevError = m_error;
@@ -161,7 +166,7 @@ public class PIDController {
      * Get the Proportional coefficient
      * @return proportional coefficient
      */
-    public double getP() {
+    public synchronized double getP() {
         return m_P;
     }
 
@@ -169,7 +174,7 @@ public class PIDController {
      * Get the Integral coefficient
      * @return integral coefficient
      */
-    public double getI() {
+    public synchronized double getI() {
         return m_I;
     }
 
@@ -177,9 +182,12 @@ public class PIDController {
      * Get the Differential coefficient
      * @return differential coefficient
      */
-    public double getD() {
+    public synchronized double getD() {
         return m_D;
     }
+
+
+
 
     /**
      * Return the current PID result
@@ -267,6 +275,30 @@ public class PIDController {
      */
     public synchronized double getError() {
         return m_error;
+    }
+
+    public synchronized double getTotalError() {
+        return m_totalError;
+    }
+
+    public synchronized double getDeltaError() {
+        return m_deltaError;
+    }
+
+    public synchronized double getDeltaTime() {
+        return m_deltaTime;
+    }
+
+    public synchronized double getPwrP () {
+        return pwrP;
+    }
+
+    public synchronized double getPwrI () {
+        return pwrI;
+    }
+
+    public synchronized double getPwrD () {
+        return pwrD;
     }
 
     /**
