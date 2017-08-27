@@ -58,16 +58,24 @@ public class Pose
     public CsvLogKeeper logger;
 
     PIDController drivePID = new PIDController(0, 0, 0);
-    PIDController balancePID = new PIDController(0,0,0);
+    public PIDController balancePID = new PIDController(0,0,0);
 
     public  double KpDrive = 0.10; //proportional constant multiplier
     private double KiDrive = 0.000; //integral constant multiplier
     private double KdDrive = 150; //derivative constant multiplier
     public  double KpBalance = 0.02; //proportional constant multiplier
-    private double KiBalance = 0.005; //integral constant multiplier
+    private double KiBalance = 0.01; //integral constant multiplier
     private double KdBalance = .07; //derivative constant multiplier
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
+
+    private double pidTunerMagnitude = .01;
+    private int pidTunerState = 0;
+
+
+
+    private int numTimesBalanced = 0;
+
 
     public boolean isBalanceMode() {
         return balanceMode;
@@ -323,7 +331,7 @@ public class Pose
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
 
-        logger = new CsvLogKeeper("test",10,"NanoTime, DeltaTime, Angle, Err, TotalErr, DeltaErr, P, I, D, Pwr");
+        logger = new CsvLogKeeper("test",10,"NanoTime, DeltaTime, Angle, Err, TotalErr, DeltaErr, P, I, D, Pwr, count");
         HeadLampOn();
 //        RedLampOn();
         //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
@@ -345,6 +353,18 @@ public class Pose
         redLamps.setPower(0);
     }*/
 
+    public int getNumTimesBalanced() {
+        return numTimesBalanced;
+    }
+
+    public void setNumTimesBalanced(int numTimesBalanced) {
+        this.numTimesBalanced = numTimesBalanced;
+    }
+
+    public void incrementNumTimesBalanced(){
+        numTimesBalanced++;
+    }
+
 public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle)
 {
     //sanity check - exit balance mode if we are out of recovery range
@@ -362,7 +382,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         //double pwr = clampMotor((roll-staticBalance)*-.05);
 
         balancePID.setOutputRange(-.5,.5);
-        balancePID.setPID(Kp, Ki, Kd);
+//        balancePID.setPID(Kp, Ki, Kd);
         balancePID.setSetpoint(staticBalance);
         balancePID.enable();
         balancePID.setInput(currentAngle);
@@ -377,7 +397,8 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
                 + Double.toString(balancePID.getPwrP()) + ","
                 + Double.toString(balancePID.getPwrI()) + ","
                 + Double.toString(balancePID.getPwrD()) + ","
-                + Double.toString(correction));
+                + Double.toString(correction) + ","
+                + Integer.toString(numTimesBalanced));
 
         timeStamp=System.nanoTime();
         motorFront.setPower(correction);
@@ -486,6 +507,53 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
 
     public void DriveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle){
         MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
+    }
+
+    public void PIDTune(PIDController pid, boolean pidIncrease, boolean pidDecrease, boolean magnitudeIncrease, boolean magnitudeDecrease, boolean shouldStateIncrement){
+        if(shouldStateIncrement){ pidTunerState = stateIncrement(pidTunerState, 0, 2, true); }
+        if(magnitudeIncrease){ pidTunerMagnitude *= 10; }
+        if(magnitudeDecrease){ pidTunerMagnitude /= 10; }
+
+        double dir;
+
+        if(pidIncrease) dir = 1;
+        else if (pidDecrease) dir = -1;
+        else if (pidDecrease) dir = -1;
+        else dir = 0;
+
+        switch(pidTunerState){
+            case 0:
+                pid.setPID(pid.getP() + pidTunerMagnitude*dir, pid.getI(), pid.getD());
+                break;
+            case 1:
+                pid.setPID(pid.getP(), pid.getI() + pidTunerMagnitude*dir, pid.getD());
+                break;
+            case 2:
+                pid.setPID(pid.getP(), pid.getI(), pid.getD() + pidTunerMagnitude*dir);
+                break;
+
+        }
+    }
+
+    public double getPidTunerMagnitude() {return pidTunerMagnitude;}
+
+    public int getPidTunerState() {return pidTunerState;}
+
+    public int stateIncrement(int val, int minVal, int maxVal, boolean increase){
+        if(increase){
+            if(val == maxVal){
+                return minVal;
+            }
+            val++;
+            return val;
+        }
+        else{
+            if(val == minVal){
+                return maxVal;
+            }
+            val--;
+            return val;
+        }
     }
 
 
@@ -802,6 +870,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
             //first time in - we assume that the robot has not started moving and that orientation values are set to the current absolute orientation
             //so first set of imu readings are effectively offsets
 
+            balancePID.setPID(KpBalance, KiBalance, KdBalance);
 
             offsetHeading = wrapAngleMinus(poseHeading, imuAngles.firstAngle);
             offsetRoll = wrapAngleMinus(imuAngles.secondAngle, poseRoll);

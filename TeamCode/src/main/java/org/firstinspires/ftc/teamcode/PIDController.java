@@ -281,6 +281,8 @@ public class PIDController {
         return m_totalError;
     }
 
+    public synchronized void setTotalError( double totalError ) { m_totalError = totalError; }
+
     public synchronized double getDeltaError() {
         return m_deltaError;
     }

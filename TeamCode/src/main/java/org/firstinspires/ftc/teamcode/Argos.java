@@ -197,9 +197,9 @@ public class Argos extends LinearOpMode {
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
-        //beaconTargets.activate();
+        beaconTargets.activate();
 
-        //mDetector = new ColorBlobDetector();
+        mDetector = new ColorBlobDetector();
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
@@ -285,7 +285,7 @@ public class Argos extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 3:
-
+                        robot.PIDTune(robot.balancePID, toggleAllowed(gamepad1.dpad_up,dpad_up), toggleAllowed(gamepad1.dpad_down,dpad_down), toggleAllowed(gamepad1.y,y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.x,x));
                         break;
                     case 4:
                         vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener(),500);
@@ -457,8 +457,13 @@ public class Argos extends LinearOpMode {
                 robot.nod = .9;
                 // this is a tighter requirement, won't enter full balance mode until robot
                 // has climbed past balance point
-                if (robot.getRoll()>robot.staticBalance)robot.setBalanceMode(true);
+                if (robot.getRoll()>robot.staticBalance){
+                    robot.balancePID.setTotalError(0);
+                    robot.setBalanceMode(true);
+                    robot.incrementNumTimesBalanced();
+                }
             }
+
 
         }
         else {
@@ -583,6 +588,33 @@ public class Argos extends LinearOpMode {
                 .addData("Kd", new Func<String>() {
                     @Override public String value() {
                         return "" + robot.getKdDrive();
+                    }
+                });
+
+        telemetry.addLine()
+                .addData("BKp", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.balancePID.getP();
+                    }
+                })
+                .addData("BKi", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.balancePID.getI();
+                    }
+                })
+                .addData("BKd", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.balancePID.getD();
+                    }
+                })
+                .addData("tuneSt", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.getPidTunerState();
+                    }
+                })
+                .addData("tuneMg", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.getPidTunerMagnitude();
                     }
                 });
 
