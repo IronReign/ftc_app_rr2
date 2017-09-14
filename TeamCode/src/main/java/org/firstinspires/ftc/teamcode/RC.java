@@ -6,7 +6,8 @@ import android.view.View;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 
-import org.firstinspires.ftc.robotcore.internal.AppUtil;
+
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
