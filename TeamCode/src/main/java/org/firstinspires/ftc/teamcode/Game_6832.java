@@ -38,26 +38,24 @@ import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.vuforia.HINT;
+import com.vuforia.PIXEL_FORMAT;
+import com.vuforia.Vuforia;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
 
-import com.vuforia.PIXEL_FORMAT;
-import com.vuforia.Vuforia;
-import com.vuforia.HINT;
-
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getBeaconConfig;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 /**
@@ -73,15 +71,15 @@ import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Argos", group="Linear Opmode")  // @Autonomous(...) is the other common choice
+@TeleOp(name="Game_6832", group="Linear Opmode")  // @Autonomous(...) is the other common choice
 //  @Autonomous
 
-public class Argos extends LinearOpMode {
+public class Game_6832 extends LinearOpMode {
 
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private PoseArgos robot = new PoseArgos();
+    private Pose robot = new Pose();
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance();
 
@@ -95,10 +93,10 @@ public class Argos extends LinearOpMode {
     private boolean shouldLaunch = false;
     private boolean isBlue = false;
     private boolean capMode = false;
-    private double pwrDamper = .05;
+    private double pwrDamper = 1;
     private double pwrFwd = 0;
     private double pwrStf = 0;
-    private double degreeRot = 0;
+    private double pwrRot = 0;
 
     private double vuPwr = 0;
 
@@ -263,17 +261,17 @@ public class Argos extends LinearOpMode {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
                         if(toggleAllowed(gamepad1.b, b)){
-                            robot.zeroHead();
+//                            robot.zeroHead();
                         }
                         if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                            robot.toggleDriftMode();
+//                            robot.toggleDriftMode();
                         }
                         if(gamepad1.x){
-                            robot.moveArgos((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
+//                            robot.moveArgos((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
                         }
                         else {
                             joystickDrive();
-                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)redNearTarget.getListener());
+//                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)redNearTarget.getListener());
                         }
 
                         break;
@@ -285,7 +283,7 @@ public class Argos extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 3:
-                        robot.PIDTune(robot.balancePID, toggleAllowed(gamepad1.dpad_up,dpad_up), toggleAllowed(gamepad1.dpad_down,dpad_down), toggleAllowed(gamepad1.y,y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.x,x));
+//                        robot.PIDTune(robot.balancePID, toggleAllowed(gamepad1.dpad_up,dpad_up), toggleAllowed(gamepad1.dpad_down,dpad_down), toggleAllowed(gamepad1.y,y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.x,x));
                         break;
                     case 4:
                         vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener(),500);
@@ -306,9 +304,9 @@ public class Argos extends LinearOpMode {
                     case 6: //provides data for left/right calibration
                         joystickDriveStarted = false;
                         if(robot.getAverageAbsTicks() < 2000){
-                            robot.driveMixer(0,0);
+                            robot.driveMixer(0,0,0);
                         }
-                        else robot.driveMixer(0,0);
+                        else robot.driveMixer(0,0,0);
                         break;
                     case 7: //demo mode
                         demo();
@@ -373,27 +371,40 @@ public class Argos extends LinearOpMode {
             robot.resetMotors(true);
             joystickDriveStarted = true;
         }
-        pwrFwd = pwrDamper * -gamepad1.left_stick_y;
-        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
-
-        if(toggleAllowed(gamepad1.y, y)){
-            robot.setKdDrive(robot.getKdDrive() + 10);
+        pwrFwd = pwrDamper * gamepad1.left_stick_y;
+        pwrStf = pwrDamper * gamepad1.left_stick_x;
+        pwrRot = pwrDamper * gamepad1.right_stick_x;
+        robot.driveMixer(pwrFwd,pwrStf,pwrRot);
+        if(gamepad1.a){
+            robot.lowerGlyph();
+        }
+        else if(gamepad1.y){
+            robot.raiseGlyph();
+        }
+        else{
+            robot.stopGlyph();
         }
 
-        if(toggleAllowed(gamepad1.a, a)){
-            robot.setKdDrive(robot.getKdDrive() - 10);
-        }
+//        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 
-        if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
-            robot.setKpDrive(robot.getKpDrive() + 0.005);
-        }
-
-        if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
-            robot.setKpDrive(robot.getKpDrive() - 0.005);
-        }
-
-        if (!runDemo && !robot.isBalanceMode())
-            robot.driveMixer(pwrFwd, degreeRot);
+//        if(toggleAllowed(gamepad1.y, y)){
+////            robot.setKdDrive(robot.getKdDrive() + 10);
+//        }
+//
+//        if(toggleAllowed(gamepad1.a, a)){
+////            robot.setKdDrive(robot.getKdDrive() - 10);
+//        }
+//
+//        if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+//            robot.setKpDrive(robot.getKpDrive() + 0.005);
+//        }
+//
+//        if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+//            robot.setKpDrive(robot.getKpDrive() - 0.005);
+//        }
+//
+//        if (!runDemo && !robot.isBalanceMode())
+//            robot.driveMixer(pwrFwd, degreeRot);
 
     }
 
@@ -451,31 +462,31 @@ public class Argos extends LinearOpMode {
         }
 
         //auto switch into balance mode when angle climbs over 70 degrees
-        if (robot.getRoll()>robot.staticBalance - robot.balanceWindow && robot.getRoll()<robot.staticBalance+robot.balanceWindow) {
-            if (!robot.isBalanceMode()) // we are transitioning into balance mode
-            {
-                robot.nod = .9;
-                // this is a tighter requirement, won't enter full balance mode until robot
-                // has climbed past balance point
-                if (robot.getRoll()>robot.staticBalance){
-                    robot.balancePID.setTotalError(0);
-                    robot.setBalanceMode(true);
-                    robot.incrementNumTimesBalanced();
-                }
-            }
-
-
-        }
-        else {
-            if (robot.isBalanceMode()) // we are transitioning out of balance mode
-            {
-                robot.nod = .5;
-                robot.setHeadTilt(robot.nod);
-                robot.motorFront.setPower(0);
-            }
-            robot.setBalanceMode(false);
-
-        }
+//        if (robot.getRoll()>robot.staticBalance - robot.balanceWindow && robot.getRoll()<robot.staticBalance+robot.balanceWindow) {
+//            if (!robot.isBalanceMode()) // we are transitioning into balance mode
+//            {
+//                robot.nod = .9;
+//                // this is a tighter requirement, won't enter full balance mode until robot
+//                // has climbed past balance point
+//                if (robot.getRoll()>robot.staticBalance){
+//                    robot.balancePID.setTotalError(0);
+//                    robot.setBalanceMode(true);
+//                    robot.incrementNumTimesBalanced();
+//                }
+//            }
+//
+//
+//        }
+//        else {
+//            if (robot.isBalanceMode()) // we are transitioning out of balance mode
+//            {
+//                robot.nod = .5;
+//                robot.setHeadTilt(robot.nod);
+//                robot.motorFront.setPower(0);
+//            }
+//            robot.setBalanceMode(false);
+//
+//        }
 
 
     }
@@ -579,44 +590,44 @@ public class Argos extends LinearOpMode {
 //                        return Float.toString(robot.particle.flywheelSpeed);
 //                    }
 //                });
-        telemetry.addLine()
-                .addData("Kp", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.getKpDrive();
-                    }
-                })
-                .addData("Kd", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.getKdDrive();
-                    }
-                });
-
-        telemetry.addLine()
-                .addData("BKp", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.balancePID.getP();
-                    }
-                })
-                .addData("BKi", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.balancePID.getI();
-                    }
-                })
-                .addData("BKd", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.balancePID.getD();
-                    }
-                })
-                .addData("tuneSt", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.getPidTunerState();
-                    }
-                })
-                .addData("tuneMg", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.getPidTunerMagnitude();
-                    }
-                });
+//        telemetry.addLine()
+//                .addData("Kp", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.getKpDrive();
+//                    }
+//                })
+//                .addData("Kd", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.getKdDrive();
+//                    }
+//                });
+//
+//        telemetry.addLine()
+//                .addData("BKp", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.balancePID.getP();
+//                    }
+//                })
+//                .addData("BKi", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.balancePID.getI();
+//                    }
+//                })
+//                .addData("BKd", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.balancePID.getD();
+//                    }
+//                })
+//                .addData("tuneSt", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.getPidTunerState();
+//                    }
+//                })
+//                .addData("tuneMg", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.getPidTunerMagnitude();
+//                    }
+//                });
 
         telemetry.addLine()
                 .addData("status", new Func<String>() {
@@ -684,16 +695,16 @@ public class Argos extends LinearOpMode {
                         return String.valueOf(autoState);
                     }
                 })
-                .addData("TicksFL", new Func<String>() {
-                    @Override public String value() {
-                        return Long.toString(robot.motorFront.getCurrentPosition());
-                    }
-                })
-                .addData("TicksBL", new Func<String>() {
-                    @Override public String value() {
-                        return Long.toString(robot.motorBack.getCurrentPosition());
-                    }
-                })
+//                .addData("TicksFL", new Func<String>() {
+//                    @Override public String value() {
+//                        return Long.toString(robot.motorFront.getCurrentPosition());
+//                    }
+//                })
+//                .addData("TicksBL", new Func<String>() {
+//                    @Override public String value() {
+//                        return Long.toString(robot.motorBack.getCurrentPosition());
+//                    }
+//                })
                 .addData("TicksAvg", new Func<String>() {
                     @Override public String value() {
                         return Long.toString(robot.getAverageTicks());
