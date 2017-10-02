@@ -73,7 +73,7 @@ public class Pose
     DcMotor motorLift       = null; //cap ball lift motor
     DcMotor headLamp        = null; //front white LED string
     DcMotor redLamps        = null; //side red highlight LED strings
-//    Servo servoGate         = null; //gate for the particle launcher
+    Servo servoGrip         = null; //gripper for Glyphs and Relics
 //    Servo servoLiftLatch    = null;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
@@ -147,6 +147,11 @@ public class Pose
     final protected double flingerFlingPwr = -1;
 
     long flingerTimer;
+
+    boolean gripOpen = false;
+    int gripOpenPos = 900;
+    int gripClosedPos = 2110;
+
 
 
     private VectorF vuTrans; //vector that calculates the position of the vuforia target relative to the phone (mm)
@@ -253,7 +258,7 @@ public class Pose
         this.motorLift       = this.hwMap.dcMotor.get("motorLift");
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.redLamps        = this.hwMap.dcMotor.get("redLamps");
-//        this.servoGate       = this.hwMap.servo.get("servoGate");
+        this.servoGrip       = this.hwMap.servo.get("servoGrip");
 //        this.servoLiftLatch  = this.hwMap.servo.get("servoLiftLatch");
 
         // get a reference to our distance sensors
@@ -1240,7 +1245,17 @@ public class Pose
 //        }//else
 //    }//driveToBeacon
 
+public void ToggleGrip (){
+    if (gripOpen) {
+        gripOpen = false;
 
+        servoGrip.setPosition(ServoNormalize(gripClosedPos));
+    }
+    else {
+        gripOpen = true;
+        servoGrip.setPosition(ServoNormalize(gripOpenPos));
+    }
+}
 
     public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
         switch(beaconState){                                              // to the alliance color in tertiaryAu2to

@@ -385,6 +385,10 @@ public class Game_6832 extends LinearOpMode {
             robot.stopGlyph();
         }
 
+        if(toggleAllowed(gamepad1.b, b)){
+            robot.ToggleGrip();
+        }
+
 //        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 
 //        if(toggleAllowed(gamepad1.y, y)){
