@@ -375,19 +375,23 @@ public class Game_6832 extends LinearOpMode {
         pwrStf = pwrDamper * gamepad1.left_stick_x;
         pwrRot = pwrDamper * gamepad1.right_stick_x;
         robot.driveMixer(pwrFwd,pwrStf,pwrRot);
+
         if(gamepad1.a){
-            robot.lowerGlyph();
-        }
-        else if(gamepad1.y){
-            robot.raiseGlyph();
-        }
-        else{
-            robot.stopGlyph();
+            robot.glyphSystem.lowerLift2();
         }
 
-        if(toggleAllowed(gamepad1.b, b)){
-            robot.ToggleGrip();
+        if(gamepad1.y){
+            robot.glyphSystem.raiseLift2();
         }
+
+
+        if(toggleAllowed(gamepad1.b, b)){
+            robot.glyphSystem.ToggleGrip();
+        }
+
+        if (gamepad1.dpad_down) robot.glyphSystem.goLiftMin();
+        if (gamepad1.dpad_up) robot.glyphSystem.goLiftMax();
+        if (gamepad1.dpad_right) robot.glyphSystem.goLiftStack();
 
 //        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 
@@ -410,6 +414,41 @@ public class Game_6832 extends LinearOpMode {
 //        if (!runDemo && !robot.isBalanceMode())
 //            robot.driveMixer(pwrFwd, degreeRot);
 
+    }
+
+    public void autonomous(){
+        switch(autoState){
+            case 0: //scan vuforia target and deploy jewel arm
+                autoState++;
+                break;
+            case 1: //scan jewels and decide which one to hit
+                autoState++;
+                break;
+            case 2: //short move to knock off jewel
+                autoState++;
+                break;
+            case 3: //back off of the balance stone
+                autoState++;
+                break;
+            case 4: //re-orient the robot
+                autoState++;
+                break;
+            case 5: //drive to proper crypto box column based on vuforia target
+                autoState++;
+                break;
+            case 6: // turn towards crypto box
+                autoState++;
+                break;
+            case 7: //drive to crypto box
+                autoState++;
+                break;
+            case 8: //deposit glyph
+                autoState++;
+                break;
+            case 9: //back away from crypto box
+                autoState++;
+                break;
+        }
     }
 
     public void resetAuto(){
@@ -581,6 +620,11 @@ public class Game_6832 extends LinearOpMode {
                 .addData("state", new Func<String>() {
                     @Override public String value() {
                         return Integer.toString(state);
+                    }
+                })
+                .addData("liftTicks", new Func<String>() {
+                    @Override public String value() {
+                        return Integer.toString(robot.glyphSystem.getMotorLiftPosition());
                     }
                 })
                 .addData("", new Func<String>() {

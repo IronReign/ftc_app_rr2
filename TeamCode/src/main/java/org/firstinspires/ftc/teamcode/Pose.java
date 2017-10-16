@@ -8,10 +8,8 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.vuforia.Image;
@@ -73,7 +71,7 @@ public class Pose
     DcMotor motorLift       = null; //cap ball lift motor
     DcMotor headLamp        = null; //front white LED string
     DcMotor redLamps        = null; //side red highlight LED strings
-    Servo servoGrip         = null; //gripper for Glyphs and Relics
+    Servo servoGrip         = null; //servoGrip for Glyphs and Relics
 //    Servo servoLiftLatch    = null;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
@@ -134,8 +132,9 @@ public class Pose
     private double minTurnError = 1.0;
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
+    public PickAndPlace glyphSystem;
 
-    SoundPlayer deadShotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
+    SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
     private long ticksLeftPrev;
     private long ticksRightPrev;
@@ -282,12 +281,14 @@ public class Pose
 //        this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
 //        this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorLift.setDirection(DcMotorSimple.Direction.FORWARD);
+        this.motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
 //        this.particle = new ParticleSystem(flingSpeed, motorLauncher, motorConveyor, servoGate, ballColorSensor, isBlue);
 //        this.cap = new CapTrap(motorLift, servoLiftLatch);
+        this.glyphSystem = new PickAndPlace(motorLift, servoGrip);
 //
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
@@ -1280,7 +1281,7 @@ public void ToggleGrip (){
                 break;
             case 3:     //stub
 //                if(findBeaconPressRange())
-                deadShotSays.play(hwMap.appContext, R.raw.a03);
+                robotSays.play(hwMap.appContext, R.raw.a03);
                 beaconState++;
                 break;
             case 4:     //drives to find the opposing alliance's color on the beacon in order to put it out of the
@@ -1301,7 +1302,7 @@ public void ToggleGrip (){
 //                presserTimer = System.nanoTime() + (long) 2e9;
 //                beaconState++;
                 driveMixer(0, .5, 0);
-                deadShotSays.play(hwMap.appContext, R.raw.a06);
+                robotSays.play(hwMap.appContext, R.raw.a06);
                 presserTimer = System.nanoTime() + (long) 1e9;
                 beaconState++;
                 break;
@@ -1312,7 +1313,7 @@ public void ToggleGrip (){
                 if(/*onAllianceColor(isBlue) || */presserTimer < System.nanoTime()){
                     presserSavedTime = System.nanoTime();
                     driveMixer(0, 0, 0);
-                    deadShotSays.play(hwMap.appContext, R.raw.a07);
+                    robotSays.play(hwMap.appContext, R.raw.a07);
                     beaconState++;
                     resetMotors(true);
                 }
