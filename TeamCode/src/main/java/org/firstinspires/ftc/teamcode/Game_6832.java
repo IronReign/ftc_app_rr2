@@ -93,7 +93,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean shouldLaunch = false;
     private boolean isBlue = false;
     private boolean capMode = false;
-    private double pwrDamper = 1;
+    private double pwrDamper = .33;
     private double pwrFwd = 0;
     private double pwrStf = 0;
     private double pwrRot = 0;
@@ -375,6 +375,11 @@ public class Game_6832 extends LinearOpMode {
         pwrStf = pwrDamper * gamepad1.left_stick_x;
         pwrRot = pwrDamper * gamepad1.right_stick_x;
         robot.driveMixer(pwrFwd,pwrStf,pwrRot);
+
+        if(gamepad1.right_trigger > 0.5)
+            pwrDamper = 1;
+        else
+            pwrDamper = .33;
 
         if(gamepad1.a){
             robot.glyphSystem.lowerLift2();
