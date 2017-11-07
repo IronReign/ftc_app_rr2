@@ -513,10 +513,10 @@ public class Pose
         powerBackLeft += strafe;
         powerBackRight += -strafe;
 
-        powerFrontLeft -= rotate;
-        powerBackLeft -= rotate;
-        powerFrontRight += rotate;
-        powerBackRight += rotate;
+        powerFrontLeft += rotate;
+        powerBackLeft += rotate;
+        powerFrontRight -= rotate;
+        powerBackRight -= rotate;
 
         motorFrontLeft.setPower(clampMotor(powerFrontLeft));
         motorBackLeft.setPower(clampMotor(powerBackLeft));
@@ -1013,7 +1013,7 @@ public class Pose
                 pwr = 0; //(vuDepth - bufferDistance/1200.0);
             else
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
-                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
+                pwr = clampDouble(-maxSpeed, maxSpeed, ((bufferDistance - vuDepth)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
             MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
 

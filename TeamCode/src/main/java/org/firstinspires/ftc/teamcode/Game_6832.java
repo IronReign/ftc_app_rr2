@@ -48,6 +48,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
@@ -141,8 +142,8 @@ public class Game_6832 extends LinearOpMode {
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
 
-    public VuforiaTrackables beaconTargets;
-    VuforiaTrackable redNearTarget;
+    public VuforiaTrackables relicCodex;
+    VuforiaTrackable relicTemplate;
     VuforiaTrackable blueNearTarget;
     VuforiaTrackable redFarTarget;
     VuforiaTrackable blueFarTarget;
@@ -174,28 +175,27 @@ public class Game_6832 extends LinearOpMode {
 //        VuforiaTrackableDefaultListener wheels = (VuforiaTrackableDefaultListener) beacons.get(0).getListener();
 //        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
 
-        beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
-        //beaconTargets.get(0).setName("Wheels");
-        //beaconTargets.get(1).setName("Tools");
-        //beaconTargets.get(2).setName("Lego");
-        beaconTargets.get(3).setName("Gears");
+        relicCodex = locale.loadTrackablesFromAsset("RelicVuMark");
+        //relicCodex.get(0).setName("Wheels");
+        //relicCodex.get(1).setName("Tools");
+        //relicCodex.get(2).setName("Lego");
+        relicCodex.get(0).setName("RelicTemplate");
 
 
-        redNearTarget = beaconTargets.get(3);
-        redNearTarget.setName("redNear");  // Gears
+        relicTemplate = relicCodex.get(0);
 
-//        blueNearTarget  = beaconTargets.get(0);
+//        blueNearTarget  = relicCodex.get(0);
 //        blueNearTarget.setName("blueNear");  // Wheels
 //
-//        redFarTarget = beaconTargets.get(1);
+//        redFarTarget = relicCodex.get(1);
 //        redFarTarget.setName("redFar");  // Tools
 //
-//        blueFarTarget  = beaconTargets.get(2);
+//        blueFarTarget  = relicCodex.get(2);
 //        blueFarTarget.setName("blueFar");  // Legos
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
-        beaconTargets.activate();
+        relicCodex.activate();
 
         mDetector = new ColorBlobDetector();
 
@@ -245,6 +245,7 @@ public class Game_6832 extends LinearOpMode {
 
 
 
+
         runtime.reset();
 
         if(!runAutonomous){
@@ -267,16 +268,18 @@ public class Game_6832 extends LinearOpMode {
 //                            robot.toggleDriftMode();
                         }
                         if(gamepad1.x){
-//                            robot.moveArgos((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
+//                            robot.moveArgos((VuforiaTrackableDefaultListener)relicTemplate.getListener(), pwrDamper, 1000);
                         }
                         else {
                             joystickDrive();
-//                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)redNearTarget.getListener());
+//                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)relicTemplate.getListener());
                         }
 
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
-                        joystickDriveStarted = false;
+                        if(((VuforiaTrackableDefaultListener)relicTemplate).getPose() != null){
+
+                        }
 
                         break;
                     case 2: //code for tele-op control
@@ -286,9 +289,9 @@ public class Game_6832 extends LinearOpMode {
 //                        robot.PIDTune(robot.balancePID, toggleAllowed(gamepad1.dpad_up,dpad_up), toggleAllowed(gamepad1.dpad_down,dpad_down), toggleAllowed(gamepad1.y,y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.x,x));
                         break;
                     case 4:
-                        vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener(),500);
+                        vuTest((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
                         beaconConfig = VisionUtils.NOT_VISIBLE;
-                        beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener)redNearTarget.getListener(), locale.getCameraCalibration());
+                        beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) relicTemplate.getListener(), locale.getCameraCalibration());
                         if (beaconConfig == VisionUtils.BEACON_RED_BLUE) {
                             Log.i("RED", "BLUE");
                         } else if (beaconConfig != VisionUtils.NOT_VISIBLE) {
@@ -346,6 +349,16 @@ public class Game_6832 extends LinearOpMode {
 
     }
 
+    public String getRelicCodex(){
+        RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
+        if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
+            if(relicConfig == RelicRecoveryVuMark.LEFT) return "left";
+            else if(relicConfig == RelicRecoveryVuMark.RIGHT) return "right";
+            else return "center";
+        }
+        return "unknown";
+    }
+
 
 
     public void joystickDrive(){
@@ -373,7 +386,7 @@ public class Game_6832 extends LinearOpMode {
         }
         pwrFwd = pwrDamper * gamepad1.left_stick_y;
         pwrStf = pwrDamper * gamepad1.left_stick_x;
-        pwrRot = pwrDamper * gamepad1.right_stick_x;
+        pwrRot = -pwrDamper * gamepad1.right_stick_x;
         robot.driveMixer(pwrFwd,pwrStf,pwrRot);
 
         if(gamepad1.right_trigger > 0.5)
@@ -693,9 +706,9 @@ public class Game_6832 extends LinearOpMode {
                         return robot.imu.getCalibrationStatus().toString();
                     }
                 })
-                .addData("Beacon Config", new Func<String>() {
+                .addData("Relic Codex", new Func<String>() {
                     @Override public String value() {
-                        return Integer.toString(beaconConfig);
+                        return getRelicCodex();
                     }
                 });
 

@@ -177,22 +177,22 @@ public class Argos extends LinearOpMode {
 //        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
 
         beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
-        //beaconTargets.get(0).setName("Wheels");
-        //beaconTargets.get(1).setName("Tools");
-        //beaconTargets.get(2).setName("Lego");
+        //relicCodex.get(0).setName("Wheels");
+        //relicCodex.get(1).setName("Tools");
+        //relicCodex.get(2).setName("Lego");
         beaconTargets.get(3).setName("Gears");
 
 
         redNearTarget = beaconTargets.get(3);
         redNearTarget.setName("redNear");  // Gears
 
-//        blueNearTarget  = beaconTargets.get(0);
+//        blueNearTarget  = relicCodex.get(0);
 //        blueNearTarget.setName("blueNear");  // Wheels
 //
-//        redFarTarget = beaconTargets.get(1);
+//        redFarTarget = relicCodex.get(1);
 //        redFarTarget.setName("redFar");  // Tools
 //
-//        blueFarTarget  = beaconTargets.get(2);
+//        blueFarTarget  = relicCodex.get(2);
 //        blueFarTarget.setName("blueFar");  // Legos
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
