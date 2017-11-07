@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.vuforia.Image;
@@ -62,16 +64,20 @@ public class Pose
     private double driveIMUBasePower = .5;
     private double motorPower = 0;
 
-    DcMotor motorFrontLeft  = null;
-    DcMotor motorFrontRight = null;
-    DcMotor motorBackLeft   = null;
-    DcMotor motorBackRight  = null;
-//    DcMotor motorConveyor   = null; //particle conveyor
-//    DcMotor motorLauncher   = null; //flywheel motor
-    DcMotor motorLift       = null; //cap ball lift motor
-    DcMotor headLamp        = null; //front white LED string
-    DcMotor redLamps        = null; //side red highlight LED strings
-    Servo servoGrip         = null; //servoGrip for Glyphs and Relics
+    DcMotor motorFrontLeft           = null;
+    DcMotor motorFrontRight          = null;
+    DcMotor motorBackLeft            = null;
+    DcMotor motorBackRight           = null;
+//    DcMotor motorConveyor            = null; //particle conveyor
+//    DcMotor motorLauncher            = null; //flywheel motor
+    DcMotor motorLift                = null; //cap ball lift motor
+    DcMotor headLamp                 = null; //front white LED string
+    DcMotor redLamps                 = null; //side red highlight LED strings
+    Servo servoGrip                  = null; //servoGrip for Glyphs and Relics
+    Servo servoJewel                 = null; //deploys the arm that knocks off the jewel
+    NormalizedColorSensor colorJewel = null;
+    NormalizedRGBA jewelRGB          = null;
+
 //    Servo servoLiftLatch    = null;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
@@ -150,6 +156,9 @@ public class Pose
     boolean gripOpen = false;
     int gripOpenPos = 900;
     int gripClosedPos = 2110;
+    int jewelUpPos = 2110;
+    int jewelDownPos = 900;
+    public int jewelTargetPos = jewelUpPos;
 
 
 
@@ -258,6 +267,10 @@ public class Pose
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.redLamps        = this.hwMap.dcMotor.get("redLamps");
         this.servoGrip       = this.hwMap.servo.get("servoGrip");
+        this.servoJewel      = this.hwMap.servo.get(("servoJewel"));
+        this.colorJewel      = this.hwMap.get(NormalizedColorSensor.class, "colorJewel");
+
+        jewelRGB = colorJewel.getNormalizedColors();
 //        this.servoLiftLatch  = this.hwMap.servo.get("servoLiftLatch");
 
         // get a reference to our distance sensors
@@ -474,6 +487,23 @@ public class Pose
     }
     public void stopGlyph(){
         motorLift.setPower(0);
+    }
+
+    public void liftJewelArm(){
+        servoJewel.setPosition(ServoNormalize(jewelUpPos));
+    }
+
+    public void lowerJewelArm(){
+        servoJewel.setPosition(ServoNormalize(jewelDownPos));
+    }
+
+    public void servoAdvance(){
+        jewelTargetPos += 50;
+        servoJewel.setPosition(ServoNormalize(jewelTargetPos));
+    }
+    public void servoDecrease(){
+        jewelTargetPos -= 50;
+        servoJewel.setPosition(ServoNormalize(jewelTargetPos));
     }
 
     public void MaintainHeading(boolean buttonState){
@@ -748,6 +778,13 @@ public class Pose
 //        beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
 //        beaconDistFore = Math.pow(beaconPresent.getLightDetected(), 0.5); //calculate linear value
         Update(imu, 0, 0);
+    }
+
+    public boolean doesJewelMatch(boolean isBlue){
+        if(isBlue){
+            return (jewelRGB.blue > 128);
+        }
+        return (jewelRGB.red > 128);
     }
 
     /**

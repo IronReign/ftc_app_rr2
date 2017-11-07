@@ -44,6 +44,7 @@ import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Func;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -56,6 +57,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
+import java.util.Timer;
 
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
@@ -118,6 +120,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean runDemo = false;
     private boolean runBeaconTestLeft = true;
     private int beaconState = 0;
+    boolean jewelMatches = false;
 
 
 
@@ -261,19 +264,8 @@ public class Game_6832 extends LinearOpMode {
             if(active) {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
-                        if(toggleAllowed(gamepad1.b, b)){
-//                            robot.zeroHead();
-                        }
-                        if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-//                            robot.toggleDriftMode();
-                        }
-                        if(gamepad1.x){
-//                            robot.moveArgos((VuforiaTrackableDefaultListener)relicTemplate.getListener(), pwrDamper, 1000);
-                        }
-                        else {
-                            joystickDrive();
-//                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)relicTemplate.getListener());
-                        }
+
+                        autonomous2();
 
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
@@ -286,6 +278,7 @@ public class Game_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 3:
+
 //                        robot.PIDTune(robot.balancePID, toggleAllowed(gamepad1.dpad_up,dpad_up), toggleAllowed(gamepad1.dpad_down,dpad_down), toggleAllowed(gamepad1.y,y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.x,x));
                         break;
                     case 4:
@@ -349,6 +342,7 @@ public class Game_6832 extends LinearOpMode {
 
     }
 
+
     public String getRelicCodex(){
         RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
         if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
@@ -358,6 +352,7 @@ public class Game_6832 extends LinearOpMode {
         }
         return "unknown";
     }
+
 
 
 
@@ -437,13 +432,21 @@ public class Game_6832 extends LinearOpMode {
     public void autonomous(){
         switch(autoState){
             case 0: //scan vuforia target and deploy jewel arm
-                autoState++;
+                robot.lowerJewelArm();
+                autoTimer = futureTime(1.5f);
+                if(autoTimer < System.nanoTime()) {
+                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoState++;
+                }
                 break;
             case 1: //scan jewels and decide which one to hit
                 autoState++;
                 break;
             case 2: //short move to knock off jewel
-                autoState++;
+                if (robot.driveForward(!jewelMatches, .2, .35)){
+                    robot.liftJewelArm();
+                    autoState++;
+                }
                 break;
             case 3: //back off of the balance stone
                 autoState++;
@@ -468,6 +471,60 @@ public class Game_6832 extends LinearOpMode {
                 break;
         }
     }
+    public void autonomous2 (){
+
+        switch(autoState){
+            case 0: //moves the robot forward .5 meters
+                if (robot.driveStrafe(false, .60, .35)) {
+
+                    robot.resetMotors(true);
+                    autoState++;
+                }
+                    break;
+            case 1: //scan jewels and decide which one to hit
+                if (robot.driveForward(false, .25, .35)) {
+                    autoTimer = futureTime(1f);
+                    robot.resetMotors(true);
+                    autoState++;
+                }
+
+                break;
+            case 2: //short move to knock off jewel
+
+                robot.glyphSystem.ToggleGrip();
+                autoTimer = futureTime(1f);
+
+                robot.resetMotors(true);
+                autoState++;
+                break;
+            case 3: //back off of the balance stone
+                if (robot.driveForward(true, .10, .35)) {
+                    autoTimer = futureTime(3f);
+                    robot.resetMotors(true);
+                    autoState++;
+                }
+                break;
+            case 4: //re-orient the robot
+                autoState++;
+                break;
+            case 5: //drive to proper crypto box column based on vuforia target
+                autoState++;
+                break;
+            case 6: // turn towards crypto box
+                autoState++;
+                break;
+            case 7: //drive to crypto box
+                autoState++;
+                break;
+            case 8: //deposit glyph
+                autoState++;
+                break;
+            case 9: //back away from crypto box
+                autoState++;
+                break;
+        }
+    }
+
 
     public void resetAuto(){
         autoState = 0;
@@ -591,6 +648,8 @@ public class Game_6832 extends LinearOpMode {
 
 
 
+
+
     public String getAlliance(){
         if(isBlue)
             return "Blue";
@@ -643,6 +702,11 @@ public class Game_6832 extends LinearOpMode {
                 .addData("liftTicks", new Func<String>() {
                     @Override public String value() {
                         return Integer.toString(robot.glyphSystem.getMotorLiftPosition());
+                    }
+                })
+                .addData("servoJewel", new Func<String>() {
+                    @Override public String value() {
+                        return Integer.toString(robot.jewelTargetPos);
                     }
                 })
                 .addData("", new Func<String>() {
