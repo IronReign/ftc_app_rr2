@@ -146,6 +146,7 @@ public class Game_6832 extends LinearOpMode {
     private int startBtn = 10; //toggle active (always)
 
     public VuforiaTrackables relicCodex;
+    public int relicCase = 0;
     VuforiaTrackable relicTemplate;
     VuforiaTrackable blueNearTarget;
     VuforiaTrackable redFarTarget;
@@ -315,6 +316,7 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
+
     public void vuTest(VuforiaTrackableDefaultListener beaconTarget, double distance){
         if (toggleAllowed(gamepad1.x, x)) {
             vuTestMode++;
@@ -335,7 +337,7 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-    public String getRelicCodex(){
+    public String getRelicCodexStr(){
         RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
         if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
             if(relicConfig == RelicRecoveryVuMark.LEFT) return "left";
@@ -343,6 +345,16 @@ public class Game_6832 extends LinearOpMode {
             else return "center";
         }
         return "unknown";
+    }
+
+    public int getRelicCodex(){
+        RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
+        if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
+            if(relicConfig == RelicRecoveryVuMark.LEFT) return 0;
+            else if(relicConfig == RelicRecoveryVuMark.RIGHT) return 2;
+            else return 1;
+        }
+        return 1;
     }
 
 
@@ -427,39 +439,115 @@ public class Game_6832 extends LinearOpMode {
                 robot.jewel.lowerArm();
                 autoTimer = futureTime(1.5f);
                 if(autoTimer < System.nanoTime()) {
+                    relicCase = getRelicCodex();
                     jewelMatches = robot.doesJewelMatch(isBlue);
                     autoState++;
                 }
                 break;
-            case 1: //scan jewels and decide which one to hit
-                autoState++;
-                break;
-            case 2: //small turn to knock off jewel
-                if (robot.driveForward(!jewelMatches, .2, .35)){
-                    robot.jewel.liftArm();
-                    autoState++;
+            case 1: //small turn to knock off jewel
+                if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
+                    if(robot.RotateIMU(10, .5)){
+                        robot.resetMotors(true);
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(350, .5)){
+                        robot.resetMotors(true);
+                    }
                 }
                 break;
+            case 2: //lift jewel arm
+                robot.jewel.liftArm();
+                autoTimer = futureTime(1.5f);
+                if(autoTimer < System.nanoTime()) {
+                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoState++;
+                }
             case 3: //turn parallel to the wall
+                if(isBlue){
+                    if(robot.RotateIMU(270, 2.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(90, 2.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
                 autoState++;
                 break;
             case 4: //drive off the balance stone
-                autoState++;
+                if(robot.driveForward(true, .3, .5)) {
+                    robot.resetMotors(true);
+                    autoState++;
+                }
                 break;
             case 5: //re-orient robot
-                autoState++;
+                if(isBlue){
+                    if(robot.RotateIMU(270, 1.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(90, 1.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
                 break;
             case 6: //drive to proper crypto box column based on vuforia target
-                autoState++;
+                switch (relicCase) {
+                    case 0:
+                        if(robot.driveForward(true, .5, .35)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                        break;
+                    case 1:
+                        if(robot.driveForward(true, .75, .35)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                        autoState++;
+                        break;
+                    case 2:
+                        if(robot.driveForward(true, 1.0, .35)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                        autoState++;
+                        break;
+                }
                 break;
             case 7: //turn to crypto box
-                autoState++;
+                if(isBlue){
+                    if(robot.RotateIMU(315, 1.5)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(45, 1.5)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
                 break;
             case 8: //deposit glyph
-                autoState++;
+                if(robot.driveForward(true, 1.0, .50)) {
+                    robot.resetMotors(true);
+                    robot.glyphSystem.ReleaseGrip();
+                    autoState++;
+                }
                 break;
             case 9: //back away from crypto box
-                autoState++;
+                if(robot.driveForward(false, .5, .50)){
+                    robot.resetMotors(true);
+                    autoState++;
+                }
                 break;
             default:
                 robot.resetMotors(true);
@@ -476,39 +564,115 @@ public class Game_6832 extends LinearOpMode {
                 robot.jewel.lowerArm();
                 autoTimer = futureTime(1.5f);
                 if(autoTimer < System.nanoTime()) {
+                    relicCase = getRelicCodex();
                     jewelMatches = robot.doesJewelMatch(isBlue);
                     autoState++;
                 }
                 break;
-            case 1: //scan jewels and decide which one to hit
-                autoState++;
-                break;
-            case 2: //small turn to knock off jewel
-                if (robot.driveForward(!jewelMatches, .2, .35)){
-                    robot.jewel.liftArm();
-                    autoState++;
+            case 1: //small turn to knock off jewel
+                if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
+                    if(robot.RotateIMU(10, .5)){
+                        robot.resetMotors(true);
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(350, .5)){
+                        robot.resetMotors(true);
+                    }
                 }
                 break;
+            case 2: //lift jewel arm
+                robot.jewel.liftArm();
+                autoTimer = futureTime(1.5f);
+                if(autoTimer < System.nanoTime()) {
+                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoState++;
+                }
             case 3: //turn parallel to the wall
+                if(isBlue){
+                    if(robot.RotateIMU(270, 2.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(90, 2.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
                 autoState++;
                 break;
             case 4: //drive off the balance stone
-                autoState++;
+                if(robot.driveForward(true, .3, .5)) {
+                    robot.resetMotors(true);
+                    autoState++;
+                }
                 break;
             case 5: //re-orient robot
-                autoState++;
+                if(isBlue){
+                    if(robot.RotateIMU(270, 1.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(90, 1.0)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
                 break;
-            case 6: //turn to proper crypto box column based on vuforia target
-                autoState++;
+            case 6: //drive to proper crypto box column based on vuforia target
+                switch (relicCase) {
+                    case 0:
+                        if(robot.driveStrafe(true, .00, .35)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                        break;
+                    case 1:
+                        if(robot.driveStrafe(true, .25, .35)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                        autoState++;
+                        break;
+                    case 2:
+                        if(robot.driveStrafe(true, .50, .35)) {
+                            robot.resetMotors(true);
+                            autoState++;
+                        }
+                        autoState++;
+                        break;
+                }
                 break;
-            case 7: //drive to crypto box
-                autoState++;
+            case 7: //turn to crypto box
+                if(isBlue){
+                    if(robot.RotateIMU(215, 1.5)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
+                else{
+                    if(robot.RotateIMU(135, 1.5)){
+                        robot.resetMotors(true);
+                        autoState++;
+                    }
+                }
                 break;
             case 8: //deposit glyph
-                autoState++;
+                if(robot.driveForward(true, 1.0, .50)) {
+                    robot.resetMotors(true);
+                    robot.glyphSystem.ReleaseGrip();
+                    autoState++;
+                }
                 break;
             case 9: //back away from crypto box
-                autoState++;
+                if(robot.driveForward(false, .5, .50)){
+                    robot.resetMotors(true);
+                    autoState++;
+                }
                 break;
             default:
                 robot.resetMotors(true);
@@ -518,6 +682,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
         }
     }
+
 
 
     public void resetAuto(){
@@ -766,7 +931,7 @@ public class Game_6832 extends LinearOpMode {
                 })
                 .addData("Relic Codex", new Func<String>() {
                     @Override public String value() {
-                        return getRelicCodex();
+                        return getRelicCodexStr();
                     }
                 });
 

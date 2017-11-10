@@ -36,6 +36,15 @@ public class PickAndPlace {
             servoGrip.setPosition(ServoNormalize(gripOpenPos));
         }
     }
+    public void CloseGrip() {
+        gripOpen = false;
+        servoGrip.setPosition(ServoNormalize(gripClosedPos));
+    }
+
+    public void ReleaseGrip() {
+        gripOpen = true;
+        servoGrip.setPosition(ServoNormalize(gripOpenPos));
+    }
 
 
     public void stopLift(){
