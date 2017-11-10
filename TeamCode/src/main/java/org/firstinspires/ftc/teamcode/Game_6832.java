@@ -199,6 +199,7 @@ public class Game_6832 extends LinearOpMode {
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
         relicCodex.activate();
+        robot.resetMotors(true);
 
         mDetector = new ColorBlobDetector();
 
@@ -269,9 +270,7 @@ public class Game_6832 extends LinearOpMode {
 
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
-                        if(((VuforiaTrackableDefaultListener)relicTemplate).getPose() != null){
 
-                        }
 
                         break;
                     case 2: //code for tele-op control
@@ -474,14 +473,18 @@ public class Game_6832 extends LinearOpMode {
     public void autonomous2 (){
 
         switch(autoState){
-            case 0: //moves the robot forward .5 meters
+            case 0:
+                robot.resetMotors(true);
+                autoState++;
+                break;
+            case 1: //moves the robot forward .5 meters
                 if (robot.driveStrafe(false, .60, .35)) {
 
                     robot.resetMotors(true);
                     autoState++;
                 }
                     break;
-            case 1: //scan jewels and decide which one to hit
+            case 2: //scan jewels and decide which one to hit
                 if (robot.driveForward(false, .25, .35)) {
                     autoTimer = futureTime(1f);
                     robot.resetMotors(true);
@@ -489,7 +492,7 @@ public class Game_6832 extends LinearOpMode {
                 }
 
                 break;
-            case 2: //short move to knock off jewel
+            case 3: //short move to knock off jewel
 
                 robot.glyphSystem.ToggleGrip();
                 autoTimer = futureTime(1f);
@@ -497,29 +500,29 @@ public class Game_6832 extends LinearOpMode {
                 robot.resetMotors(true);
                 autoState++;
                 break;
-            case 3: //back off of the balance stone
+            case 4: //back off of the balance stone
                 if (robot.driveForward(true, .10, .35)) {
                     autoTimer = futureTime(3f);
                     robot.resetMotors(true);
                     autoState++;
                 }
                 break;
-            case 4: //re-orient the robot
+            case 5: //re-orient the robot
                 autoState++;
                 break;
-            case 5: //drive to proper crypto box column based on vuforia target
+            case 6: //drive to proper crypto box column based on vuforia target
                 autoState++;
                 break;
-            case 6: // turn towards crypto box
+            case 7: // turn towards crypto box
                 autoState++;
                 break;
-            case 7: //drive to crypto box
+            case 8: //drive to crypto box
                 autoState++;
                 break;
-            case 8: //deposit glyph
+            case 9: //deposit glyph
                 autoState++;
                 break;
-            case 9: //back away from crypto box
+            case 10: //back away from crypto box
                 autoState++;
                 break;
         }
