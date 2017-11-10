@@ -75,6 +75,7 @@ public class Pose
     DcMotor redLamps                 = null; //side red highlight LED strings
     Servo servoGrip                  = null; //servoGrip for Glyphs and Relics
     Servo servoJewel                 = null; //deploys the arm that knocks off the jewel
+    Servo servoTester                = null;
     NormalizedColorSensor colorJewel = null;
     NormalizedRGBA jewelRGB          = null;
 
@@ -139,6 +140,7 @@ public class Pose
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
     public PickAndPlace glyphSystem;
+    public JewelArm jewel;
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
@@ -158,6 +160,7 @@ public class Pose
     int gripClosedPos = 2110;
     int jewelUpPos = 2110;
     int jewelDownPos = 900;
+    public int servoTesterPos = 0;
     public int jewelTargetPos = jewelUpPos;
 
 
@@ -267,7 +270,8 @@ public class Pose
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.redLamps        = this.hwMap.dcMotor.get("redLamps");
         this.servoGrip       = this.hwMap.servo.get("servoGrip");
-        this.servoJewel      = this.hwMap.servo.get(("servoJewel"));
+        this.servoJewel      = this.hwMap.servo.get("servoJewel");
+        this.servoTester     = this.hwMap.servo.get("servoTester");
         this.colorJewel      = this.hwMap.get(NormalizedColorSensor.class, "colorJewel");
 
         jewelRGB = colorJewel.getNormalizedColors();
@@ -302,6 +306,7 @@ public class Pose
 //        this.particle = new ParticleSystem(flingSpeed, motorLauncher, motorConveyor, servoGate, ballColorSensor, isBlue);
 //        this.cap = new CapTrap(motorLift, servoLiftLatch);
         this.glyphSystem = new PickAndPlace(motorLift, servoGrip);
+        this.jewel = new JewelArm(servoJewel, colorJewel, jewelUpPos, jewelDownPos);
 //
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
@@ -382,6 +387,11 @@ public class Pose
 */
         if(strafe) driveMixer(0, pwr, correction);
         else driveMixer(pwr, 0, correction);
+    }
+
+    public void StopAll(){
+        glyphSystem.stopLift();
+        driveMixer(0, 0, 0);
     }
 
     /**
@@ -489,29 +499,15 @@ public class Pose
         motorLift.setPower(0);
     }
 
-    public void liftJewelArm(){
-        servoJewel.setPosition(ServoNormalize(jewelUpPos));
-    }
 
-    public void lowerJewelArm(){
-        servoJewel.setPosition(ServoNormalize(jewelDownPos));
-    }
 
-    public void servoAdvance(){
-        jewelTargetPos += 50;
-        servoJewel.setPosition(ServoNormalize(jewelTargetPos));
-    }
-    public void servoDecrease(){
-        jewelTargetPos -= 50;
-        servoJewel.setPosition(ServoNormalize(jewelTargetPos));
-    }
+
 
     public void MaintainHeading(boolean buttonState){
         if(buttonState) {
             if (!maintainHeadingInit) {
                 poseSavedHeading = poseHeading;
-                maintainHeadingInit = true;
-            }
+                maintainHeadingInit = true;}
             DriveIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading, false);
         }
         if(!buttonState){
@@ -525,6 +521,22 @@ public class Pose
     public void setHeading(double angle){
         poseHeading = angle;
         initialized = false; //triggers recalc of heading offset at next IMU update cycle
+    }
+
+    public void servoTester(boolean bigUp, boolean smallUp, boolean smallDown, boolean bigDown){
+        if(bigUp){
+            servoTesterPos += 25;
+        }
+        if(smallUp){
+            servoTesterPos += 100;
+        }
+        if(smallDown){
+            servoTesterPos -= 25;
+        }
+        if(bigDown){
+            servoTesterPos -= 100;
+        }
+        servoTester.setPosition(ServoNormalize(servoTesterPos));
     }
 
     public void driveMixer(double forward,double strafe ,double rotate){
