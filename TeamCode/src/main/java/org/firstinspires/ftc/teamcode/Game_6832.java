@@ -298,20 +298,20 @@ public class Game_6832 extends LinearOpMode {
                         }
                         else robot.driveMixer(0,0,0);
                         break;
-                    case 7: //demo mode
-                        demo();
+                    case 7: //IMU demo mode
+                        robot.MaintainHeading(gamepad1.x);
                         break;
                     case 8: //tertiaryAuto demo mode
-                        //tertiaryAuto(1.0);
-                        //break;
-                        testableHeading = robot.getHeading();
-                        state++;
+                        robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
                     case 9:
-
+                        break;
+                    default:
+                        robot.StopAll();
                         break;
                 }
                 robot.updateSensors();
             }
+            else robot.StopAll();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
@@ -426,7 +426,7 @@ public class Game_6832 extends LinearOpMode {
     public void autonomous(){
         switch(autoState){
             case 0: //scan vuforia target and deploy jewel arm
-                robot.lowerJewelArm();
+                robot.jewel.lowerArm();
                 autoTimer = futureTime(1.5f);
                 if(autoTimer < System.nanoTime()) {
                     jewelMatches = robot.doesJewelMatch(isBlue);
@@ -436,22 +436,71 @@ public class Game_6832 extends LinearOpMode {
             case 1: //scan jewels and decide which one to hit
                 autoState++;
                 break;
-            case 2: //short move to knock off jewel
+            case 2: //small turn to knock off jewel
                 if (robot.driveForward(!jewelMatches, .2, .35)){
-                    robot.liftJewelArm();
+                    robot.jewel.liftArm();
                     autoState++;
                 }
                 break;
-            case 3: //back off of the balance stone
+            case 3: //turn parallel to the wall
                 autoState++;
                 break;
-            case 4: //re-orient the robot
+            case 4: //drive off the balance stone
                 autoState++;
                 break;
-            case 5: //drive to proper crypto box column based on vuforia target
+            case 5: //re-orient robot
                 autoState++;
                 break;
-            case 6: // turn towards crypto box
+            case 6: //drive to proper crypto box column based on vuforia target
+                autoState++;
+                break;
+            case 7: //turn to crypto box
+                autoState++;
+                break;
+            case 8: //deposit glyph
+                autoState++;
+                break;
+            case 9: //back away from crypto box
+                autoState++;
+                break;
+            default:
+                robot.resetMotors(true);
+                autoState = 0;
+                active = false;
+                state = 0;
+                break;
+        }
+    }
+    public void autonomous2 (){
+
+        switch(autoState){
+            case 0: //scan vuforia target and deploy jewel arm
+                robot.jewel.lowerArm();
+                autoTimer = futureTime(1.5f);
+                if(autoTimer < System.nanoTime()) {
+                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoState++;
+                }
+                break;
+            case 1: //scan jewels and decide which one to hit
+                autoState++;
+                break;
+            case 2: //small turn to knock off jewel
+                if (robot.driveForward(!jewelMatches, .2, .35)){
+                    robot.jewel.liftArm();
+                    autoState++;
+                }
+                break;
+            case 3: //turn parallel to the wall
+                autoState++;
+                break;
+            case 4: //drive off the balance stone
+                autoState++;
+                break;
+            case 5: //re-orient robot
+                autoState++;
+                break;
+            case 6: //turn to proper crypto box column based on vuforia target
                 autoState++;
                 break;
             case 7: //drive to crypto box
@@ -463,66 +512,11 @@ public class Game_6832 extends LinearOpMode {
             case 9: //back away from crypto box
                 autoState++;
                 break;
-        }
-    }
-    public void autonomous2 (){
-
-        switch(autoState){
-            case 0:
-                robot.resetMotors(true);
-                autoState++;
-                break;
-            case 1: //moves the robot forward .5 meters
-                if (robot.driveStrafe(false, .60, .35)) {
-
-                    robot.resetMotors(true);
-                    autoState++;
-                }
-                    break;
-            case 2: //scan jewels and decide which one to hit
-                if (robot.driveForward(false, .25, .35)) {
-                    autoTimer = futureTime(1f);
-                    robot.resetMotors(true);
-                    autoState++;
-                }
-
-                break;
-            case 3: //short move to knock off jewel
-
-                robot.glyphSystem.ToggleGrip();
-                autoTimer = futureTime(1f);
-
-                robot.resetMotors(true);
-                autoState++;
-                break;
-            case 4: //back off of the balance stone
-                if (robot.driveForward(true, .10, .35)) {
-                    autoTimer = futureTime(3f);
-                    robot.resetMotors(true);
-                    autoState++;
-                }
-                break;
-            case 5: //re-orient the robot
-                autoState++;
-                break;
-            case 6: //drive to proper crypto box column based on vuforia target
-                autoState++;
-                break;
-            case 7: // turn towards crypto box
-                autoState++;
-                break;
-            case 8: //drive to crypto box
-                autoState++;
-                break;
-            case 9: //deposit glyph
-                autoState++;
-                break;
-            case 10: //back away from crypto box
-                autoState++;
-                break;
             default:
+                robot.resetMotors(true);
+                autoState = 0;
                 active = false;
-                state = 2;
+                state = 0;
                 break;
         }
     }
