@@ -217,10 +217,6 @@ public class Game_6832 extends LinearOpMode {
 
             stateSwitch();
 
-
-            if(gamepad1.y){
-                flingNumber = 3;
-            }
             if(toggleAllowed(gamepad1.x,x)) {
 
                     isBlue = !isBlue;
@@ -240,7 +236,7 @@ public class Game_6832 extends LinearOpMode {
             }
 
             telemetry.addData("Status", "Initialized");
-            telemetry.addData("Status", "Number of throws: " + Integer.toString(flingNumber));
+            telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
             telemetry.update();
 
@@ -264,17 +260,14 @@ public class Game_6832 extends LinearOpMode {
             stateSwitch();
             if(active) {
                 switch(state){
-                    case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
-
-                        autonomous2();
-
+                    case 0: //code for tele-op control
+                        joystickDrive();
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
-
-
+                        autonomous();
                         break;
-                    case 2: //code for tele-op control
-                        joystickDrive();
+                    case 2:
+                        autonomous2();
                         break;
                     case 3:
 
