@@ -58,7 +58,7 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public  double KpDrive = 0.007; //proportional constant multiplier
+    public  double KpDrive = 0.010; //proportional constant multiplier
     private double KiDrive = 0.000; //integral constant multiplier
     private double KdDrive = 0.001; //derivative constant multiplier
     private double driveIMUBasePower = .5;

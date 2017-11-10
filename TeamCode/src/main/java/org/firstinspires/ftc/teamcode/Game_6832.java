@@ -525,6 +525,10 @@ public class Game_6832 extends LinearOpMode {
             case 10: //back away from crypto box
                 autoState++;
                 break;
+            default:
+                active = false;
+                state = 2;
+                break;
         }
     }
 
