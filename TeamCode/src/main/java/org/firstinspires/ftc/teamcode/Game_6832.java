@@ -271,9 +271,7 @@ public class Game_6832 extends LinearOpMode {
                         autonomous2();
                         break;
                     case 3:
-                        if(robot.RotateIMU(270, 1.5)){
-                            active = false;
-                        }
+
 //                        robot.PIDTune(robot.balancePID, toggleAllowed(gamepad1.dpad_up,dpad_up), toggleAllowed(gamepad1.dpad_down,dpad_down), toggleAllowed(gamepad1.y,y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.x,x));
                         break;
                     case 4:
@@ -860,9 +858,9 @@ public class Game_6832 extends LinearOpMode {
                         return Integer.toString(state);
                     }
                 })
-                .addData("liftTicks", new Func<String>() {
+                .addData("Servo Tester", new Func<String>() {
                     @Override public String value() {
-                        return Integer.toString(robot.glyphSystem.getMotorLiftPosition());
+                        return Integer.toString(robot.servoTesterPos);
                     }
                 })
                 .addData("servoJewel", new Func<String>() {
