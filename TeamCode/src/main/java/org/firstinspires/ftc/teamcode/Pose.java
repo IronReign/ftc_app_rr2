@@ -158,10 +158,9 @@ public class Pose
     boolean gripOpen = false;
     int gripOpenPos = 900;
     int gripClosedPos = 2110;
-    int jewelUpPos = 750;
-    int jewelDownPos = 2250;
+    int jewelUpPos = 850;
+    int jewelDownPos = 2050;
     public int servoTesterPos = 0;
-    public int jewelTargetPos = jewelUpPos;
 
 
 
