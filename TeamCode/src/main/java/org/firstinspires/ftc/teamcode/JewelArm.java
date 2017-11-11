@@ -13,6 +13,7 @@ public class JewelArm {
     private NormalizedColorSensor colorJewel;
     private int jewelUpPos;
     private int jewelDownPos;
+    public int jewelPos;
 
     public JewelArm(Servo servoJewel, NormalizedColorSensor colorJewel, int jewelUpPos, int jewelDownPos){
         this.servoJewel = servoJewel;
@@ -23,8 +24,10 @@ public class JewelArm {
 
     public void liftArm(){
         servoJewel.setPosition(ServoNormalize(jewelUpPos));
+        jewelPos = jewelUpPos;
     }
     public void lowerArm(){
+        jewelPos = jewelDownPos;
         servoJewel.setPosition(ServoNormalize(jewelDownPos));
     }
 
