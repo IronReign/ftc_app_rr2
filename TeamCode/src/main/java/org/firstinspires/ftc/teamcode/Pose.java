@@ -88,18 +88,6 @@ public class Pose
     OpticalDistanceSensor beaconPresent;
 
 
-    byte[] beaconColorCache = new byte[100]; //
-    //byte[] ballColorCache = new byte[100];
-
-    I2cDevice beaconColorSensor;
-    I2cDevice ballColorSensor;
-    I2cDeviceSynch beaconColorReader; //senses the color of the
-    //I2cDeviceSynch ballColorReader;
-    long beaconColor; //numerical feedback from the beacon color sensor (2-3 = blue, 9-12 = red)
-    //long ballColor;
-    double beaconDistAft; //holds most recent linearized distance reading from ODS sensor
-    double beaconDistFore;
-
     private double powerFrontLeft  = 0;
     private double powerFrontRight = 0;
     private double powerBackLeft   = 0;
@@ -608,15 +596,6 @@ public class Pose
     }
 
 
-
-    //    public void moveTicks(double forward, double strafe, double rotate, long ticks){
-//        ticks += motorFrontLeft.getCurrentPosition();
-//        while(motorFrontLeft.getCurrentPosition() < ticks && opModeIsActive()){
-//            telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFrontLeft.getCurrentPosition()));
-//            telemetry.update();
-//            driveMixer(forward, strafe, rotate);
-//        }
-//    }
     public boolean driveForward(boolean forward, double targetMeters, double power){
         if(!forward){
             moveMode = moveMode.backward;
@@ -635,22 +614,6 @@ public class Pose
             return true;
         }
     }
-//    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
-//        moveMode = moveMode.rotate;
-//        if(!clockwise){
-//            targetAngle = -targetAngle;
-//            power = -power;
-//        }
-//        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
-//        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
-//            driveMixer(0, 0, power);
-//            return false;
-//        }
-//        else {
-//            driveMixer(0, 0, 0);
-//            return true;
-//        }
-//    }
 
     public boolean driveStrafe(boolean left, double targetMeters, double power){
 
@@ -671,6 +634,23 @@ public class Pose
             return true;
         }
     }
+
+//    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
+//        moveMode = moveMode.rotate;
+//        if(!clockwise){
+//            targetAngle = -targetAngle;
+//            power = -power;
+//        }
+//        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
+//        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
+//            driveMixer(0, 0, power);
+//            return false;
+//        }
+//        else {
+//            driveMixer(0, 0, 0);
+//            return true;
+//        }
+//    }
 
 
     /**
@@ -779,15 +759,6 @@ public class Pose
     }
 
     public void updateSensors(){
-        // read color sensors
-//        beaconColorCache = beaconColorReader.read(0x04, 1);
-//        //ballColorCache = ballColorReader.read(0x04, 1);
-//        //ballColor = (ballColorCache[0] & 0xFF);
-//        beaconColor = (beaconColorCache[0] & 0xFF);
-
-        //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
-//        beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
-//        beaconDistFore = Math.pow(beaconPresent.getLightDetected(), 0.5); //calculate linear value
         Update(imu, 0, 0);
     }
 
@@ -977,72 +948,6 @@ public class Pose
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
 
-    public boolean nearBeacon(boolean isBlue) { //did the optical distance sensor see something close enough to
-        if(isBlue){                              //be one of the beacons
-            return beaconDistFore > 0.08;
-        }
-        return beaconDistFore > .08;
-    }
-
-    public boolean findBeaconPressRange(boolean isBlue) { //is the robot close enough to push the beacon with the
-        double dist;                                      //the servo (DEPRECATED)
-        if(isBlue){ dist = beaconDistAft; }
-        else { dist = beaconDistFore; }
-        if(dist > .25){
-            driveMixer(0, -.35, 0);
-            return false;
-        }
-        else if(dist < .15){
-            driveMixer(0, .35, 0);
-            return false;
-        }
-        else{
-            driveMixer(0, 0, 0);
-            return true;
-        }
-    }
-
-    public void drivePID(boolean forward, double power){
-
-    }
-
-    public boolean onAllianceColor(boolean isBlue){ //is the robot looking at it's team's aliance color
-        if(isBlue){
-            return beaconColor == 3 || beaconColor == 2;
-        }
-        return (beaconColor > 9 && beaconColor < 12);
-    }
-
-    public boolean onOpposingColor(boolean isBlue){ //is the robot looking at its team's aliance color
-        if(isBlue){
-            return (beaconColor > 9 && beaconColor < 12);
-        }
-        return beaconColor == 3 || beaconColor == 2;
-    }
-    public boolean findOpposingColor(boolean isBlue, boolean fromLeft, double pwr){
-        if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-pwr, 0, 0); }
-        else { driveMixer(pwr, 0, 0); }
-        if(onOpposingColor(isBlue)){
-            return true;
-        }
-        return false;
-    }
-
-    // Don't need this since we now have a PID version of RotateIMU
-//    public boolean turnIMU(double targetAngle, double power, boolean turnRight){
-//            if(turnRight)
-//                driveMixer(0, 0, power);
-//            else
-//                driveMixer(0, 0, -power);
-//            if(turnRight && targetAngle <= poseHeading)
-//                return true;
-//            else if(!turnRight && targetAngle >= poseHeading)
-//                return true;
-//            else return false;
-//
-//    }
-
-
     public double driveToBeacon(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
 
         //double vuDepth = 0;
@@ -1072,110 +977,6 @@ public class Pose
 
     return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
     }//driveToBeacon
-
-    public double driveToParticle(VuforiaLocalizer locale, boolean isBlue, double bufferDistance, double maxSpeed, boolean turnOnly) {
-
-        //double vuDepth = 0;
-        double pwr = 0;
-        int blobx; //current x value of the centroid (center of mass) of the largest tracked blob contour
-        int bloby; //current y value of the centroid of the largest tracked blob
-        org.opencv.core.Rect blobBox;
-        int blobHeight;
-        int blobWidth;
-        double maxContour = 0;
-        double minContour = 1000; //smallest contour area that we will pay attention to
-        double targetContour = -1; //what is the size of the maximum contour just after it is selected by touch? - serves as the target size (distance to maintain from the object)
-        boolean               mIsColorSelected = false;
-        Mat mRgba;
-        Scalar mBlobColorRgba;
-        Scalar mBlobColorHsv;
-        ColorBlobDetector mDetector;
-        Image img;
-        mDetector = new ColorBlobDetector();
-
-        try {
-            img = getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565);
-        } catch (InterruptedException e) {
-            img = null;
-            e.printStackTrace();
-        }
-
-        //copy image into intermediate stage android bitmap which can then be used to create an opencv native Mat
-        Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
-        bm.copyPixelsFromBuffer(img.getPixels());
-
-        mRgba = bitmapToMat(bm, CvType.CV_8UC3);
-
-        Scalar targetHue = RC.a().getTargetBlobColor();
-
-
-        if (mIsColorSelected) {
-            mDetector.setHsvColor(targetHue);
-            mDetector.process(mRgba);
-            List<MatOfPoint> contours = mDetector.getContours();
-            Log.e("OpenCV", "Contours count: " + contours.size());
-            //Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 3);
-
-            //get the centroid (center of mass) and area for each contour
-
-            List<Moments> mu = new ArrayList<Moments>(contours.size());
-            maxContour=0;
-            blobWidth = 0;
-            blobHeight = 0;
-            blobBox = null;
-
-            for (int i = 0; i < contours.size(); i++) {
-                mu.add(i, Imgproc.moments(contours.get(i), false));
-                Moments p = mu.get(i);
-                int x = (int) (p.get_m10() / p.get_m00()); //centroid in x
-                int y = (int) (p.get_m01() / p.get_m00());
-
-                //Core.circle(mRgba, new Point(x, y), 5, CONTOUR_COLOR, -1);
-                double area = Imgproc.contourArea(contours.get(i));
-                if (area > minContour && area > maxContour) //we have a new largest contour in the set
-                {
-                    maxContour=area;
-                    blobx=x;
-                    bloby=y;
-                    blobBox= Imgproc.boundingRect(contours.get(i));
-                    blobWidth=blobBox.width;
-                    blobHeight = blobBox.height;
-                }
-            }
-
-            if (targetContour == -1 && maxContour > 0 )
-            {
-                targetContour = maxContour; //new target size, thus distance to object
-            }
-
-        }
-        /*
-        if (beacon.getPose() != null) {
-            vuTrans = beacon.getRawPose().getTranslation();
-
-            //todo - add a new transform that will shift our target left or right depending on beacon analysis
-
-            if(offset){vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));}
-            else vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
-            vuDepth = vuTrans.get(2);
-
-            if (turnOnly)
-                pwr = 0; //(vuDepth - bufferDistance/1200.0);
-            else
-                // this is a very simple proportional on the distance to target - todo - convert to PID control
-                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
-            Log.i("Particle Angle", String.valueOf(vuAngle));
-            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
-
-        } else { //disable motors if given target not visible
-            vuDepth = 0;
-            driveMixer(0,0,0);
-        }//else
-
-*/
-
-        return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
-    }
 
     public double strafeBeacon(VuforiaTrackableDefaultListener beacon, double offsetDistance, double pwrMax, double iWishForThisToBeOurHeading) {
 
@@ -1260,140 +1061,6 @@ public class Pose
         return vuXOffset;
     }
 
-//    public void driveToBeacon(VuforiaTrackableDefaultListener beacon, double bufferDistance, double speed, boolean strafe,
-//                               double robotAngle, VectorF coordinate) {
-//
-//        if (beacon.getPose() != null) {
-//            VectorF vuTrans = beacon.getPose().getTranslation();
-//
-//            Log.i(TAG, "strafeToBeacon: " + vuTrans);
-//
-//            vuTrans = VortexUtils.navOffWall(vuTrans, robotAngle, coordinate);
-//
-//            Log.i(TAG, "strafeToBeacon: " + vuTrans);
-//
-//            double vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
-//
-//            Log.i(TAG, "strafeToBeacon: " + vuAngle);
-//
-//
-//            if (strafe) {
-//                //track(vuAngle, Math.hypot(vuTrans.get(0), vuTrans.get(2)) - bufferDistance, speed);
-//            } else {
-//                if (vuAngle < 0) {
-//                    imuTurnL(-vuAngle, speed);
-//                } else {
-//                    imuTurnR(vuAngle, speed);
-//                }//else
-//
-//                track(0, Math.hypot(vuTrans.get(0), vuTrans.get(2) - bufferDistance), speed);
-//            }//else
-//
-//        } else {
-//            RC.t.addData("FERMION", "Strafe To Beacon failed: Beacon not visible");
-//        }//else
-//    }//driveToBeacon
-
-public void ToggleGrip (){
-    if (gripOpen) {
-        gripOpen = false;
-
-        servoGrip.setPosition(ServoNormalize(gripClosedPos));
-    }
-    else {
-        gripOpen = true;
-        servoGrip.setPosition(ServoNormalize(gripOpenPos));
-    }
-}
-
-    public boolean pressAllianceBeacon(boolean isBlue, boolean fromLeft){ //press the button on the beacon that corresponds
-        switch(beaconState){                                              // to the alliance color in tertiaryAu2to
-            case 0:
-                //if((isBlue && fromLeft) || (!isBlue && !fromLeft)){ driveMixer(-scanSpeed, 0, 0); }
-                //else { driveMixer(scanSpeed, 0, 0); }
-                //if(nearBeacon(isBlue)) {
-                //    driveMixer(0, 0, 0);
-                    resetMotors(true);
-                    beaconState++;
-                //}
-                break;
-            case 1:     //stub
-                //if(driveForward(((isBlue && fromLeft) || (!isBlue && !fromLeft)), .1, .5)){
-//                    resetMotors();
-                    beaconState++;
-                //}
-                break;
-            case 2:     //stub
-//                if(findBeaconPressRange())
-                beaconState++;
-                break;
-            case 3:     //stub
-//                if(findBeaconPressRange())
-                robotSays.play(hwMap.appContext, R.raw.a03);
-                beaconState++;
-                break;
-            case 4:     //drives to find the opposing alliance's color on the beacon in order to put it out of the
-                if(findOpposingColor(isBlue, fromLeft, 0.15)) beaconState++;  //range of the beacon presser
-                break;
-            case 5:     //stub
-//                if(driveForward(true, 0, .25)){
-//                    resetMotors();
-                //check to see if we overshot, if so, go back very slowly and find the color again
-                if(onOpposingColor(isBlue)){
-                    if(findOpposingColor(isBlue, !fromLeft, 0.10)) beaconState++;
-                }
-                    else beaconState++;
-                break;
-            case 6:     //begins moving sideways in order to press the beacon and sets a timer to stop moving if the
-                        //beacon takes too long to switch
-//                servoGate.setPosition(ServoNormalize(pressedPosition));
-//                presserTimer = System.nanoTime() + (long) 2e9;
-//                beaconState++;
-                driveMixer(0, .5, 0);
-                robotSays.play(hwMap.appContext, R.raw.a06);
-                presserTimer = System.nanoTime() + (long) 1e9;
-                beaconState++;
-                break;
-            case 7:     //continue trying to press the beacon until the color switches to the color of the alliance
-                        //or the beacon takes more than 5 seconds to press
-//                if(presserTimer < System.nanoTime())
-//                    beaconState++;
-                if(/*onAllianceColor(isBlue) || */presserTimer < System.nanoTime()){
-                    presserSavedTime = System.nanoTime();
-                    driveMixer(0, 0, 0);
-                    robotSays.play(hwMap.appContext, R.raw.a07);
-                    beaconState++;
-                    resetMotors(true);
-                }
-                break;
-            case 8:
-                if(driveStrafe(false, .06, .35)) { beaconState++; }
-                break;
-            case 9:     //re-align with wall
-                if(isBlue){
-                    if(RotateIMU(94, 1)) beaconState++;
-                }
-                else{
-                    if(RotateIMU(0, 1)) beaconState++;
-                }
-                break;
-            case 10:    //retry all steps from locating the opposing alliance's color to pressing the beacon if
-                        //the initial press was unsuccessful
-                //if(presserSavedTime > presserTimer)
-                //    beaconState = 4;
-                 beaconState++;
-                break;
-            case 11:
-                beaconState = 0;
-                return true;
-
-        }
-        return false;
-    }
-
-    public void resetBeaconPresserState(){
-        beaconState = 0;
-    }
 
     public double getBatteryVoltage(){
         return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();

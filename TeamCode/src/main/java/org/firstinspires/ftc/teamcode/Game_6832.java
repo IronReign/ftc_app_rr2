@@ -1015,25 +1015,6 @@ public class Game_6832 extends LinearOpMode {
                         return Double.toString(robot.drivePID.getError());
                     }
                 });
-
-        telemetry.addLine()
-                .addData("DistRear", new Func<String>() {
-                    @Override public String value() {
-                        return String.valueOf(robot.beaconDistAft);
-                    }
-                })
-
-                .addData("DistFore", new Func<String>() {
-                    @Override public String value() {
-                        return String.valueOf(robot.beaconDistFore);
-                    }
-                })
-                .addData("ForeColor", new Func<String>() {
-                    @Override public String value() {
-                        return Long.toString(robot.beaconColor);
-                    }
-                });
-
     }
     String formatAngle(AngleUnit angleUnit, double angle) {
         return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
