@@ -44,7 +44,6 @@ import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Func;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -57,7 +56,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
-import java.util.Timer;
 
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
@@ -89,7 +87,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean active = true;
     boolean joystickDriveStarted = false;
 
-    private int autoState = 0;
+
     private int beaconConfig = 0;
 
     private int flingNumber = 0;
@@ -108,6 +106,7 @@ public class Game_6832 extends LinearOpMode {
     Orientation angles;
 
     private int state = 0;
+    private int autoStage = 0;
     private  int vuTestMode = 0;
     private boolean runAutonomous = true;
     private long autoTimer = 0;
@@ -146,8 +145,10 @@ public class Game_6832 extends LinearOpMode {
     private int startBtn = 10; //toggle active (always)
 
     public VuforiaTrackables relicCodex;
-    public int relicCase = 0;
+    public int savedVuMarkCodex = 0;
     VuforiaTrackable relicTemplate;
+    public int codexFlashStage = 0;
+    public long codexFlashTimer = 0;
     VuforiaTrackable blueNearTarget;
     VuforiaTrackable redFarTarget;
     VuforiaTrackable blueFarTarget;
@@ -357,6 +358,148 @@ public class Game_6832 extends LinearOpMode {
         return 1;
     }
 
+    public boolean flashRelicCodex(){
+        switch (savedVuMarkCodex){
+            case 0:
+                switch (codexFlashStage){
+                    case 0:
+                        codexFlashTimer = futureTime(.5f);
+                        robot.headLamp.setPower(0);
+                        codexFlashStage++;
+                        break;
+                    case 1:
+                        if(codexFlashTimer < System.nanoTime()) {
+                            codexFlashTimer = futureTime(.15f);
+                            robot.headLamp.setPower(1);
+                            codexFlashStage++;
+                        }
+                        break;
+                    case 2:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(0);
+                            codexFlashTimer = futureTime(.5f);
+                            codexFlashStage++;}
+                        break;
+                    case 3:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(1);
+                            codexFlashStage = 0;
+                            return true;
+                        }
+                        break;
+                    default:
+                        codexFlashStage = 0;
+                        break;
+                }
+                break;
+            case 1:
+                switch (codexFlashStage){
+                    case 0:
+                        codexFlashTimer = futureTime(.5f);
+                        robot.headLamp.setPower(0);
+                        codexFlashStage++;
+                        break;
+                    case 1:
+                        if(codexFlashTimer < System.nanoTime()) {
+                            codexFlashTimer = futureTime(.15f);
+                            robot.headLamp.setPower(1);
+                            codexFlashStage++;
+                        }
+                        break;
+                    case 2:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(0);
+                            codexFlashTimer = futureTime(.15f);
+                            codexFlashStage++;}
+                        break;
+                    case 3:
+                        if(codexFlashTimer < System.nanoTime()) {
+                            codexFlashTimer = futureTime(.15f);
+                            robot.headLamp.setPower(1);
+                            codexFlashStage++;
+                        }
+                        break;
+                    case 4:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(0);
+                            codexFlashTimer = futureTime(.5f);
+                            codexFlashStage++;}
+                        break;
+                    case 5:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(1);
+                            codexFlashStage = 0;
+                            return true;
+                        }
+                        break;
+                    default:
+                        codexFlashStage = 0;
+                        break;
+                }
+                break;
+            case 2:
+                switch (codexFlashStage){
+                    case 0:
+                        codexFlashTimer = futureTime(.5f);
+                        robot.headLamp.setPower(0);
+                        codexFlashStage++;
+                        break;
+                    case 1:
+                        if(codexFlashTimer < System.nanoTime()) {
+                            codexFlashTimer = futureTime(.15f);
+                            robot.headLamp.setPower(1);
+                            codexFlashStage++;
+                        }
+                        break;
+                    case 2:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(0);
+                            codexFlashTimer = futureTime(.15f);
+                            codexFlashStage++;}
+                        break;
+                    case 3:
+                        if(codexFlashTimer < System.nanoTime()) {
+                            codexFlashTimer = futureTime(.15f);
+                            robot.headLamp.setPower(1);
+                            codexFlashStage++;
+                        }
+                        break;
+                    case 4:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(0);
+                            codexFlashTimer = futureTime(.15f);
+                            codexFlashStage++;}
+                        break;
+                    case 5:
+                        if(codexFlashTimer < System.nanoTime()) {
+                            codexFlashTimer = futureTime(.15f);
+                            robot.headLamp.setPower(1);
+                            codexFlashStage++;
+                        }
+                        break;
+                    case 6:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(0);
+                            codexFlashTimer = futureTime(.5f);
+                            codexFlashStage++;}
+                        break;
+                    case 7:
+                        if(codexFlashTimer < System.nanoTime()){
+                            robot.headLamp.setPower(1);
+                            codexFlashStage = 0;
+                            return true;
+                        }
+                        break;
+                    default:
+                        codexFlashStage = 0;
+                        break;
+                }
+                break;
+
+        }
+        return false;
+    }
+
 
 
 
@@ -434,38 +577,38 @@ public class Game_6832 extends LinearOpMode {
     }
 
     public void autonomous(){
-        switch(autoState){
+        switch(autoStage){
             case 0:
                 autoTimer = futureTime(1.5f);
                 robot.resetMotors(true);
-                autoState++;
+                autoStage++;
             case 1: //scan vuforia target and deploy jewel arm
                 //robot.jewel.lowerArm();
                 if(autoTimer < System.nanoTime()) {
-                    relicCase = getRelicCodex();
+                    savedVuMarkCodex = getRelicCodex();
 
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 2:
                 if(robot.driveForward(false, .03, .25)){
                     jewelMatches = robot.doesJewelMatch(isBlue);
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 3: //small turn to knock off jewel
                 if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
                     if(robot.RotateIMU(10, 2.5)){
                         autoTimer = futureTime(1.5f);
-                        autoState++;
+                        autoStage++;
                         robot.resetMotors(true);
                     }
                 }
                 else{
                     if(robot.RotateIMU(350, 2.5)){
                         autoTimer = futureTime(1.5f);
-                        autoState++;
+                        autoStage++;
                         robot.resetMotors(true);
                     }
                 }
@@ -473,70 +616,70 @@ public class Game_6832 extends LinearOpMode {
             case 4:
                 if(robot.driveForward(true, .03, .25)){
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 5: //lift jewel arm
                 robot.jewel.liftArm();
                 if(autoTimer < System.nanoTime()) {
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 6: //turn parallel to the wall
                 if(isBlue){
                     if(robot.RotateIMU(270, 3.5)){
                         robot.resetMotors(true);
-                        autoState++;
+                        autoStage++;
                     }
                 }
                 else{
                     if(robot.RotateIMU(90, 3.5)){
                         robot.resetMotors(true);
-                        autoState++;
+                        autoStage++;
                     }
                 }
                 break;
             case 7: //drive off the balance stone
                 if(robot.driveForward(false, .3, .5)) {
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 8: //re-orient robot
                 if(isBlue){
                     if(robot.RotateIMU(270, 1.0)){
                         robot.resetMotors(true);
-                        autoState++;
+                        autoStage++;
                     }
                 }
                 else{
                     if(robot.RotateIMU(90, 1.0)){
                         robot.resetMotors(true);
-                        autoState++;
+                        autoStage++;
                     }
                 }
                 break;
             case 9: //drive to proper crypto box column based on vuforia target
-                switch (relicCase) {
+                switch (savedVuMarkCodex) {
                     case 0:
                         if(robot.driveForward(false, .5, .35)) {
                             robot.resetMotors(true);
-                            autoState++;
+                            autoStage++;
                         }
                         break;
                     case 1:
                         if(robot.driveForward(false, .75, .35)) {
                             robot.resetMotors(true);
-                            autoState++;
+                            autoStage++;
                         }
-                        autoState++;
+                        autoStage++;
                         break;
                     case 2:
                         if(robot.driveForward(false, 1.0, .35)) {
                             robot.resetMotors(true);
-                            autoState++;
+                            autoStage++;
                         }
-                        autoState++;
+                        autoStage++;
                         break;
                 }
                 break;
@@ -544,13 +687,13 @@ public class Game_6832 extends LinearOpMode {
                 if(isBlue){
                     if(robot.RotateIMU(325, 1.5)){
                         robot.resetMotors(true);
-                        autoState++;
+                        autoStage++;
                      }
                 }
                 else{
                     if(robot.RotateIMU(35, 1.5)){
                         robot.resetMotors(true);
-                        autoState++;
+                        autoStage++;
                     }
                 }
                 break;
@@ -559,47 +702,47 @@ public class Game_6832 extends LinearOpMode {
                     robot.resetMotors(true);
                     robot.glyphSystem.ReleaseGrip();
                     autoTimer = futureTime(1.5f);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 12:
                 if(autoTimer < System.nanoTime()){
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 13: //back away from crypto box
                 if(robot.driveForward(true, .15, .50)){
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 14:
                 autoTimer = futureTime(1.5f);
                 robot.glyphSystem.CloseGrip();
-                autoState++;
+                autoStage++;
                 break;
             case 15:
                 if(autoTimer < System.nanoTime()){
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 16:
                 //back away from crypto box
                 if(robot.driveForward(false, .25, .50)){
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 17:
                 //back away from crypto box
                 if(robot.driveForward(true, .05, .30)){
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             default:
                 robot.resetMotors(true);
-                autoState = 0;
+                autoStage = 0;
                 active = false;
                 state = 0;
                 break;
@@ -607,53 +750,53 @@ public class Game_6832 extends LinearOpMode {
     }
     public void autonomous2 (){
 
-        switch(autoState){
+        switch(autoStage){
             case 0: //deposit glyph
                 if(robot.driveForward(false, 1.0, .50)) {
                     robot.resetMotors(true);
                     robot.glyphSystem.ReleaseGrip();
                     autoTimer = futureTime(1.5f);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 1:
                 if(autoTimer < System.nanoTime()){
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 2: //back away from crypto box
                 if(robot.driveForward(true, .15, .50)){
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 3:
                 autoTimer = futureTime(1.5f);
                 robot.glyphSystem.CloseGrip();
-                autoState++;
+                autoStage++;
                 break;
             case 4:
                 if(autoTimer < System.nanoTime()){
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 5:
                 //back away from crypto box
                 if(robot.driveForward(false, .25, .50)){
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             case 6:
                 //back away from crypto box
                 if(robot.driveForward(true, .05, .30)){
                     robot.resetMotors(true);
-                    autoState++;
+                    autoStage++;
                 }
                 break;
             default:
                 robot.resetMotors(true);
-                autoState = 0;
+                autoStage = 0;
                 active = false;
                 state = 0;
                 break;
@@ -663,7 +806,7 @@ public class Game_6832 extends LinearOpMode {
 
 
     public void resetAuto(){
-        autoState = 0;
+        autoStage = 0;
         autoTimer = 0;
         robot.ResetTPM();
     }
@@ -913,7 +1056,7 @@ public class Game_6832 extends LinearOpMode {
                 })
                 .addData("Relic Codex", new Func<String>() {
                     @Override public String value() {
-                        return Integer.toString(relicCase);
+                        return Integer.toString(savedVuMarkCodex);
                     }
                 });
 
@@ -963,7 +1106,7 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("State", new Func<String>() {
                     @Override public String value() {
-                        return String.valueOf(autoState);
+                        return String.valueOf(autoStage);
                     }
                 })
 //                .addData("TicksFL", new Func<String>() {
@@ -1013,7 +1156,7 @@ public class Game_6832 extends LinearOpMode {
                 });
 
 //        telemetry.addData("Status", "Run Time: " + runtime.toString());
-//        //telemetry.addData("Status", "State: " + autoState);
+//        //telemetry.addData("Status", "State: " + autoStage);
 //        //telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFront.getCurrentPosition()));
 //        //telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
 //        telemetry.addLine().addData("Normal", beaconPresentRear.getLightDetected());
