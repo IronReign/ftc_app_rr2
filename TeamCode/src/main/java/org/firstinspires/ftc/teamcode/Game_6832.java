@@ -260,12 +260,12 @@ public class Game_6832 extends LinearOpMode {
                     case 9:
                         break;
                     default:
-                        robot.StopAll();
+                        robot.stopAll();
                         break;
                 }
                 robot.updateSensors();
             }
-            else robot.StopAll();
+            else robot.stopAll();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }

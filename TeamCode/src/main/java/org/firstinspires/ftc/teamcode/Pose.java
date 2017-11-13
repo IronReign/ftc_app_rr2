@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -66,9 +65,6 @@ public class Pose
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
 
-    OpticalDistanceSensor beaconPresentRear;
-    OpticalDistanceSensor beaconPresent;
-
 
     private double powerFrontLeft  = 0;
     private double powerFrontRight = 0;
@@ -109,6 +105,8 @@ public class Pose
     private double minTurnError = 1.0;
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
+
+    //scoring objects and related variables
     public PickAndPlace glyphSystem;
     public JewelArm jewel;
 
@@ -126,10 +124,6 @@ public class Pose
     long flingerTimer;
 
     boolean gripOpen = false;
-    int gripOpenPos = 900;
-    int gripClosedPos = 2110;
-    int jewelUpPos = 850;
-    int jewelDownPos = 2050;
     public int servoTesterPos = 0;
 
 
@@ -253,7 +247,7 @@ public class Pose
         moveMode = MoveMode.still;
 
         this.glyphSystem = new PickAndPlace(motorLift, servoGrip);
-        this.jewel = new JewelArm(servoJewel, colorJewel, jewelUpPos, jewelDownPos);
+        this.jewel = new JewelArm(servoJewel, colorJewel);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
@@ -292,7 +286,7 @@ public class Pose
      * @param targetAngle   the target angle of the robot in the coordinate system of the sensor that provides the current angle
      * @param strafe   if true, the robot will drive left/right. if false, the robot will drive forwards/backwards.
      */
-    public void MovePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
+    public void movePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
         drivePID.setOutputRange(-.5,.5);
@@ -329,7 +323,7 @@ public class Pose
         else driveMixer(pwr, 0, correction);
     }
 
-    public void StopAll(){
+    public void stopAll(){
         glyphSystem.stopLift();
         driveMixer(0, 0, 0);
     }
@@ -345,7 +339,7 @@ public class Pose
      * @param currentAngle   current angle of the robot in the coordinate system of the sensor that provides it- should be updated every cycle
      * @param targetAngle   the target angle of the robot in the coordinate system of the sensor that provides the current angle
      */
-    public void MovePIDMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double currentAngle, double targetAngle) {
+    public void movePIDMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double currentAngle, double targetAngle) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
         drivePID.setOutputRange(-.5,.5);
@@ -383,11 +377,11 @@ public class Pose
 
 
     public void driveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
-        MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
+        movePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
 
     public void driveIMUMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double targetAngle){
-        MovePIDMixer(Kp, Ki, Kd, pwrFwd, pwrStf, poseHeading, targetAngle);
+        movePIDMixer(Kp, Ki, Kd, pwrFwd, pwrStf, poseHeading, targetAngle);
     }
 
     public boolean driveIMUDistance(double Kp, double pwr, double targetAngle, boolean forwardOrLeft, double targetMeters, boolean strafe){
@@ -921,7 +915,7 @@ public class Pose
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
                 pwr = clampDouble(-maxSpeed, maxSpeed, ((bufferDistance - vuDepth)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
-            MovePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
+            movePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
 
         } else { //disable motors if given target not visible
             vuDepth = 0;

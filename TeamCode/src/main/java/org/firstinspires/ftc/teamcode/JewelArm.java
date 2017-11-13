@@ -11,15 +11,13 @@ public class JewelArm {
 
     private Servo servoJewel;
     private NormalizedColorSensor colorJewel;
-    private int jewelUpPos;
-    private int jewelDownPos;
+    int jewelUpPos = 850;
+    int jewelDownPos = 2050;
     public int jewelPos;
 
-    public JewelArm(Servo servoJewel, NormalizedColorSensor colorJewel, int jewelUpPos, int jewelDownPos){
+    public JewelArm(Servo servoJewel, NormalizedColorSensor colorJewel){
         this.servoJewel = servoJewel;
         this.colorJewel = colorJewel;
-        this.jewelUpPos = jewelUpPos;
-        this.jewelDownPos = jewelDownPos;
     }
 
     public void liftArm(){
