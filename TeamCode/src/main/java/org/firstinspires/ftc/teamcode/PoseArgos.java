@@ -1262,7 +1262,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
                 pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
             Log.i("Particle Angle", String.valueOf(vuPanAngle));
-            movePID(KpDrive, KiDrive, KdDrive, pwr, -vuPanAngle, 0, false);
+            movePID(kpDrive, KiDrive, KdDrive, pwr, -vuPanAngle, 0, false);
 
         } else { //disable motors if given target not visible
             vuDepth = 0;

@@ -25,8 +25,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefau
  * This class should be a point of reference for any navigation classes that want to know current
  * orientation and location of the robot.  The update method must be called regularly, it
  * monitors and integrates data from the orientation (IMU) and odometry (motor encoder) sensors.
- * @author Max Virani, Tycho Virani
- * @version 1.2
+ * @author Tycho Virani
+ * @version 3.0
  * @since 2016-12-10
  */
 
@@ -39,11 +39,10 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public  double KpDrive = 0.010; //proportional constant multiplier
-    private double KiDrive = 0.000; //integral constant multiplier
-    private double KdDrive = 0.001; //derivative constant multiplier
-    private double driveIMUBasePower = .5;
-    private double motorPower = 0;
+    public  double kpDrive = 0.010; //proportional constant multiplier
+    private double kiDrive = 0.000; //integral constant multiplier
+    private double kdDrive = 0.001; //derivative constant multiplier
+
 
     DcMotor motorFrontLeft           = null;
     DcMotor motorFrontRight          = null;
@@ -395,7 +394,7 @@ public class Pose
         if(strafe) targetPos = (long) targetMeters * strafeTPM;
         else targetPos = (long)(targetMeters * forwardTPM);
         if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){//we've not arrived yet
-            driveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle, strafe);
+            driveIMU(Kp, kiDrive, kdDrive, pwr, targetAngle, strafe);
             return false;
         }
         else { //destination achieved
@@ -409,7 +408,7 @@ public class Pose
             turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
             turnTimerInit = true;
         }
-        driveIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle, false); //if the robot turns within a threshold of the target
+        driveIMU(kpDrive, kiDrive, kdDrive, 0, targetAngle, false); //if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
             driveMixer(0,0,0);
@@ -442,7 +441,7 @@ public class Pose
             if (!maintainHeadingInit) {
                 poseSavedHeading = poseHeading;
                 maintainHeadingInit = true;}
-            driveIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading, false);
+            driveIMU(kpDrive, kiDrive, kdDrive, 0, poseSavedHeading, false);
         }
         if(!buttonState){
             maintainHeadingInit = false;
@@ -915,7 +914,7 @@ public class Pose
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
                 pwr = clampDouble(-maxSpeed, maxSpeed, ((bufferDistance - vuDepth)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
-            movePID(KpDrive, KiDrive, KdDrive, pwr, -vuAngle, 0, false);
+            movePID(kpDrive, kiDrive, kdDrive, pwr, -vuAngle, 0, false);
 
         } else { //disable motors if given target not visible
             vuDepth = 0;
@@ -941,7 +940,7 @@ public class Pose
                             // this is a very simple proportional on the distance to target - todo - convert to PID control
             pwr = clampDouble(-pwrMax, pwrMax, ((vuXOffset - offsetDistance)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
-            driveIMU(KpDrive, KiDrive, KdDrive, pwr, iWishForThisToBeOurHeading, true);
+            driveIMU(kpDrive, kiDrive, kdDrive, pwr, iWishForThisToBeOurHeading, true);
 
         } else { //disable motors if given target not visible
             vuDepth = 0;

@@ -118,7 +118,7 @@ public class Game_6832 extends LinearOpMode {
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
-    double testableDouble = robot.KpDrive;
+    double testableDouble = robot.kpDrive;
     double testableHeading = 0;
     boolean testableDirection = true;
 
