@@ -90,10 +90,7 @@ public class Game_6832 extends LinearOpMode {
 
     private int beaconConfig = 0;
 
-    private int flingNumber = 0;
-    private boolean shouldLaunch = false;
     private boolean isBlue = false;
-    private boolean capMode = false;
     private double pwrDamper = .33;
     private double pwrFwd = 0;
     private double pwrStf = 0;
@@ -110,21 +107,11 @@ public class Game_6832 extends LinearOpMode {
     private  int vuTestMode = 0;
     private boolean runAutonomous = true;
     private long autoTimer = 0;
-    private long launchTimer = 0;
     private long autoDelay = 0;
     private boolean[] buttonSavedStates = new boolean[11];
-    //private boolean[] buttonCurrentState = new boolean[8];
-    private boolean slowMode = false;
-
-    private boolean runDemo = false;
-    private boolean runBeaconTestLeft = true;
-    private int beaconState = 0;
     boolean jewelMatches = false;
 
 
-
-    private int pressedPosition = 750; //Note: find servo position value for pressing position on servoPan
-    private int relaxedPosition = 2250; //Note: find servo position value for relaxing position on servoPan
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
@@ -149,9 +136,6 @@ public class Game_6832 extends LinearOpMode {
     VuforiaTrackable relicTemplate;
     public int codexFlashStage = 0;
     public long codexFlashTimer = 0;
-    VuforiaTrackable blueNearTarget;
-    VuforiaTrackable redFarTarget;
-    VuforiaTrackable blueFarTarget;
     VuforiaLocalizer locale;
 
 
@@ -176,27 +160,11 @@ public class Game_6832 extends LinearOpMode {
 
         Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 
-//        VuforiaTrackables beacons = locale.loadTrackablesFromAsset("FTC_2016-17");
-//        VuforiaTrackableDefaultListener wheels = (VuforiaTrackableDefaultListener) beacons.get(0).getListener();
-//        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
-
         relicCodex = locale.loadTrackablesFromAsset("RelicVuMark");
-        //relicCodex.get(0).setName("Wheels");
-        //relicCodex.get(1).setName("Tools");
-        //relicCodex.get(2).setName("Lego");
         relicCodex.get(0).setName("RelicTemplate");
 
 
         relicTemplate = relicCodex.get(0);
-
-//        blueNearTarget  = relicCodex.get(0);
-//        blueNearTarget.setName("blueNear");  // Wheels
-//
-//        redFarTarget = relicCodex.get(1);
-//        redFarTarget.setName("redFar");  // Tools
-//
-//        blueFarTarget  = relicCodex.get(2);
-//        blueFarTarget.setName("blueFar");  // Legos
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
@@ -214,8 +182,6 @@ public class Game_6832 extends LinearOpMode {
                     return;
                 }
             }
-            //beacons.activate();
-
 
             stateSwitch();
 
@@ -301,7 +267,7 @@ public class Game_6832 extends LinearOpMode {
                     case 7: //IMU demo mode
                         robot.MaintainHeading(gamepad1.x);
                         break;
-                    case 8: //tertiaryAuto demo mode
+                    case 8: //servo testing mode
                         robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
                     case 9:
                         break;
@@ -518,9 +484,6 @@ public class Game_6832 extends LinearOpMode {
         9  = right bumper
         10 = start button
         */
-        if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-            capMode = !capMode;
-        }
 
         if (!joystickDriveStarted) {
             robot.resetMotors(true);
@@ -812,7 +775,7 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-    public void stateSwitch(){
+    public void stateSwitch() {
 
         /*button indexes:
         0  = a
@@ -828,19 +791,19 @@ public class Game_6832 extends LinearOpMode {
         10 = start button
         */
 
-        if(toggleAllowed(gamepad1.left_bumper,left_bumper)) {
+        if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
 
             state--;
             if (state < 0) {
-                state = 9 ;
+                state = 9;
             }
             robot.resetMotors(true);
             active = false;
             resetAuto();
-            beaconState = 0;
+            codexFlashStage = 0;
         }
 
-        if (toggleAllowed(gamepad1.right_bumper,right_bumper)) {
+        if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
 
             state++;
             if (state > 9) {
@@ -849,45 +812,15 @@ public class Game_6832 extends LinearOpMode {
             robot.resetMotors(true);
             active = false;
             resetAuto();
-            beaconState = 0;
+            codexFlashStage = 0;
         }
 
-        if(toggleAllowed(gamepad1.start, startBtn)) {
+        if (toggleAllowed(gamepad1.start, startBtn)) {
             robot.resetMotors(true);
             active = !active;
-            beaconState = 0;
+            codexFlashStage = 0;
         }
-
-        //auto switch into balance mode when angle climbs over 70 degrees
-//        if (robot.getRoll()>robot.staticBalance - robot.balanceWindow && robot.getRoll()<robot.staticBalance+robot.balanceWindow) {
-//            if (!robot.isBalanceMode()) // we are transitioning into balance mode
-//            {
-//                robot.nod = .9;
-//                // this is a tighter requirement, won't enter full balance mode until robot
-//                // has climbed past balance point
-//                if (robot.getRoll()>robot.staticBalance){
-//                    robot.balancePID.setTotalError(0);
-//                    robot.setBalanceMode(true);
-//                    robot.incrementNumTimesBalanced();
-//                }
-//            }
-//
-//
-//        }
-//        else {
-//            if (robot.isBalanceMode()) // we are transitioning out of balance mode
-//            {
-//                robot.nod = .5;
-//                robot.setHeadTilt(robot.nod);
-//                robot.motorFront.setPower(0);
-//            }
-//            robot.setBalanceMode(false);
-//
-//        }
-
-
     }
-
 
 
     boolean toggleAllowed(boolean button, int buttonIndex)
@@ -925,26 +858,10 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-
-
-
-
     public String getAlliance(){
         if(isBlue)
             return "Blue";
         return "Red";
-    }
-
-    public String autoRun(){
-        if(runAutonomous)
-            return "Auto will run";
-        return "Auto will not run";
-    }
-    public String getTeleopMode(){
-        if(capMode){
-            return "Cap Mode";
-        }
-        return "Particle Mode";
     }
 
 
@@ -987,18 +904,7 @@ public class Game_6832 extends LinearOpMode {
                     @Override public String value() {
                         return Integer.toString(robot.jewel.jewelPos);
                     }
-                })
-                .addData("", new Func<String>() {
-                    @Override public String value() {
-                        return getTeleopMode();
-                    }
                 });
-//                .addData("Flywheel Speed", new Func<String>() {
-//                    @Override public String value() {
-//
-//                        return Float.toString(robot.particle.flywheelSpeed);
-//                    }
-//                });
 //        telemetry.addLine()
 //                .addData("Kp", new Func<String>() {
 //                    @Override public String value() {
@@ -1011,33 +917,6 @@ public class Game_6832 extends LinearOpMode {
 //                    }
 //                });
 //
-//        telemetry.addLine()
-//                .addData("BKp", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.balancePID.getP();
-//                    }
-//                })
-//                .addData("BKi", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.balancePID.getI();
-//                    }
-//                })
-//                .addData("BKd", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.balancePID.getD();
-//                    }
-//                })
-//                .addData("tuneSt", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.getPidTunerState();
-//                    }
-//                })
-//                .addData("tuneMg", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.getPidTunerMagnitude();
-//                    }
-//                });
-
         telemetry.addLine()
                 .addData("status", new Func<String>() {
                     @Override public String value() {
@@ -1078,31 +957,31 @@ public class Game_6832 extends LinearOpMode {
                         //return formatAngle(angles.angleUnit, angles.firstAngle);
                         return Double.toString(robot.getVuDepth());
                     }
-                })
-                .addData("headingRaw", new Func<String>() {
-                    @Override public String value() {
-                        return formatAngle(angles.angleUnit, angles.firstAngle);
-
-                    }
-                })
-                .addData("headingOffset", new Func<String>() {
-                    @Override public String value() {
-                        return Double.toString(robot.offsetHeading);
-
-                    }
-                })
-
-                .addData("rollRaw", new Func<String>() {
-                    @Override public String value() {
-                        //return formatAngle(angles.angleUnit, angles.secondAngle);
-                        return Double.toString(robot.getRoll());
-                    }
-                })
-                .addData("pitchRaw", new Func<String>() {
-                    @Override public String value() {
-                        return formatAngle(angles.angleUnit, angles.thirdAngle);
-                    }
                 });
+//                .addData("headingRaw", new Func<String>() {
+//                    @Override public String value() {
+//                        return formatAngle(angles.angleUnit, angles.firstAngle);
+//
+//                    }
+//                })
+//                .addData("headingOffset", new Func<String>() {
+//                    @Override public String value() {
+//                        return Double.toString(robot.offsetHeading);
+//
+//                    }
+//                })
+//
+//                .addData("rollRaw", new Func<String>() {
+//                    @Override public String value() {
+//                        //return formatAngle(angles.angleUnit, angles.secondAngle);
+//                        return Double.toString(robot.getRoll());
+//                    }
+//                })
+//                .addData("pitchRaw", new Func<String>() {
+//                    @Override public String value() {
+//                        return formatAngle(angles.angleUnit, angles.thirdAngle);
+//                    }
+//                });
         telemetry.addLine()
                 .addData("State", new Func<String>() {
                     @Override public String value() {
@@ -1154,15 +1033,6 @@ public class Game_6832 extends LinearOpMode {
                         return Long.toString(robot.beaconColor);
                     }
                 });
-
-//        telemetry.addData("Status", "Run Time: " + runtime.toString());
-//        //telemetry.addData("Status", "State: " + autoStage);
-//        //telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFront.getCurrentPosition()));
-//        //telemetry.addData("Status", "Average Ticks: " + Long.toString(getAverageTicks()));
-//        telemetry.addLine().addData("Normal", beaconPresentRear.getLightDetected());
-//
-//        telemetry.addLine().addData("ColorFore", beaconColorCache[0] & 0xFF);
-//        telemetry.addData("ColorRear", ballColorCache[0] & 0xFF);
 
     }
     String formatAngle(AngleUnit angleUnit, double angle) {
