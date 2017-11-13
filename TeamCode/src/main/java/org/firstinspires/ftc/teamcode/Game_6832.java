@@ -32,8 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Log;
-
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -53,11 +51,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
-
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -86,31 +81,39 @@ public class Game_6832 extends LinearOpMode {
 
     private boolean active = true;
     boolean joystickDriveStarted = false;
-
-
-    private int beaconConfig = 0;
-
+    private int state = 0;
     private boolean isBlue = false;
+
+
+    //drive train control variables
     private double pwrDamper = .33;
     private double pwrFwd = 0;
     private double pwrStf = 0;
     private double pwrRot = 0;
 
-    private double vuPwr = 0;
 
-    private ColorBlobDetector mDetector;
-
-    Orientation angles;
-
-    private int state = 0;
+    //staging and timer variables
     private int autoStage = 0;
     private  int vuTestMode = 0;
-    private boolean runAutonomous = true;
     private long autoTimer = 0;
     private long autoDelay = 0;
-    private boolean[] buttonSavedStates = new boolean[11];
-    boolean jewelMatches = false;
+    public int codexFlashStage = 0;
+    public long codexFlashTimer = 0;
 
+
+    //vision objects/vision-based variables
+    public VuforiaTrackables relicCodex;
+    public int savedVuMarkCodex = 0;
+    VuforiaTrackable relicTemplate;
+    VuforiaLocalizer locale;
+    private ColorBlobDetector mDetector;
+    private int beaconConfig = 0;
+    private double vuPwr = 0;
+
+
+    //sensors/sensing-related variables
+    Orientation angles;
+    boolean jewelMatches = false;
 
 
     //these are meant as short term testing variables, don't expect their usage
@@ -119,24 +122,21 @@ public class Game_6832 extends LinearOpMode {
     double testableHeading = 0;
     boolean testableDirection = true;
 
-    private int a = 0; //collect (particle mode), manual cap lower (cap mode)
-    private int b = 1; //eject (particle mode)
-    private int x = 2; //launch (particle mode)
-    private int y = 3; //spin up (particle mode), manual cap raise (cap mode)
-    private int dpad_down = 4; //no function (particle mode), lowers cap to next lowest preset (cap mode)
-    private int dpad_up = 5; //no function (particle mode), raises cap to next highest preset (cap mode)
-    private int dpad_left = 6; //toggles between particle and cap mode (both modes)
-    private int dpad_right = 7; //no function
+
+    //values associated with the buttons in the toggleAllowed method
+    private boolean[] buttonSavedStates = new boolean[11];
+    private int a = 0; //lower glyph lift
+    private int b = 1; //toggle grip/release on glyph
+    private int x = 2; //no function
+    private int y = 3; //raise glyph lift
+    private int dpad_down = 4; //glyph lift bottom position
+    private int dpad_up = 5; //glyph lift top position
+    private int dpad_left = 6; //no function
+    private int dpad_right = 7; //glyph lift mid position
     private int left_bumper = 8; //increment state down (always)
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
 
-    public VuforiaTrackables relicCodex;
-    public int savedVuMarkCodex = 0;
-    VuforiaTrackable relicTemplate;
-    public int codexFlashStage = 0;
-    public long codexFlashTimer = 0;
-    VuforiaLocalizer locale;
 
 
 
@@ -160,6 +160,7 @@ public class Game_6832 extends LinearOpMode {
 
         Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 
+        //set vuforia to look for assets from the Relic Recovery library
         relicCodex = locale.loadTrackablesFromAsset("RelicVuMark");
         relicCodex.get(0).setName("RelicTemplate");
 
@@ -168,6 +169,7 @@ public class Game_6832 extends LinearOpMode {
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
+        //activate vuforia to start identifying targets/vuMarks
         relicCodex.activate();
         robot.resetMotors(true);
 
@@ -216,11 +218,6 @@ public class Game_6832 extends LinearOpMode {
 
         runtime.reset();
 
-        if(!runAutonomous){
-            state = 1;
-        }
-
-
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -243,15 +240,6 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 4:
                         vuTest((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
-                        beaconConfig = VisionUtils.NOT_VISIBLE;
-                        beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) relicTemplate.getListener(), locale.getCameraCalibration());
-                        if (beaconConfig == VisionUtils.BEACON_RED_BLUE) {
-                            Log.i("RED", "BLUE");
-                        } else if (beaconConfig != VisionUtils.NOT_VISIBLE) {
-                            Log.i("BLUE", "RED");
-                        } else {
-                            Log.i("BEAC", "== -1");
-                        }
                         break;
                     case 5: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
@@ -265,7 +253,7 @@ public class Game_6832 extends LinearOpMode {
                         else robot.driveMixer(0,0,0);
                         break;
                     case 7: //IMU demo mode
-                        robot.MaintainHeading(gamepad1.x);
+                        robot.maintainHeading(gamepad1.x);
                         break;
                     case 8: //servo testing mode
                         robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
@@ -299,7 +287,7 @@ public class Game_6832 extends LinearOpMode {
         }
     }
     public void demo(){
-        robot.MaintainHeading(gamepad1.x);
+        robot.maintainHeading(gamepad1.x);
 
     }
 
@@ -330,13 +318,13 @@ public class Game_6832 extends LinearOpMode {
                 switch (codexFlashStage){
                     case 0:
                         codexFlashTimer = futureTime(.5f);
-                        robot.headLamp.setPower(0);
+                        robot.headLampOff();
                         codexFlashStage++;
                         break;
                     case 1:
                         if(codexFlashTimer < System.nanoTime()) {
                             codexFlashTimer = futureTime(.15f);
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage++;
                         }
                         break;
@@ -348,7 +336,7 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 3:
                         if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage = 0;
                             return true;
                         }
@@ -368,7 +356,7 @@ public class Game_6832 extends LinearOpMode {
                     case 1:
                         if(codexFlashTimer < System.nanoTime()) {
                             codexFlashTimer = futureTime(.15f);
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage++;
                         }
                         break;
@@ -381,7 +369,7 @@ public class Game_6832 extends LinearOpMode {
                     case 3:
                         if(codexFlashTimer < System.nanoTime()) {
                             codexFlashTimer = futureTime(.15f);
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage++;
                         }
                         break;
@@ -393,7 +381,7 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 5:
                         if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage = 0;
                             return true;
                         }
@@ -413,7 +401,7 @@ public class Game_6832 extends LinearOpMode {
                     case 1:
                         if(codexFlashTimer < System.nanoTime()) {
                             codexFlashTimer = futureTime(.15f);
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage++;
                         }
                         break;
@@ -426,7 +414,7 @@ public class Game_6832 extends LinearOpMode {
                     case 3:
                         if(codexFlashTimer < System.nanoTime()) {
                             codexFlashTimer = futureTime(.15f);
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage++;
                         }
                         break;
@@ -439,7 +427,7 @@ public class Game_6832 extends LinearOpMode {
                     case 5:
                         if(codexFlashTimer < System.nanoTime()) {
                             codexFlashTimer = futureTime(.15f);
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage++;
                         }
                         break;
@@ -451,7 +439,7 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 7:
                         if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(1);
+                            robot.headLampOn();
                             codexFlashStage = 0;
                             return true;
                         }
@@ -509,7 +497,7 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(toggleAllowed(gamepad1.b, b)){
-            robot.glyphSystem.ToggleGrip();
+            robot.glyphSystem.toggleGrip();
         }
 
         if (gamepad1.dpad_down) robot.glyphSystem.goLiftMin();
@@ -562,14 +550,14 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 3: //small turn to knock off jewel
                 if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
-                    if(robot.RotateIMU(10, 2.5)){
+                    if(robot.rotateIMU(10, 2.5)){
                         autoTimer = futureTime(1.5f);
                         autoStage++;
                         robot.resetMotors(true);
                     }
                 }
                 else{
-                    if(robot.RotateIMU(350, 2.5)){
+                    if(robot.rotateIMU(350, 2.5)){
                         autoTimer = futureTime(1.5f);
                         autoStage++;
                         robot.resetMotors(true);
@@ -590,13 +578,13 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 6: //turn parallel to the wall
                 if(isBlue){
-                    if(robot.RotateIMU(270, 3.5)){
+                    if(robot.rotateIMU(270, 3.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 else{
-                    if(robot.RotateIMU(90, 3.5)){
+                    if(robot.rotateIMU(90, 3.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
@@ -610,13 +598,13 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 8: //re-orient robot
                 if(isBlue){
-                    if(robot.RotateIMU(270, 1.0)){
+                    if(robot.rotateIMU(270, 1.0)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 else{
-                    if(robot.RotateIMU(90, 1.0)){
+                    if(robot.rotateIMU(90, 1.0)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
@@ -648,13 +636,13 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 10: //turn to crypto box
                 if(isBlue){
-                    if(robot.RotateIMU(325, 1.5)){
+                    if(robot.rotateIMU(325, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
                      }
                 }
                 else{
-                    if(robot.RotateIMU(35, 1.5)){
+                    if(robot.rotateIMU(35, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
@@ -663,7 +651,7 @@ public class Game_6832 extends LinearOpMode {
             case 11: //deposit glyph
                 if(robot.driveForward(false, 1.0, .50)) {
                     robot.resetMotors(true);
-                    robot.glyphSystem.ReleaseGrip();
+                    robot.glyphSystem.releaseGrip();
                     autoTimer = futureTime(1.5f);
                     autoStage++;
                 }
@@ -681,7 +669,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 14:
                 autoTimer = futureTime(1.5f);
-                robot.glyphSystem.CloseGrip();
+                robot.glyphSystem.closeGrip();
                 autoStage++;
                 break;
             case 15:
@@ -717,7 +705,7 @@ public class Game_6832 extends LinearOpMode {
             case 0: //deposit glyph
                 if(robot.driveForward(false, 1.0, .50)) {
                     robot.resetMotors(true);
-                    robot.glyphSystem.ReleaseGrip();
+                    robot.glyphSystem.releaseGrip();
                     autoTimer = futureTime(1.5f);
                     autoStage++;
                 }
@@ -735,7 +723,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 3:
                 autoTimer = futureTime(1.5f);
-                robot.glyphSystem.CloseGrip();
+                robot.glyphSystem.closeGrip();
                 autoStage++;
                 break;
             case 4:
@@ -771,7 +759,7 @@ public class Game_6832 extends LinearOpMode {
     public void resetAuto(){
         autoStage = 0;
         autoTimer = 0;
-        robot.ResetTPM();
+        robot.resetTPM();
     }
 
 

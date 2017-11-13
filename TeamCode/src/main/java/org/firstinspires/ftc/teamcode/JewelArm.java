@@ -23,15 +23,15 @@ public class JewelArm {
     }
 
     public void liftArm(){
-        servoJewel.setPosition(ServoNormalize(jewelUpPos));
+        servoJewel.setPosition(servoNormalize(jewelUpPos));
         jewelPos = jewelUpPos;
     }
     public void lowerArm(){
         jewelPos = jewelDownPos;
-        servoJewel.setPosition(ServoNormalize(jewelDownPos));
+        servoJewel.setPosition(servoNormalize(jewelDownPos));
     }
 
-    public static double ServoNormalize(int pulse){
+    public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }

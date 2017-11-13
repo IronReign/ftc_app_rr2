@@ -333,7 +333,7 @@ public class PoseArgos
 
         logger = new CsvLogKeeper("test",10,"NanoTime, DeltaTime, Angle, Err, TotalErr, DeltaErr, P, I, D, Pwr, count");
         HeadLampOn();
-//        RedLampOn();
+//        redLampOn();
         //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
 //        beaconColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
 //        ballColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
@@ -346,10 +346,10 @@ public class PoseArgos
     public void HeadLampOff(){
         headLamp.setPower(0);
     }
-/*    public void RedLampOn(){
+/*    public void redLampOn(){
         redLamps.setPower(1);
     }
-    public void RedLampOff(){
+    public void redLampOff(){
         redLamps.setPower(0);
     }*/
 
@@ -755,7 +755,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
      */
     public void setPoseHeading(double poseHeading) {
         this.poseHeading = poseHeading;
-        initialized = false; //trigger recalc of offset on next Update
+        initialized = false; //trigger recalc of offset on next update
     }
 
     /**
@@ -764,7 +764,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
      */
     public void setPosePitch(double posePitch) {
         this.posePitch = posePitch;
-        initialized = false; //trigger recalc of offset on next Update
+        initialized = false; //trigger recalc of offset on next update
     }
 
     /**
@@ -773,7 +773,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
      */
     public void setPoseRoll(double poseRoll) {
         this.poseRoll = poseRoll;
-        initialized = false; //trigger recalc of offset on next Update
+        initialized = false; //trigger recalc of offset on next update
     }
     /**
      * Returns the x position of the robot
@@ -845,7 +845,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
     }
 
     /**
-     * Update the current location of the robot. This implementation gets heading and orientation
+     * update the current location of the robot. This implementation gets heading and orientation
      * from the Bosch BNO055 IMU and assumes a simple differential steer robot with left and right motor
      * encoders.
      *
@@ -1048,7 +1048,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
     }
 
 
-    // Don't need this since we now have a PID version of RotateIMU
+    // Don't need this since we now have a PID version of rotateIMU
 //    public boolean turnIMU(double targetAngle, double power, boolean turnRight){
 //            if(turnRight)
 //                driveMixer(0, 0, power);

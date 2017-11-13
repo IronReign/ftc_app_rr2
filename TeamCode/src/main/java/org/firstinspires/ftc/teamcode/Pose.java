@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.qualcomm.ftccommon.SoundPlayer;
@@ -8,33 +7,16 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.I2cDevice;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.vuforia.Image;
-import com.vuforia.PIXEL_FORMAT;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Moments;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.bitmapToMat;
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 
 /**
@@ -100,8 +82,8 @@ public class Pose
 
     private long flingTimer = 0;
     private int flingSpeed  = 5000; //ticks per second
-    private int TPM_Forward = 2439; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
-    private int TPM_Strafe  = 3145 ; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int forwardTPM = 2439; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int strafeTPM = 3145 ; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
 
     private double poseX;
     private double poseY;
@@ -229,16 +211,16 @@ public class Pose
 
     }
 
-    public void ResetTPM(){
-        TPM_Forward = 2493;
-        TPM_Strafe = 3145;
+    public void resetTPM(){
+        forwardTPM = 2493;
+        strafeTPM = 3145;
     }
 
     /**
      * Initializes motors, servos, lights and sensors from a given hardware map
      *
      * @param ahwMap   Given hardware map
-     * @param isBlue   Tells the robot which alliance to initialize for
+     * @param isBlue   Tells the robot which alliance to initialize for (however initialization is currently alliance independent)
      */
     public void init(HardwareMap ahwMap, boolean isBlue) {
         // save reference to HW Map
@@ -251,8 +233,6 @@ public class Pose
         this.motorFrontRight = this.hwMap.dcMotor.get("motorFrontRight");
         this.motorBackLeft   = this.hwMap.dcMotor.get("motorBackLeft");
         this.motorBackRight  = this.hwMap.dcMotor.get("motorBackRight");
-//        this.motorConveyor   = this.hwMap.dcMotor.get("motorConveyor");
-//        this.motorLauncher   = this.hwMap.dcMotor.get("motorLauncher");
         this.motorLift       = this.hwMap.dcMotor.get("motorLift");
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.redLamps        = this.hwMap.dcMotor.get("redLamps");
@@ -262,69 +242,42 @@ public class Pose
         this.colorJewel      = this.hwMap.get(NormalizedColorSensor.class, "colorJewel");
 
         jewelRGB = colorJewel.getNormalizedColors();
-//        this.servoLiftLatch  = this.hwMap.servo.get("servoLiftLatch");
-
-        // get a reference to our distance sensors
-//        beaconPresentRear = hwMap.opticalDistanceSensor.get("beaconPresentRear");
-//        beaconPresent = hwMap.opticalDistanceSensor.get("beaconPresentFore");
-//
-//        // color sensors init
-//        beaconColorSensor = hwMap.i2cDevice.get("beaconColorSensor");
-//        ballColorSensor = hwMap.i2cDevice.get("ballColorSensor");
-//
-//        beaconColorReader = new I2cDeviceSynchImpl(beaconColorSensor, I2cAddr.create8bit(0x60), false);
-//        //ballColorReader = new I2cDeviceSynchImpl(ballColorSensor, I2cAddr.create8bit(0x64), false);
-//
-//        beaconColorReader.engage();
-        //ballColorReader.engage();
 
         //motor configurations
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
-//        this.motorConveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-//        this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorLift.setDirection(DcMotorSimple.Direction.FORWARD);
         this.motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        this.motorLauncher.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
-//        this.particle = new ParticleSystem(flingSpeed, motorLauncher, motorConveyor, servoGate, ballColorSensor, isBlue);
-//        this.cap = new CapTrap(motorLift, servoLiftLatch);
         this.glyphSystem = new PickAndPlace(motorLift, servoGrip);
         this.jewel = new JewelArm(servoJewel, colorJewel, jewelUpPos, jewelDownPos);
-//
+
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
         parametersIMU.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parametersIMU.loggingEnabled       = true;
         parametersIMU.loggingTag           = "IMU";
 
-//        //imu = hardwareMap.get(BNO055IMU.class, "imu");
-//        imu = (BNO055IMU)hwMap.get("imu");
-//        imu.initialize(parametersIMU);
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
 
-        HeadLampOn();
-        RedLampOn();
-        //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
-//        beaconColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
-//        ballColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
-
+        headLampOn();
+        redLampOn();
     }
 
-    public void HeadLampOn(){
+    public void headLampOn(){
         headLamp.setPower(1);
     }
-    public void HeadLampOff(){
+    public void headLampOff(){
         headLamp.setPower(0);
     }
-    public void RedLampOn(){
+    public void redLampOn(){
         redLamps.setPower(1);
     }
-    public void RedLampOff(){
+    public void redLampOff(){
         redLamps.setPower(0);
     }
 
@@ -429,15 +382,15 @@ public class Pose
     }
 
 
-    public void DriveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
+    public void driveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
         MovePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
 
-    public void DriveIMUMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double targetAngle){
+    public void driveIMUMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double targetAngle){
         MovePIDMixer(Kp, Ki, Kd, pwrFwd, pwrStf, poseHeading, targetAngle);
     }
 
-    public boolean DriveIMUDistance(double Kp, double pwr, double targetAngle,boolean forwardOrLeft, double targetMeters, boolean strafe){
+    public boolean driveIMUDistance(double Kp, double pwr, double targetAngle, boolean forwardOrLeft, double targetMeters, boolean strafe){
         if(!forwardOrLeft){
             moveMode = moveMode.backward;
             targetMeters = -targetMeters;
@@ -445,10 +398,10 @@ public class Pose
         }
         else moveMode = moveMode.forward;
         long targetPos;
-        if(strafe) targetPos = (long) targetMeters * TPM_Strafe;
-        else targetPos = (long)(targetMeters * TPM_Forward);
+        if(strafe) targetPos = (long) targetMeters * strafeTPM;
+        else targetPos = (long)(targetMeters * forwardTPM);
         if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){//we've not arrived yet
-            DriveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle, strafe);
+            driveIMU(Kp, KiDrive, KdDrive, pwr, targetAngle, strafe);
             return false;
         }
         else { //destination achieved
@@ -457,12 +410,12 @@ public class Pose
         }
     }
 
-    public boolean RotateIMU(double targetAngle, double maxTime){ //uses default pose PID constants and has end conditions
+    public boolean rotateIMU(double targetAngle, double maxTime){ //uses default pose PID constants and has end conditions
         if(!turnTimerInit){
             turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
             turnTimerInit = true;
         }
-        DriveIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle, false); //if the robot turns within a threshold of the target
+        driveIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle, false); //if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
             driveMixer(0,0,0);
@@ -490,12 +443,12 @@ public class Pose
 
 
 
-    public void MaintainHeading(boolean buttonState){
+    public void maintainHeading(boolean buttonState){
         if(buttonState) {
             if (!maintainHeadingInit) {
                 poseSavedHeading = poseHeading;
                 maintainHeadingInit = true;}
-            DriveIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading, false);
+            driveIMU(KpDrive, KiDrive, KdDrive, 0, poseSavedHeading, false);
         }
         if(!buttonState){
             maintainHeadingInit = false;
@@ -523,7 +476,7 @@ public class Pose
         if(bigDown){
             servoTesterPos -= 100;
         }
-        servoTester.setPosition(ServoNormalize(servoTesterPos));
+        servoTester.setPosition(servoNormalize(servoTesterPos));
     }
 
     public void driveMixer(double forward,double strafe ,double rotate){
@@ -604,7 +557,7 @@ public class Pose
         }
         else moveMode = moveMode.forward;
 
-        long targetPos = (long)(targetMeters * TPM_Forward);
+        long targetPos = (long)(targetMeters * forwardTPM);
         if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
             driveMixer(power, 0, 0);
             return false;
@@ -624,7 +577,7 @@ public class Pose
         }
         else moveMode = moveMode.left;
 
-        long targetPos = (long)(targetMeters * TPM_Strafe);
+        long targetPos = (long)(targetMeters * strafeTPM);
         if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){
             driveMixer(0, power, 0);
             return false;
@@ -675,7 +628,7 @@ public class Pose
      */
     public void setPoseHeading(double poseHeading) {
         this.poseHeading = poseHeading;
-        initialized = false; //trigger recalc of offset on next Update
+        initialized = false; //trigger recalc of offset on next update
     }
 
     /**
@@ -684,7 +637,7 @@ public class Pose
      */
     public void setPosePitch(double posePitch) {
         this.posePitch = posePitch;
-        initialized = false; //trigger recalc of offset on next Update
+        initialized = false; //trigger recalc of offset on next update
     }
 
     /**
@@ -693,7 +646,7 @@ public class Pose
      */
     public void setPoseRoll(double poseRoll) {
         this.poseRoll = poseRoll;
-        initialized = false; //trigger recalc of offset on next Update
+        initialized = false; //trigger recalc of offset on next update
     }
     /**
      * Returns the x position of the robot
@@ -742,24 +695,24 @@ public class Pose
         return poseRoll;
     }
 
-    public long getTPM_Forward() {
-        return TPM_Forward;
+    public long getForwardTPM() {
+        return forwardTPM;
     }
 
-    public void setTPM_Forward(long TPM_Forward) { this.TPM_Forward = (int)TPM_Forward; }
+    public void setForwardTPM(long forwardTPM) { this.forwardTPM = (int) forwardTPM; }
 
-    public long getTPM_Strafe() {
-        return TPM_Strafe;
+    public long getStrafeTPM() {
+        return strafeTPM;
     }
 
-    public void setTPM_Strafe(long TPM_Strafe) { this.TPM_Strafe = (int)TPM_Strafe; }
+    public void setStrafeTPM(long strafeTPM) { this.strafeTPM = (int) strafeTPM; }
 
     public void setTicksPerMeterLeft(long TPM_Strafe) {
-        this.TPM_Strafe = (int)TPM_Strafe;
+        this.strafeTPM = (int)TPM_Strafe;
     }
 
     public void updateSensors(){
-        Update(imu, 0, 0);
+        update(imu, 0, 0);
     }
 
     public boolean doesJewelMatch(boolean isBlue){
@@ -770,7 +723,7 @@ public class Pose
     }
 
     /**
-     * Update the current location of the robot. This implementation gets heading and orientation
+     * update the current location of the robot. This implementation gets heading and orientation
      * from the Bosch BNO055 IMU and assumes a simple differential steer robot with left and right motor
      * encoders.
      *
@@ -788,7 +741,7 @@ public class Pose
      * @param ticksRight
      */
 
-    public void Update(BNO055IMU imu, long ticksLeft, long ticksRight){
+    public void update(BNO055IMU imu, long ticksLeft, long ticksRight){
         long currentTime = System.nanoTime();
         imuAngles= imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         if (!initialized){
@@ -817,17 +770,17 @@ public class Pose
         switch (moveMode) {
             case forward:
             case backward:
-                displacement = (getAverageTicks() - displacementPrev) * TPM_Forward;
+                displacement = (getAverageTicks() - displacementPrev) * forwardTPM;
                 odometer += Math.abs(displacement);
                 poseHeadingRad = Math.toRadians(poseHeading);
                 break;
             case left:
-                displacement = (getAverageAbsTicks() - displacementPrev) * TPM_Strafe; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
+                displacement = (getAverageAbsTicks() - displacementPrev) * strafeTPM; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
                 poseHeadingRad = Math.toRadians(poseHeading)- Math.PI/2; //actual heading is rotated 90 degrees counterclockwise
 
                 break;
             case right:
-                displacement = (getAverageAbsTicks() - displacementPrev) * TPM_Strafe; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
+                displacement = (getAverageAbsTicks() - displacementPrev) * strafeTPM; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
                 poseHeadingRad = Math.toRadians(poseHeading) + Math.PI/2; //actual heading is rotated 90 degrees clockwise
 
                 break;
@@ -943,7 +896,7 @@ public class Pose
     }
 
 
-    public static double ServoNormalize(int pulse){
+    public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
@@ -994,7 +947,7 @@ public class Pose
                             // this is a very simple proportional on the distance to target - todo - convert to PID control
             pwr = clampDouble(-pwrMax, pwrMax, ((vuXOffset - offsetDistance)/1200.0));//but this should be equivalent
             Log.i("Beacon Angle", String.valueOf(vuAngle));
-            DriveIMU(KpDrive, KiDrive, KdDrive, pwr, iWishForThisToBeOurHeading, true);
+            driveIMU(KpDrive, KiDrive, KdDrive, pwr, iWishForThisToBeOurHeading, true);
 
         } else { //disable motors if given target not visible
             vuDepth = 0;
@@ -1003,42 +956,6 @@ public class Pose
 
         return vuDepth - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
     }//driveToBeacon
-
-    public double strafeBeaconPress(VuforiaTrackableDefaultListener beacon, int beaconConfig, double pwrMax, double pwrFwd, boolean isBlue, double iWishForThisToBeOurHeading) {
-
-        //double vuDepth = 0;
-        double pwrStf = 0;
-        double offsetDistance;
-
-        if((beaconConfig == 1 && isBlue) || (beaconConfig == 2 && !isBlue)){
-            offsetDistance = 60;
-        }
-        else {
-            offsetDistance = -60;
-        }
-
-
-
-        if (beacon.getPose() != null) {
-            vuTrans = beacon.getRawPose().getTranslation();
-
-            //todo - add a new transform that will shift our target left or right depending on beacon analysis
-
-            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
-            vuXOffset = vuTrans.get(0);
-
-            // this is a very simple proportional on the distance to target - todo - convert to PID control
-            pwrStf = clampDouble(-pwrMax, pwrMax, ((vuXOffset - offsetDistance)/800.0));//but this should be equivalent
-            Log.i("Beacon Angle", String.valueOf(vuAngle));
-            DriveIMUMixer(KpDrive, KiDrive, KdDrive, pwrFwd, pwrStf, iWishForThisToBeOurHeading);
-
-        } else { //disable motors if given target not visible
-            vuDepth = 0;
-            driveMixer(0,0,0);
-        }//else
-
-        return vuXOffset - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
-    }
 
     public double getBeaconOffset(boolean isBlue, int beaconConfig){
         double offset;

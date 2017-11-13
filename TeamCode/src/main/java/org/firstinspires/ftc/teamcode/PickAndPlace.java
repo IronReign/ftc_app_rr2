@@ -26,24 +26,24 @@ public class PickAndPlace {
         this.servoGrip = servoGrip;
     }
 
-    public void ToggleGrip (){
+    public void toggleGrip(){
         if (gripOpen) {
             gripOpen = false;
-            servoGrip.setPosition(ServoNormalize(gripClosedPos));
+            servoGrip.setPosition(servoNormalize(gripClosedPos));
         }
         else {
             gripOpen = true;
-            servoGrip.setPosition(ServoNormalize(gripOpenPos));
+            servoGrip.setPosition(servoNormalize(gripOpenPos));
         }
     }
-    public void CloseGrip() {
+    public void closeGrip() {
         gripOpen = false;
-        servoGrip.setPosition(ServoNormalize(gripClosedPos));
+        servoGrip.setPosition(servoNormalize(gripClosedPos));
     }
 
-    public void ReleaseGrip() {
+    public void releaseGrip() {
         gripOpen = true;
-        servoGrip.setPosition(ServoNormalize(gripOpenPos));
+        servoGrip.setPosition(servoNormalize(gripOpenPos));
     }
 
 
@@ -102,7 +102,7 @@ public class PickAndPlace {
         return motorLift.getCurrentPosition();
     }
 
-    public static double ServoNormalize(int pulse){
+    public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
