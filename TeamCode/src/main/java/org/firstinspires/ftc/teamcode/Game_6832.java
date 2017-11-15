@@ -109,6 +109,7 @@ public class Game_6832 extends LinearOpMode {
     private ColorBlobDetector mDetector;
     private int beaconConfig = 0;
     private double vuPwr = 0;
+    public boolean vuFlashDemo = false;
 
 
     //sensors/sensing-related variables
@@ -235,11 +236,10 @@ public class Game_6832 extends LinearOpMode {
                         autonomous2();
                         break;
                     case 3:
-
-//                        robot.PIDTune(robot.balancePID, toggleAllowed(gamepad1.dpad_up,dpad_up), toggleAllowed(gamepad1.dpad_down,dpad_down), toggleAllowed(gamepad1.y,y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.x,x));
                         break;
                     case 4:
-                        vuTest((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
+                        demo((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
+
                         break;
                     case 5: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
@@ -253,7 +253,7 @@ public class Game_6832 extends LinearOpMode {
                         else robot.driveMixer(0,0,0);
                         break;
                     case 7: //IMU demo mode
-                        robot.maintainHeading(gamepad1.x);
+
                         break;
                     case 8: //servo testing mode
                         robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
@@ -272,24 +272,25 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-    public void vuTest(VuforiaTrackableDefaultListener beaconTarget, double distance){
-        if (toggleAllowed(gamepad1.x, x)) {
-            vuTestMode++;
-            if (vuTestMode > 1) vuTestMode=0;
+    public void demo(VuforiaTrackableDefaultListener beaconTarget, double distance){
+        if(gamepad1.x){
+            robot.maintainHeading(gamepad1.x);
         }
-        switch (vuTestMode) {
-            case 0: //do nothing
-                break;
-            case 1: // drive to center of beacon target
-                vuPwr = robot.driveToBeacon(beaconTarget,isBlue, beaconConfig,500, 0.8, false, false);
-                break;
+        else {
+            vuPwr = robot.driveToBeacon(beaconTarget, isBlue, beaconConfig, 500, 0.8, false, false);
 
         }
+        if(toggleAllowed(gamepad1.y, y)) {
+            savedVuMarkCodex = getRelicCodex();
+            vuFlashDemo = true;
+        }
+        if(vuFlashDemo){
+            if(flashRelicCodex()){
+                vuFlashDemo = false;
+            }
+        }
     }
-    public void demo(){
-        robot.maintainHeading(gamepad1.x);
 
-    }
 
 
     public String getRelicCodexStr(){
