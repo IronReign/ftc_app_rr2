@@ -56,6 +56,8 @@ public class Pose
     Servo servoGrip                  = null; //servoGrip for Glyphs and Relics
     Servo servoJewel                 = null; //deploys the arm that knocks off the jewel
     Servo servoTester                = null;
+    Servo servoLiftLeft              = null;
+    Servo servoLiftRight             = null;
     NormalizedColorSensor colorJewel = null;
     NormalizedRGBA jewelRGB          = null;
 
@@ -232,6 +234,9 @@ public class Pose
         this.servoGrip       = this.hwMap.servo.get("servoGrip");
         this.servoJewel      = this.hwMap.servo.get("servoJewel");
         this.servoTester     = this.hwMap.servo.get("servoTester");
+        this.servoLiftLeft   = this.hwMap.servo.get("servoLiftLeft");
+        this.servoLiftRight   = this.hwMap.servo.get("servoLiftRight");
+
         this.colorJewel      = this.hwMap.get(NormalizedColorSensor.class, "colorJewel");
 
         jewelRGB = colorJewel.getNormalizedColors();
@@ -245,7 +250,7 @@ public class Pose
 
         moveMode = MoveMode.still;
 
-        this.glyphSystem = new PickAndPlace(motorLift, servoGrip);
+        this.glyphSystem = new PickAndPlace(motorLift, servoGrip, servoLiftLeft, servoLiftRight);
         this.jewel = new JewelArm(servoJewel, colorJewel);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();

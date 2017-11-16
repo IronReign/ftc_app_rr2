@@ -11,6 +11,8 @@ public class PickAndPlace {
 
     DcMotor motorLift = null;
     Servo servoGrip = null;
+    Servo servoLeft = null;
+    Servo servoRight = null;
 
     private int liftMax = 4000;
     private int liftStack = 2500; //stacking height
@@ -21,9 +23,11 @@ public class PickAndPlace {
     int gripOpenPos = 900;
     int gripClosedPos = 2110;
 
-    public PickAndPlace(DcMotor motorLift, Servo servoGrip){
+    public PickAndPlace(DcMotor motorLift, Servo servoGrip, Servo servoLeft, Servo servoRight){
         this.motorLift = motorLift;
         this.servoGrip = servoGrip;
+        this.servoLeft = servoLeft;
+        this.servoRight = servoRight;
     }
 
     public void toggleGrip(){
@@ -46,6 +50,13 @@ public class PickAndPlace {
         servoGrip.setPosition(servoNormalize(gripOpenPos));
     }
 
+    public void setServoLeft (int pulse){
+        servoLeft.setPosition(servoNormalize(pulse));
+    }
+
+    public void setServoRight (int pulse){
+        servoRight.setPosition(servoNormalize(pulse));
+    }
 
     public void stopLift(){
         motorLift.setPower(0);
