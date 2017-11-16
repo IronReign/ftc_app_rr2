@@ -89,14 +89,14 @@ public class VisionUtils {
         int config = NOT_VISIBLE;
         long beginTime = System.currentTimeMillis();
         while (config == NOT_VISIBLE && System.currentTimeMillis() - beginTime < timeOut && RC.l.opModeIsActive()) {
-            config = getBeaconConfig(img, beacon, camCal);
+            config = getJewelConfig(img, beacon, camCal);
             RC.l.idle();
         }//while
 
         return config;
     }
 
-    public static int getBeaconConfig(Bitmap bm) {
+    public static int getJewelConfig(Bitmap bm) {
 
 
         if (bm != null) {
@@ -139,12 +139,12 @@ public class VisionUtils {
         }//if
 
         return VisionUtils.NOT_VISIBLE;
-    }//getBeaconConfig
+    }//getJewelConfig
 
 
-    public static int getBeaconConfig(Image img, VuforiaTrackableDefaultListener beacon, CameraCalibration camCal) {
+    public static int getJewelConfig(Image img, VuforiaTrackableDefaultListener codex, CameraCalibration camCal) {
 
-        OpenGLMatrix pose = beacon.getRawPose();
+        OpenGLMatrix pose = codex.getRawPose();
 
         if (pose != null && img != null && img.getPixels() != null) {
 
@@ -156,10 +156,16 @@ public class VisionUtils {
             //calculating pixel coordinates of beacon corners
             float[][] corners = new float[4][2];
 
-            corners[0] = Tool.projectPoint(camCal, rawPose, new Vec3F(-127, 276, 0)).getData(); //upper left of beacon
-            corners[1] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, 276, 0)).getData(); //upper right of beacon
-            corners[2] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, -92, 0)).getData(); //lower right of beacon
-            corners[3] = Tool.projectPoint(camCal, rawPose, new Vec3F(-127, -92, 0)).getData(); //lower left of beacon
+
+            corners[0] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, -100, 0)).getData(); //upper left of beacon
+            corners[1] = Tool.projectPoint(camCal, rawPose, new Vec3F(254, -100, 0)).getData(); //upper right of beacon
+            corners[2] = Tool.projectPoint(camCal, rawPose, new Vec3F(254, -1000, 0)).getData(); //lower right of beacon
+            corners[3] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, -1000, 0)).getData(); //lower left of beacon
+
+//            corners[0] = Tool.projectPoint(camCal, rawPose, new Vec3F(-127, 276, 0)).getData(); //upper left of beacon
+//            corners[1] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, 276, 0)).getData(); //upper right of beacon
+//            corners[2] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, -92, 0)).getData(); //lower right of beacon
+//            corners[3] = Tool.projectPoint(camCal, rawPose, new Vec3F(-127, -92, 0)).getData(); //lower left of beacon
 
             //getting camera image...
             Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
@@ -217,7 +223,7 @@ public class VisionUtils {
         }//if
 
         return VisionUtils.NOT_VISIBLE;
-    }//getBeaconConfig
+    }//getJewelConfig
 
 
     Bitmap getBitmapFromView(View v)

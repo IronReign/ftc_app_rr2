@@ -49,7 +49,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 //        while (opModeIsActive()) {
 //            int beaconConfig = VortexUtils.NOT_VISIBLE;
 //            while (beaconConfig == VortexUtils.NOT_VISIBLE) {
-//                beaconConfig = VortexUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), gears, locale.getCameraCalibration());
+//                beaconConfig = VortexUtils.getJewelConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), gears, locale.getCameraCalibration());
 //            }//while
 //
 //            if (beaconConfig == VortexUtils.BEACON_RED_BLUE) {

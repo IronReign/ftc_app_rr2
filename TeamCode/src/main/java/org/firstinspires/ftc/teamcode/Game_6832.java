@@ -277,7 +277,7 @@ public class Game_6832 extends LinearOpMode {
             robot.maintainHeading(gamepad1.x);
         }
         else {
-            vuPwr = robot.driveToBeacon(beaconTarget, isBlue, beaconConfig, 500, 0.8, false, false);
+
 
         }
         if(toggleAllowed(gamepad1.y, y)) {

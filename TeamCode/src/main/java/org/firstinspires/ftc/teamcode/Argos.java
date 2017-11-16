@@ -57,7 +57,7 @@ import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.Vuforia;
 import com.vuforia.HINT;
 
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getBeaconConfig;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 /**
@@ -290,7 +290,7 @@ public class Argos extends LinearOpMode {
                     case 4:
                         vuTest((VuforiaTrackableDefaultListener)redNearTarget.getListener(),500);
                         beaconConfig = VisionUtils.NOT_VISIBLE;
-                        beaconConfig = VisionUtils.getBeaconConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener)redNearTarget.getListener(), locale.getCameraCalibration());
+                        beaconConfig = VisionUtils.getJewelConfig(getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener)redNearTarget.getListener(), locale.getCameraCalibration());
                         if (beaconConfig == VisionUtils.BEACON_RED_BLUE) {
                             Log.i("RED", "BLUE");
                         } else if (beaconConfig != VisionUtils.NOT_VISIBLE) {

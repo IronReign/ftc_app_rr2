@@ -1168,7 +1168,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         }//else
 
     return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
-    }//driveToBeacon
+    }//getJewelConfig
 
     public double driveToParticle( VuforiaLocalizer locale, boolean isBlue, double bufferDistance, double maxSpeed, boolean turnOnly) {
 
