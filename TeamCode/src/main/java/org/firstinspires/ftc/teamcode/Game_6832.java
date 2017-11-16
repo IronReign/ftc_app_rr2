@@ -483,9 +483,10 @@ public class Game_6832 extends LinearOpMode {
         pwrRot = -pwrDamper * gamepad1.right_stick_x;
         robot.driveMixer(pwrFwd,pwrStf,pwrRot);
 
-        robot.glyphSystem.setServoLeft((int)(1500 - 100*gamepad1.left_stick_x));
-        robot.glyphSystem.setServoRight((int)(1500 + 100*gamepad1.right_stick_x));
-
+//        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
+            robot.glyphSystem.setServoLeft((int) (1500 - 100 * gamepad2.left_stick_x));
+            robot.glyphSystem.setServoRight((int) (1500 - 100 * gamepad2.right_stick_x));
+//        }
         if(gamepad1.right_trigger > 0.5)
             pwrDamper = 1;
         else

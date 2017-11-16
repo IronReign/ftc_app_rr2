@@ -20,7 +20,7 @@ public class PickAndPlace {
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
 
     boolean gripOpen = false;
-    int gripOpenPos = 900;
+    int gripOpenPos = 1000;
     int gripClosedPos = 2110;
 
     public PickAndPlace(DcMotor motorLift, Servo servoGrip, Servo servoLeft, Servo servoRight){
