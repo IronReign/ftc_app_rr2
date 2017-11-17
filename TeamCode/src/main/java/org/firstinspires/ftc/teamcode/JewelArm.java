@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -9,24 +10,35 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class JewelArm {
 
-    private Servo servoJewel;
-    private NormalizedColorSensor colorJewel;
-    int jewelUpPos = 850;
+    private Servo servoJewelLeft;
+    private Servo servoJewelRight;
+    private ColorSensor colorJewel;
+    int jewelStartPos = 950;
+    int jewelUpPos = 1000;
     int jewelDownPos = 2050;
     public int jewelPos;
 
-    public JewelArm(Servo servoJewel, NormalizedColorSensor colorJewel){
-        this.servoJewel = servoJewel;
+    public JewelArm(Servo servoJewelLeft, Servo servoJewelRight, ColorSensor colorJewel){
+        this.servoJewelLeft = servoJewelLeft;
+        this.servoJewelRight = servoJewelRight;
         this.colorJewel = colorJewel;
     }
 
+    public void startArm(){
+        servoJewelLeft.setPosition(servoNormalize(jewelStartPos));
+        servoJewelRight.setPosition(servoNormalize(jewelStartPos));
+        jewelPos = jewelStartPos;
+    }
+
     public void liftArm(){
-        servoJewel.setPosition(servoNormalize(jewelUpPos));
+        servoJewelLeft.setPosition(servoNormalize(jewelUpPos));
+        servoJewelRight.setPosition(servoNormalize(jewelUpPos));
         jewelPos = jewelUpPos;
     }
     public void lowerArm(){
         jewelPos = jewelDownPos;
-        servoJewel.setPosition(servoNormalize(jewelDownPos));
+        servoJewelLeft.setPosition(servoNormalize(jewelDownPos));
+        servoJewelRight.setPosition(servoNormalize(jewelDownPos));
     }
 
     public static double servoNormalize(int pulse){

@@ -165,6 +165,8 @@ public class Game_6832 extends LinearOpMode {
         relicCodex = locale.loadTrackablesFromAsset("RelicVuMark");
         relicCodex.get(0).setName("RelicTemplate");
 
+        robot.glyphSystem.closeGrip();
+        robot.jewel.startArm();
 
         relicTemplate = relicCodex.get(0);
 
@@ -217,6 +219,7 @@ public class Game_6832 extends LinearOpMode {
 
 
 
+        robot.jewel.liftArm();
         runtime.reset();
 
 
@@ -495,6 +498,17 @@ public class Game_6832 extends LinearOpMode {
         if(gamepad1.a){
             robot.glyphSystem.lowerLift2();
         }
+        if(robot.glyphSystem.getMotorLiftPosition() < 510) {
+            if (gamepad2.dpad_up) {
+                robot.jewel.liftArm();
+            }
+            if (gamepad2.dpad_down) {
+                robot.jewel.lowerArm();
+            }
+        }
+        else{
+            robot.jewel.liftArm();
+        }
 
         if(gamepad1.y){
             robot.glyphSystem.raiseLift2();
@@ -535,7 +549,7 @@ public class Game_6832 extends LinearOpMode {
     public void autonomous(){
         switch(autoStage){
             case 0:
-//                robot.setZeroHeading();
+                robot.setZeroHeading();
                 autoStage++;
                 break;
             case 1:
@@ -543,7 +557,8 @@ public class Game_6832 extends LinearOpMode {
                 robot.resetMotors(true);
                 autoStage++;
             case 2: //scan vuforia target and deploy jewel arm
-                //robot.jewel.lowerArm();
+                robot.glyphSystem.goLiftAuto();
+                robot.jewel.lowerArm();
                 if(autoTimer < System.nanoTime()) {
                     savedVuMarkCodex = getRelicCodex();
 
@@ -552,12 +567,18 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 3:
                 if(robot.driveForward(false, .03, .25)){
+                        autoTimer = futureTime(3.0f);
+                        robot.resetMotors(true);
+                        autoStage++;
+                }
+                break;
+            case 4:
+                if(autoTimer < System.nanoTime()){
                     jewelMatches = robot.doesJewelMatch(isBlue);
-                    robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 4: //small turn to knock off jewel
+            case 5: //small turn to knock off jewel
                 if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
                     if(robot.rotateIMU(10, 2.5)){
                         autoTimer = futureTime(1.5f);
@@ -573,19 +594,19 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 5:
+            case 6:
                 if(robot.driveForward(true, .03, .25)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 6: //lift jewel arm
+            case 7: //lift jewel arm
                 robot.jewel.liftArm();
                 if(autoTimer < System.nanoTime()) {
                     autoStage++;
                 }
                 break;
-            case 7: //turn parallel to the wall
+            case 8: //turn parallel to the wall
                 if(isBlue){
                     if(robot.rotateIMU(90, 3.5)){
                         robot.resetMotors(true);
@@ -599,13 +620,13 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 8: //drive off the balance stone
+            case 9: //drive off the balance stone
                 if(robot.driveForward(true, .5, .5)) {
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 9: //re-orient robot
+            case 10: //re-orient robot
                 if(isBlue){
                     if(robot.rotateIMU(270, 1.0)){
                         robot.resetMotors(true);
@@ -619,7 +640,7 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 10: //drive to proper crypto box column based on vuforia target
+            case 11: //drive to proper crypto box column based on vuforia target
                 switch (savedVuMarkCodex) {
                     case 0:
                         if(robot.driveForward(false, .5, .35)) {
@@ -643,7 +664,7 @@ public class Game_6832 extends LinearOpMode {
                         break;
                 }
                 break;
-            case 11: //turn to crypto box
+            case 12: //turn to crypto box
                 if(isBlue){
                     if(robot.rotateIMU(325, 1.5)){
                         robot.resetMotors(true);
@@ -657,7 +678,7 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 12: //deposit glyph
+            case 13: //deposit glyph
                 if(robot.driveForward(false, 1.0, .50)) {
                     robot.resetMotors(true);
                     robot.glyphSystem.releaseGrip();
@@ -665,35 +686,35 @@ public class Game_6832 extends LinearOpMode {
                     autoStage++;
                 }
                 break;
-            case 13:
+            case 14:
                 if(autoTimer < System.nanoTime()){
                     autoStage++;
                 }
                 break;
-            case 14: //back away from crypto box
+            case 15: //back away from crypto box
                 if(robot.driveForward(true, .15, .50)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 15:
+            case 16:
                 autoTimer = futureTime(1.5f);
                 robot.glyphSystem.closeGrip();
                 autoStage++;
                 break;
-            case 16:
+            case 17:
                 if(autoTimer < System.nanoTime()){
                     autoStage++;
                 }
                 break;
-            case 17:
+            case 18:
                 //back away from crypto box
                 if(robot.driveForward(false, .25, .50)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 18:
+            case 19:
                 //back away from crypto box
                 if(robot.driveForward(true, .05, .30)){
                     robot.resetMotors(true);
@@ -712,7 +733,7 @@ public class Game_6832 extends LinearOpMode {
 
         switch(autoStage){
             case 0:
-//                robot.setZeroHeading();
+                robot.setZeroHeading();
                 autoStage++;
                 break;
             case 1:
@@ -720,7 +741,8 @@ public class Game_6832 extends LinearOpMode {
                 robot.resetMotors(true);
                 autoStage++;
             case 2: //scan vuforia target and deploy jewel arm
-                //robot.jewel.lowerArm();
+                robot.jewel.lowerArm();
+                robot.glyphSystem.goLiftAuto();
                 if(autoTimer < System.nanoTime()) {
                     savedVuMarkCodex = getRelicCodex();
 
@@ -729,12 +751,19 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 3:
                 if(robot.driveForward(false, .03, .25)){
-                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoTimer = futureTime(3.0f);
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 4: //small turn to knock off jewel
+
+            case 4:
+                if(autoTimer < System.nanoTime()){
+                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoStage++;
+                }
+                break;
+            case 5: //small turn to knock off jewel
                 if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
                     if(robot.rotateIMU(10, 2.5)){
                         autoTimer = futureTime(1.5f);
@@ -750,19 +779,19 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 5:
-                if(robot.driveForward(true, .03, .25)){
+            case 6:
+                if(robot.driveForward(true, .05, .25)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 6: //lift jewel arm
+            case 7: //lift jewel arm
                 robot.jewel.liftArm();
                 if(autoTimer < System.nanoTime()) {
                     autoStage++;
                 }
                 break;
-            case 7: //turn parallel to the wall
+            case 8: //turn parallel to the wall
                 if(isBlue){
                     if(robot.rotateIMU(270, 3.5)){
                         robot.resetMotors(true);
@@ -776,43 +805,43 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 8: //drive off the balance stone
-                if(robot.driveForward(true, .5, .5)) {
+            case 9: //drive off the balance stone
+                if(robot.driveForward(false, .5, .5)) {
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 9: //re-orient robot
+            case 10: //re-orient robot
                 if(isBlue){
-                    if(robot.rotateIMU(90, 2.0)){
+                    if(robot.rotateIMU(270, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 else{
-                    if(robot.rotateIMU(270, 2.0)){
+                    if(robot.rotateIMU(90, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 break;
-            case 10: //turn to proper crypto box column based on vuforia target
+            case 11: //turn to proper crypto box column based on vuforia target
                 if(isBlue) {
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(75, 1.5)) {
+                            if (robot.rotateIMU(255, 1.5)) {
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if (robot.rotateIMU(60, 1.5)) {
+                            if (robot.rotateIMU(240, 1.5)) {
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(45, 1.5)) {
+                            if (robot.rotateIMU(220, 1.5)) {
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
@@ -822,19 +851,19 @@ public class Game_6832 extends LinearOpMode {
                 else{
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(315, 1.5)) {
+                            if (robot.rotateIMU(105, 1.5)) {
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if (robot.rotateIMU(300, 1.5)) {
+                            if (robot.rotateIMU(120, 1.5)) {
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(285, 1.5)) {
+                            if (robot.rotateIMU(140, 1.5)) {
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
@@ -842,7 +871,7 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 11: //turn to crypto box
+//            case 11: //turn to crypto box
 //                if(isBlue){
 //                    if(robot.rotateIMU(325, 1.5)){
 //                        robot.resetMotors(true);
@@ -855,14 +884,14 @@ public class Game_6832 extends LinearOpMode {
 //                        autoStage++;
 //                    }
 //                }
-                autoStage++;
-                break;
+//                autoStage++;
+//                break;
             case 12: //deposit glyph
                 if(robot.driveForward(false, 1.0, .50)) {
                     robot.resetMotors(true);
                     robot.glyphSystem.releaseGrip();
                     robot.glyphSystem.setServoLeft(1400);
-                    robot.glyphSystem.setServoLeft(1400);
+                    robot.glyphSystem.setServoRight(1400);
                     autoTimer = futureTime(1.5f);
                     autoStage++;
                 }
@@ -1047,7 +1076,12 @@ public class Game_6832 extends LinearOpMode {
                         return Integer.toString(robot.servoTesterPos);
                     }
                 })
-                .addData("servoJewel", new Func<String>() {
+                .addData("lift pos", new Func<String>() {
+                    @Override public String value() {
+                        return Integer.toString(robot.glyphSystem.getMotorLiftPosition());
+                    }
+                })
+                .addData("servoJewelLeft", new Func<String>() {
                     @Override public String value() {
                         return Integer.toString(robot.jewel.jewelPos);
                     }
@@ -1075,6 +1109,18 @@ public class Game_6832 extends LinearOpMode {
                         return robot.imu.getCalibrationStatus().toString();
                     }
                 })
+                .addData("Jewel Red", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.colorJewel.red();
+                    }
+                })
+
+                .addData("Jewel Blue", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.colorJewel.blue();
+                    }
+                })
+
                 .addData("Relic Codex", new Func<String>() {
                     @Override public String value() {
                         return getRelicCodexStr();

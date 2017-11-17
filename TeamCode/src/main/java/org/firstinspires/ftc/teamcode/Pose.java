@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -54,12 +55,13 @@ public class Pose
     DcMotor headLamp                 = null; //front white LED string
     DcMotor redLamps                 = null; //side red highlight LED strings
     Servo servoGrip                  = null; //servoGrip for Glyphs and Relics
-    Servo servoJewel                 = null; //deploys the arm that knocks off the jewel
+    Servo servoJewelLeft             = null; //deploys the arm that knocks off the jewel
+    Servo servoJewelRight            = null; //deploys the arm that knocks off the jewel
     Servo servoTester                = null;
     Servo servoLiftLeft              = null;
     Servo servoLiftRight             = null;
-    NormalizedColorSensor colorJewel = null;
-    NormalizedRGBA jewelRGB          = null;
+    ColorSensor colorJewel = null;
+
 
 //    Servo servoLiftLatch    = null;
 
@@ -232,14 +234,14 @@ public class Pose
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.redLamps        = this.hwMap.dcMotor.get("redLamps");
         this.servoGrip       = this.hwMap.servo.get("servoGrip");
-        this.servoJewel      = this.hwMap.servo.get("servoJewel");
+        this.servoJewelLeft = this.hwMap.servo.get("servoJewelLeft");
+        this.servoJewelRight = this.hwMap.servo.get("servoJewelRight");
         this.servoTester     = this.hwMap.servo.get("servoTester");
         this.servoLiftLeft   = this.hwMap.servo.get("servoLiftLeft");
         this.servoLiftRight   = this.hwMap.servo.get("servoLiftRight");
 
-        this.colorJewel      = this.hwMap.get(NormalizedColorSensor.class, "colorJewel");
+        this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
 
-        jewelRGB = colorJewel.getNormalizedColors();
 
         //motor configurations
 
@@ -248,10 +250,12 @@ public class Pose
         this.motorLift.setDirection(DcMotorSimple.Direction.FORWARD);
         this.motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        this.servoJewelRight.setDirection(Servo.Direction.REVERSE);
+
         moveMode = MoveMode.still;
 
         this.glyphSystem = new PickAndPlace(motorLift, servoGrip, servoLiftLeft, servoLiftRight);
-        this.jewel = new JewelArm(servoJewel, colorJewel);
+        this.jewel = new JewelArm(servoJewelLeft,servoJewelRight, colorJewel);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
@@ -745,9 +749,9 @@ public class Pose
 
     public boolean doesJewelMatch(boolean isBlue){
         if(isBlue){
-            return (jewelRGB.blue > 128);
+            return (colorJewel.blue() > colorJewel.red());
         }
-        return (jewelRGB.red > 128);
+        return (colorJewel.red() > colorJewel.blue());
     }
 
     /**

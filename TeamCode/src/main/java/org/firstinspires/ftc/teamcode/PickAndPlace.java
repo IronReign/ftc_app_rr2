@@ -17,6 +17,7 @@ public class PickAndPlace {
     private int liftMax = 4000;
     private int liftStack = 2500; //stacking height
     private int liftMin = 50;
+    private int liftAuto = 500;
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
 
     boolean gripOpen = false;
@@ -92,6 +93,16 @@ public class PickAndPlace {
             motorLift.setPower(1);
 
     }
+
+    public void goLiftAuto() {
+
+        motorLift.setTargetPosition(liftAuto);
+        motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLift.setPower(1);
+
+    }
+
+
 
     public void goLiftMin() {
 
