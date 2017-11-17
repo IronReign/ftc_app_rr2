@@ -157,10 +157,10 @@ public class VisionUtils {
             float[][] corners = new float[4][2];
 
 
-            corners[0] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, -100, 0)).getData(); //upper left of beacon
-            corners[1] = Tool.projectPoint(camCal, rawPose, new Vec3F(254, -100, 0)).getData(); //upper right of beacon
-            corners[2] = Tool.projectPoint(camCal, rawPose, new Vec3F(254, -1000, 0)).getData(); //lower right of beacon
-            corners[3] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, -1000, 0)).getData(); //lower left of beacon
+            corners[0] = Tool.projectPoint(camCal, rawPose, new Vec3F(-127, -0, 0)).getData(); //upper left of beacon
+            corners[1] = Tool.projectPoint(camCal, rawPose, new Vec3F(-254, -0, 0)).getData(); //upper right of beacon
+            corners[2] = Tool.projectPoint(camCal, rawPose, new Vec3F(-254, -254, 0)).getData(); //lower right of beacon
+            corners[3] = Tool.projectPoint(camCal, rawPose, new Vec3F(-127, -254, 0)).getData(); //lower left of beacon
 
 //            corners[0] = Tool.projectPoint(camCal, rawPose, new Vec3F(-127, 276, 0)).getData(); //upper left of beacon
 //            corners[1] = Tool.projectPoint(camCal, rawPose, new Vec3F(127, 276, 0)).getData(); //upper right of beacon
@@ -203,6 +203,7 @@ public class VisionUtils {
             //calculating centroid of the resulting binary mask via image moments
             Log.i("CentroidX", "" + ((mmnts.get_m10() / mmnts.get_m00())));
             Log.i("CentroidY", "" + ((mmnts.get_m01() / mmnts.get_m00())));
+
 
             //checking if blue either takes up the majority of the image (which means the beacon is all blue)
             //or if there's barely any blue in the image (which means the beacon is all red or off)
