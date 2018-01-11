@@ -487,9 +487,14 @@ public class Game_6832 extends LinearOpMode {
         robot.driveMixer(pwrFwd,pwrStf,pwrRot);
 
 //        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
-            robot.glyphSystem.setServoLeft((int) (1500 - 100 * gamepad2.left_stick_x));
-            robot.glyphSystem.setServoRight((int) (1500 - 100 * gamepad2.right_stick_x));
+            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_x);
+            robot.glyphSystem.setMotorRight(gamepad2.right_stick_x);
 //        }
+
+        if(toggleAllowed(gamepad2.a, a)){
+            robot.glyphSystem.toggleBelt();
+        }
+
         if(gamepad1.right_trigger > 0.5)
             pwrDamper = 1;
         else
@@ -890,8 +895,8 @@ public class Game_6832 extends LinearOpMode {
                 if(robot.driveForward(false, 1.0, .50)) {
                     robot.resetMotors(true);
                     robot.glyphSystem.releaseGrip();
-                    robot.glyphSystem.setServoLeft(1400);
-                    robot.glyphSystem.setServoRight(1400);
+                    robot.glyphSystem.setMotorLeft(-1);
+                    robot.glyphSystem.setMotorRight(-1);
                     autoTimer = futureTime(1.5f);
                     autoStage++;
                 }
@@ -904,8 +909,8 @@ public class Game_6832 extends LinearOpMode {
             case 14: //back away from crypto box
                 if(robot.driveForward(true, .15, .50)){
                     robot.resetMotors(true);
-                    robot.glyphSystem.setServoLeft(1500);
-                    robot.glyphSystem.setServoRight(1500);
+                    robot.glyphSystem.setMotorLeft(0);
+                    robot.glyphSystem.setMotorRight(0);
                     autoStage++;
                 }
                 break;

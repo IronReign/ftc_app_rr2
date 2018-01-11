@@ -8,8 +8,6 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -49,11 +47,12 @@ public class Pose
     DcMotor motorFrontRight          = null;
     DcMotor motorBackLeft            = null;
     DcMotor motorBackRight           = null;
+    DcMotor motorGripLeft = null;
+    DcMotor motorGripRight = null;
 //    DcMotor motorConveyor            = null; //particle conveyor
 //    DcMotor motorLauncher            = null; //flywheel motor
     DcMotor motorLift                = null; //cap ball lift motor
     DcMotor headLamp                 = null; //front white LED string
-    DcMotor redLamps                 = null; //side red highlight LED strings
     Servo servoGrip                  = null; //servoGrip for Glyphs and Relics
     Servo servoJewelLeft             = null; //deploys the arm that knocks off the jewel
     Servo servoJewelRight            = null; //deploys the arm that knocks off the jewel
@@ -110,7 +109,7 @@ public class Pose
     private double poseSavedHeading = 0.0;
 
     //scoring objects and related variables
-    public PickAndPlace glyphSystem;
+    public GlyphSystem glyphSystem;
     public JewelArm jewel;
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
@@ -232,13 +231,15 @@ public class Pose
         this.motorBackRight  = this.hwMap.dcMotor.get("motorBackRight");
         this.motorLift       = this.hwMap.dcMotor.get("motorLift");
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
-        this.redLamps        = this.hwMap.dcMotor.get("redLamps");
         this.servoGrip       = this.hwMap.servo.get("servoGrip");
         this.servoJewelLeft = this.hwMap.servo.get("servoJewelLeft");
         this.servoJewelRight = this.hwMap.servo.get("servoJewelRight");
         this.servoTester     = this.hwMap.servo.get("servoTester");
         this.servoLiftLeft   = this.hwMap.servo.get("servoLiftLeft");
-        this.servoLiftRight   = this.hwMap.servo.get("servoLiftRight");
+        this.servoLiftRight  = this.hwMap.servo.get("servoLiftRight");
+        this.motorGripLeft = this.hwMap.dcMotor.get("motorGripLeft");
+        this.motorGripRight = this.hwMap.dcMotor.get("motorGripRight");
+
 
         this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
 
@@ -251,10 +252,12 @@ public class Pose
         this.motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         this.servoJewelRight.setDirection(Servo.Direction.REVERSE);
+//        this.motorGripRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.servoLiftLeft.setDirection(Servo.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
-        this.glyphSystem = new PickAndPlace(motorLift, servoGrip, servoLiftLeft, servoLiftRight);
+        this.glyphSystem = new GlyphSystem(motorLift, servoGrip, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight);
         this.jewel = new JewelArm(servoJewelLeft,servoJewelRight, colorJewel);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
@@ -267,7 +270,6 @@ public class Pose
         imu.initialize(parametersIMU);
 
         headLampOn();
-        redLampOn();
     }
 
     public void headLampOn(){
@@ -276,12 +278,7 @@ public class Pose
     public void headLampOff(){
         headLamp.setPower(0);
     }
-    public void redLampOn(){
-        redLamps.setPower(1);
-    }
-    public void redLampOff(){
-        redLamps.setPower(0);
-    }
+
 
     /**
      * Moves the mecanum platform under PID control applied to the rotation of the robot. This version can either drive forwards/backwards or strafe.
