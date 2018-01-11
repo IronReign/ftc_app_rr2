@@ -90,6 +90,7 @@ public class Game_6832 extends LinearOpMode {
     private double pwrFwd = 0;
     private double pwrStf = 0;
     private double pwrRot = 0;
+    private double beaterDamper = .33;
 
 
     //staging and timer variables
@@ -166,7 +167,7 @@ public class Game_6832 extends LinearOpMode {
         relicCodex.get(0).setName("RelicTemplate");
 
         robot.glyphSystem.closeGrip();
-        robot.jewel.startArm();
+
 
         relicTemplate = relicCodex.get(0);
 
@@ -199,7 +200,7 @@ public class Game_6832 extends LinearOpMode {
 
                 autoDelay--;
                 if(autoDelay < 0) autoDelay = 15;
-
+ 
             }
             if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
 
@@ -487,8 +488,8 @@ public class Game_6832 extends LinearOpMode {
         robot.driveMixer(pwrFwd,pwrStf,pwrRot);
 
 //        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
-            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_x);
-            robot.glyphSystem.setMotorRight(gamepad2.right_stick_x);
+            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_x*beaterDamper);
+            robot.glyphSystem.setMotorRight(gamepad2.right_stick_x*beaterDamper);
 //        }
 
         if(toggleAllowed(gamepad2.a, a)){
@@ -584,15 +585,15 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 5: //small turn to knock off jewel
-                if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
-                    if(robot.rotateIMU(10, 2.5)){
+                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
+                    if(robot.rotateIMU(13, 2.5)){
                         autoTimer = futureTime(1.5f);
                         autoStage++;
                         robot.resetMotors(true);
                     }
                 }
                 else{
-                    if(robot.rotateIMU(350, 2.5)){
+                    if(robot.rotateIMU(347, 2.5)){
                         autoTimer = futureTime(1.5f);
                         autoStage++;
                         robot.resetMotors(true);
@@ -769,15 +770,15 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 5: //small turn to knock off jewel
-                if ((isBlue && jewelMatches)||!(isBlue && jewelMatches)){
-                    if(robot.rotateIMU(10, 2.5)){
+                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
+                    if(robot.rotateIMU(13, 2.5)){
                         autoTimer = futureTime(1.5f);
                         autoStage++;
                         robot.resetMotors(true);
                     }
                 }
                 else{
-                    if(robot.rotateIMU(350, 2.5)){
+                    if(robot.rotateIMU(347, 2.5)){
                         autoTimer = futureTime(1.5f);
                         autoStage++;
                         robot.resetMotors(true);

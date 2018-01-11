@@ -15,7 +15,7 @@ public class GlyphSystem {
     Servo servoGrip = null;
     Servo servoBeltLeft = null;
     Servo servoBeltRight = null;
-    Servo phoneAngle = null;
+    Servo servoPhone = null;
 
     private int liftMax = 4000;
     private int liftStack = 2500; //stacking height
@@ -23,21 +23,22 @@ public class GlyphSystem {
     private int liftAuto = 500;
     private int beltOn = 2000;
     private int beltOff = 1500;
-    private int phoneUp = 1500;
-    private int phoneDown = 1500;
+    private int phoneUp = 1250;
+    private int phoneDown = 1850;
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
 
     boolean gripOpen = false;
-    int gripOpenPos = 1200;
+    int gripOpenPos = 1400;
     int gripClosedPos = 1900;
 
-    public GlyphSystem(DcMotor motorLift, Servo servoGrip, DcMotor motorLeft, DcMotor motorRight, Servo servoBeltLeft, Servo servoBeltRight){
+    public GlyphSystem(DcMotor motorLift, Servo servoGrip, DcMotor motorLeft, DcMotor motorRight, Servo servoBeltLeft, Servo servoBeltRight, Servo servoPhone){
         this.motorLift = motorLift;
         this.servoGrip = servoGrip;
         this.motorLeft = motorLeft;
         this.motorRight = motorRight;
         this.servoBeltLeft = servoBeltLeft;
         this.servoBeltRight = servoBeltRight;
+        this.servoPhone = servoPhone;
         this.servoBeltLeft.setPosition(servoNormalize(beltOff));
         this.servoBeltRight.setPosition(servoNormalize(beltOff));
         this.servoGrip.setPosition(servoNormalize(gripClosedPos));
@@ -61,6 +62,14 @@ public class GlyphSystem {
     public void releaseGrip() {
         gripOpen = true;
         servoGrip.setPosition(servoNormalize(gripOpenPos));
+    }
+
+    public void tiltPhoneUp(){
+        servoPhone.setPosition(servoNormalize(phoneUp));
+    }
+
+    public void tiltPhoneDown(){
+        servoPhone.setPosition(servoNormalize(phoneDown));
     }
 
     public void liftBelt () {

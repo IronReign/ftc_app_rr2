@@ -59,6 +59,7 @@ public class Pose
     Servo servoTester                = null;
     Servo servoLiftLeft              = null;
     Servo servoLiftRight             = null;
+    Servo servoPhone                 = null;
     ColorSensor colorJewel = null;
 
 
@@ -126,7 +127,7 @@ public class Pose
     long flingerTimer;
 
     boolean gripOpen = false;
-    public int servoTesterPos = 0;
+    public int servoTesterPos = 1600;
 
 
 
@@ -232,13 +233,14 @@ public class Pose
         this.motorLift       = this.hwMap.dcMotor.get("motorLift");
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.servoGrip       = this.hwMap.servo.get("servoGrip");
-        this.servoJewelLeft = this.hwMap.servo.get("servoJewelLeft");
+        this.servoJewelLeft  = this.hwMap.servo.get("servoJewelLeft");
         this.servoJewelRight = this.hwMap.servo.get("servoJewelRight");
         this.servoTester     = this.hwMap.servo.get("servoTester");
+        this.servoPhone      = this.hwMap.servo.get("servoPhone");
         this.servoLiftLeft   = this.hwMap.servo.get("servoLiftLeft");
         this.servoLiftRight  = this.hwMap.servo.get("servoLiftRight");
-        this.motorGripLeft = this.hwMap.dcMotor.get("motorGripLeft");
-        this.motorGripRight = this.hwMap.dcMotor.get("motorGripRight");
+        this.motorGripLeft   = this.hwMap.dcMotor.get("motorGripLeft");
+        this.motorGripRight  = this.hwMap.dcMotor.get("motorGripRight");
 
 
         this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
@@ -257,7 +259,7 @@ public class Pose
 
         moveMode = MoveMode.still;
 
-        this.glyphSystem = new GlyphSystem(motorLift, servoGrip, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight);
+        this.glyphSystem = new GlyphSystem(motorLift, servoGrip, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
         this.jewel = new JewelArm(servoJewelLeft,servoJewelRight, colorJewel);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
@@ -494,10 +496,10 @@ public class Pose
 
     public void servoTester(boolean bigUp, boolean smallUp, boolean smallDown, boolean bigDown){
         if(bigUp){
-            servoTesterPos += 25;
+            servoTesterPos += 100;
         }
         if(smallUp){
-            servoTesterPos += 100;
+            servoTesterPos += 25;
         }
         if(smallDown){
             servoTesterPos -= 25;
