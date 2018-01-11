@@ -769,7 +769,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 5: //small turn to knock off jewel
-                if ((isBlue && jewelMatches)||(!isBlue && !jewelMatches)){
+                if ((isBlue && jewelMatches)||!(isBlue && jewelMatches)){
                     if(robot.rotateIMU(10, 2.5)){
                         autoTimer = futureTime(1.5f);
                         autoStage++;
