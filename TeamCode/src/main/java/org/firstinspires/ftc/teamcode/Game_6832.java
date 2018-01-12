@@ -201,7 +201,7 @@ public class Game_6832 extends LinearOpMode {
 
                 autoDelay--;
                 if(autoDelay < 0) autoDelay = 15;
- 
+
             }
             if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
 
@@ -577,7 +577,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 3:
-                if (robot.driveForward(false, .05, .25)) {
+                if (robot.driveForward(false, .05, .15)) {
                     autoTimer = futureTime(3.0f);
                     robot.glyphSystem.closeGrip();
                     robot.glyphSystem.hold();
@@ -586,8 +586,24 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 }
                 break;
+
             case 4:
+                if(autoTimer < System.nanoTime()){
+                    robot.resetMotors(true);
+                    autoSetupStage++;
+                }
+            break;
+
+            case 5:
+                if (robot.driveForward(true, .02, .35)) {
+//                    autoTimer = futureTime(3.0f);
+                    robot.resetMotors(true);
+                    autoSetupStage++;
+                }
+                break;
+            case 6:
                 if (autoTimer < System.nanoTime()) {
+                    robot.resetMotors(true);
                     jewelMatches = robot.doesJewelMatch(isBlue);
                     autoTimer = futureTime(1.5f);
 
@@ -601,7 +617,7 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 }
                 break;
-            case 5: //small turn to knock off jewel
+            case 7: //small turn to knock off jewel
 //                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
 //                    if(robot.rotateIMU(13, 2.5)){
 //                        autoTimer = futureTime(1.5f);
@@ -621,13 +637,13 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 }
                 break;
-            case 6:
-                if (robot.driveForward(true, .03, .25)) {
+            case 8:
+                if (robot.driveForward(true, .1, .5)) {
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
                 break;
-            case 7: //lift jewel arm
+            case 9: //lift jewel arm
                 robot.jewel.liftArm();
                 if (autoTimer < System.nanoTime()) {
                     autoSetupStage = 0;

@@ -16,7 +16,7 @@ public class JewelArm {
     private ColorSensor colorJewel;
     int jewelStartPos = 950;
     int jewelUpPos = 1000;
-    int jewelDownPos = 2050;
+    int jewelDownPos = 2000;
     private int jewelLeft = 900;
     private int jewelMid = 1500;
     private int jewelRight = 2100;
