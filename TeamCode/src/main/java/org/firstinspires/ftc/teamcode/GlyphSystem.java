@@ -44,6 +44,17 @@ public class GlyphSystem {
         this.servoGrip.setPosition(servoNormalize(gripClosedPos));
     }
 
+    public void collect(){
+        motorLeft.setPower(.33);
+        motorRight.setPower(-.33);
+    }
+
+    public void hold(){
+
+        motorLeft.setPower(0);
+        motorRight.setPower(0);
+    }
+
     public void toggleGrip(){
         if (gripOpen) {
             gripOpen = false;

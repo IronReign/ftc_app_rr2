@@ -12,16 +12,21 @@ public class JewelArm {
 
     private Servo servoJewelLeft;
     private Servo servoJewelRight;
+    private Servo servoJewel;
     private ColorSensor colorJewel;
     int jewelStartPos = 950;
     int jewelUpPos = 1000;
     int jewelDownPos = 2050;
+    private int jewelLeft = 900;
+    private int jewelMid = 1500;
+    private int jewelRight = 2100;
     public int jewelPos;
 
-    public JewelArm(Servo servoJewelLeft, Servo servoJewelRight, ColorSensor colorJewel){
+    public JewelArm(Servo servoJewelLeft, Servo servoJewelRight, ColorSensor colorJewel, Servo servoJewel){
         this.servoJewelLeft = servoJewelLeft;
         this.servoJewelRight = servoJewelRight;
         this.colorJewel = colorJewel;
+        this.servoJewel = servoJewel;
     }
 
     public void startArm(){
@@ -39,6 +44,16 @@ public class JewelArm {
         jewelPos = jewelDownPos;
         servoJewelLeft.setPosition(servoNormalize(jewelDownPos));
         servoJewelRight.setPosition(servoNormalize(jewelDownPos));
+    }
+
+    public void hitLeft(){
+        servoJewel.setPosition(servoNormalize(jewelLeft));
+    }
+    public void hitRight(){
+        servoJewel.setPosition(servoNormalize(jewelRight));
+    }
+    public void center(){
+        servoJewel.setPosition(servoNormalize(jewelMid));
     }
 
     public static double servoNormalize(int pulse){

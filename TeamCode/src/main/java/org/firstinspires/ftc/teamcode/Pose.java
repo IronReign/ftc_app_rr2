@@ -60,6 +60,7 @@ public class Pose
     Servo servoLiftLeft              = null;
     Servo servoLiftRight             = null;
     Servo servoPhone                 = null;
+    Servo servoJewel                 = null;
     ColorSensor colorJewel = null;
 
 
@@ -241,7 +242,7 @@ public class Pose
         this.servoLiftRight  = this.hwMap.servo.get("servoLiftRight");
         this.motorGripLeft   = this.hwMap.dcMotor.get("motorGripLeft");
         this.motorGripRight  = this.hwMap.dcMotor.get("motorGripRight");
-
+        this.servoJewel      = this.hwMap.servo.get("servoJewel");
 
         this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
 
@@ -260,7 +261,7 @@ public class Pose
         moveMode = MoveMode.still;
 
         this.glyphSystem = new GlyphSystem(motorLift, servoGrip, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
-        this.jewel = new JewelArm(servoJewelLeft,servoJewelRight, colorJewel);
+        this.jewel = new JewelArm(servoJewelLeft,servoJewelRight, colorJewel, servoJewel);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
@@ -381,6 +382,8 @@ public class Pose
 */
         driveMixer(pwrFwd, pwrStf, correction);
     }
+
+
 //
 //    public double getJewelConfig(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
 //

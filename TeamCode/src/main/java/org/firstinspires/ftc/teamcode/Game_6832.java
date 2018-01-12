@@ -95,6 +95,7 @@ public class Game_6832 extends LinearOpMode {
 
     //staging and timer variables
     private int autoStage = 0;
+    private int autoSetupStage = 0;
     private  int vuTestMode = 0;
     private long autoTimer = 0;
     private long autoDelay = 0;
@@ -552,65 +553,96 @@ public class Game_6832 extends LinearOpMode {
 
     }
 
-    public void autonomous(){
-        switch(autoStage){
+    public boolean autoSetup(){
+        switch(autoSetupStage) {
             case 0:
                 robot.setZeroHeading();
-                autoStage++;
+                robot.glyphSystem.tiltPhoneDown();
+                robot.glyphSystem.releaseGrip();
+                robot.jewel.lowerArm();
+                autoSetupStage++;
                 break;
             case 1:
                 autoTimer = futureTime(1.5f);
                 robot.resetMotors(true);
-                autoStage++;
+                autoSetupStage++;
+                break;
             case 2: //scan vuforia target and deploy jewel arm
-                robot.glyphSystem.goLiftAuto();
-                robot.jewel.lowerArm();
-                if(autoTimer < System.nanoTime()) {
+//                robot.glyphSystem.goLiftAuto();
+                if (autoTimer < System.nanoTime()) {
                     savedVuMarkCodex = getRelicCodex();
-
-                    autoStage++;
+                    robot.glyphSystem.collect();
+                    robot.glyphSystem.tiltPhoneUp();
+                    autoSetupStage++;
                 }
                 break;
             case 3:
-                if(robot.driveForward(false, .03, .25)){
-                        autoTimer = futureTime(3.0f);
-                        robot.resetMotors(true);
-                        autoStage++;
+                if (robot.driveForward(false, .05, .25)) {
+                    autoTimer = futureTime(3.0f);
+                    robot.glyphSystem.closeGrip();
+                    robot.glyphSystem.hold();
+                    robot.glyphSystem.goLiftAuto();
+                    robot.resetMotors(true);
+                    autoSetupStage++;
                 }
                 break;
             case 4:
-                if(autoTimer < System.nanoTime()){
+                if (autoTimer < System.nanoTime()) {
                     jewelMatches = robot.doesJewelMatch(isBlue);
-                    autoStage++;
+                    autoTimer = futureTime(1.5f);
+
+                    if ((isBlue && jewelMatches) || (!isBlue && jewelMatches)) {
+
+                        robot.jewel.hitLeft();
+                    } else {
+
+                        robot.jewel.hitRight();
+                    }
+                    autoSetupStage++;
                 }
                 break;
             case 5: //small turn to knock off jewel
-                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
-                    if(robot.rotateIMU(13, 2.5)){
-                        autoTimer = futureTime(1.5f);
-                        autoStage++;
-                        robot.resetMotors(true);
-                    }
-                }
-                else{
-                    if(robot.rotateIMU(347, 2.5)){
-                        autoTimer = futureTime(1.5f);
-                        autoStage++;
-                        robot.resetMotors(true);
-                    }
+//                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
+//                    if(robot.rotateIMU(13, 2.5)){
+//                        autoTimer = futureTime(1.5f);
+//                        autoStage++;
+//                        robot.resetMotors(true);
+//                    }
+//                }
+//                else{
+//                    if(robot.rotateIMU(347, 2.5)){
+//                        autoTimer = futureTime(1.5f);
+//                        autoStage++;
+//                        robot.resetMotors(true);
+//                    }
+//                }
+                if (autoTimer < System.nanoTime()) {
+                    robot.jewel.center();
+                    autoSetupStage++;
                 }
                 break;
             case 6:
-                if(robot.driveForward(true, .03, .25)){
+                if (robot.driveForward(true, .03, .25)) {
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoSetupStage++;
                 }
                 break;
             case 7: //lift jewel arm
                 robot.jewel.liftArm();
-                if(autoTimer < System.nanoTime()) {
-                    autoStage++;
+                if (autoTimer < System.nanoTime()) {
+                    autoSetupStage = 0;
+                    return true;
                 }
+
+                break;
+        }
+        return false;
+    }
+
+    public void autonomous(){
+        switch(autoStage){
+            case 0:
+                if(autoSetup()) autoStage = 8;
                 break;
             case 8: //turn parallel to the wall
                 if(isBlue){
@@ -739,63 +771,7 @@ public class Game_6832 extends LinearOpMode {
 
         switch(autoStage){
             case 0:
-                robot.setZeroHeading();
-                autoStage++;
-                break;
-            case 1:
-                autoTimer = futureTime(1.5f);
-                robot.resetMotors(true);
-                autoStage++;
-            case 2: //scan vuforia target and deploy jewel arm
-                robot.jewel.lowerArm();
-                robot.glyphSystem.goLiftAuto();
-                if(autoTimer < System.nanoTime()) {
-                    savedVuMarkCodex = getRelicCodex();
-
-                    autoStage++;
-                }
-                break;
-            case 3:
-                if(robot.driveForward(false, .03, .25)){
-                    autoTimer = futureTime(3.0f);
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-
-            case 4:
-                if(autoTimer < System.nanoTime()){
-                    jewelMatches = robot.doesJewelMatch(isBlue);
-                    autoStage++;
-                }
-                break;
-            case 5: //small turn to knock off jewel
-                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
-                    if(robot.rotateIMU(13, 2.5)){
-                        autoTimer = futureTime(1.5f);
-                        autoStage++;
-                        robot.resetMotors(true);
-                    }
-                }
-                else{
-                    if(robot.rotateIMU(347, 2.5)){
-                        autoTimer = futureTime(1.5f);
-                        autoStage++;
-                        robot.resetMotors(true);
-                    }
-                }
-                break;
-            case 6:
-                if(robot.driveForward(true, .05, .25)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 7: //lift jewel arm
-                robot.jewel.liftArm();
-                if(autoTimer < System.nanoTime()) {
-                    autoStage++;
-                }
+                if(autoSetup()) autoStage = 8;
                 break;
             case 8: //turn parallel to the wall
                 if(isBlue){
