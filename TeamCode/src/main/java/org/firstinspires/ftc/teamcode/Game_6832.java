@@ -168,6 +168,7 @@ public class Game_6832 extends LinearOpMode {
         relicCodex.get(0).setName("RelicTemplate");
 
         robot.glyphSystem.closeGrip();
+        robot.jewel.center();
 
 
         relicTemplate = relicCodex.get(0);
@@ -580,7 +581,7 @@ public class Game_6832 extends LinearOpMode {
                 if (robot.driveForward(false, .05, .15)) {
                     autoTimer = futureTime(3.0f);
                     robot.glyphSystem.closeGrip();
-                    robot.glyphSystem.hold();
+//                    robot.glyphSystem.hold();
                     robot.glyphSystem.goLiftAuto();
                     robot.resetMotors(true);
                     autoSetupStage++;
@@ -589,6 +590,7 @@ public class Game_6832 extends LinearOpMode {
 
             case 4:
                 if(autoTimer < System.nanoTime()){
+                    robot.glyphSystem.hold();
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
@@ -632,24 +634,51 @@ public class Game_6832 extends LinearOpMode {
 //                        robot.resetMotors(true);
 //                    }
 //                }
-                if (autoTimer < System.nanoTime()) {
+                if (autoTimer < System.nanoTime()) { //wait for kick
                     robot.jewel.center();
+                    robot.driveMixer(.5, 0, 0);
                     autoSetupStage++;
                 }
                 break;
             case 8:
-                if (robot.driveForward(true, .1, .5)) {
+                if(robot.getRoll() > 0 && robot.getRoll() < 180){
+                    robot.resetMotors(true);
+                    robot.driveMixer(0,0,0);
+                    autoSetupStage++;
+                }
+//                if (robot.driveForward(true, .9, .5)) {
+//                    robot.resetMotors(true);
+//                    autoSetupStage++;
+//                }
+                break;
+            case 9:
+                if (robot.driveForward(false, .01, .75)) {
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
                 break;
-            case 9: //lift jewel arm
+            case 10: //lift jewel arm
                 robot.jewel.liftArm();
-                if (autoTimer < System.nanoTime()) {
+//                if (autoTimer < System.nanoTime()) {
+                    autoSetupStage++;
+                    autoTimer = futureTime(1.5f);
+//                }
+
+                break;
+            case 11:
+                if(autoTimer < System.nanoTime()){
+                    robot.glyphSystem.collect();
+                    autoTimer = futureTime(1.5f);
+                    autoSetupStage++;
+                }
+                break;
+            case 12:
+                if(autoTimer < System.nanoTime()){
+                    robot.glyphSystem.hold();
+                    robot.glyphSystem.goLiftAuto2();
                     autoSetupStage = 0;
                     return true;
                 }
-
                 break;
         }
         return false;
@@ -1135,6 +1164,18 @@ public class Game_6832 extends LinearOpMode {
                     @Override public String value() {
                         //return formatAngle(angles.angleUnit, angles.firstAngle);
                         return Double.toString(robot.getHeading());
+                    }
+                })
+                .addData("pitch", new Func<String>() {
+                    @Override public String value() {
+                        //return formatAngle(angles.angleUnit, angles.firstAngle);
+                        return Double.toString(robot.getPitch());
+                    }
+                })
+                .addData("roll", new Func<String>() {
+                    @Override public String value() {
+                        //return formatAngle(angles.angleUnit, angles.firstAngle);
+                        return Double.toString(robot.getRoll());
                     }
                 })
                 .addData("vuPwr", new Func<String>() {

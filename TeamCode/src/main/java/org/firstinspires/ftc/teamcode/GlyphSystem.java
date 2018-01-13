@@ -21,6 +21,7 @@ public class GlyphSystem {
     private int liftStack = 2500; //stacking height
     private int liftMin = 50;
     private int liftAuto = 500;
+    private int liftAuto2 = 1500;
     private int beltOn = 2000;
     private int beltOff = 1500;
     private int phoneUp = 1250;
@@ -151,6 +152,14 @@ public class GlyphSystem {
     public void goLiftAuto() {
 
         motorLift.setTargetPosition(liftAuto);
+        motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLift.setPower(1);
+
+    }
+
+    public void goLiftAuto2() {
+
+        motorLift.setTargetPosition(liftAuto2);
         motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorLift.setPower(1);
 
