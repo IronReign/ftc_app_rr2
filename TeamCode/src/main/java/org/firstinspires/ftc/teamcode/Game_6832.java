@@ -559,7 +559,7 @@ public class Game_6832 extends LinearOpMode {
             case 0:
                 robot.setZeroHeading();
                 robot.glyphSystem.tiltPhoneDown();
-                robot.glyphSystem.releaseGrip();
+                robot.glyphSystem.wideOpenGrip();
                 robot.jewel.lowerArm();
                 autoSetupStage++;
                 break;

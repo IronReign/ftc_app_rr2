@@ -31,6 +31,7 @@ public class GlyphSystem {
     boolean gripOpen = false;
     int gripOpenPos = 1400;
     int gripClosedPos = 1900;
+    int gripWideOpenPos = 1200;
 
     public GlyphSystem(DcMotor motorLift, Servo servoGrip, DcMotor motorLeft, DcMotor motorRight, Servo servoBeltLeft, Servo servoBeltRight, Servo servoPhone){
         this.motorLift = motorLift;
@@ -74,6 +75,11 @@ public class GlyphSystem {
     public void releaseGrip() {
         gripOpen = true;
         servoGrip.setPosition(servoNormalize(gripOpenPos));
+    }
+
+    public void wideOpenGrip() {
+        gripOpen = true;
+        servoGrip.setPosition(servoNormalize(gripWideOpenPos));
     }
 
     public void tiltPhoneUp(){
