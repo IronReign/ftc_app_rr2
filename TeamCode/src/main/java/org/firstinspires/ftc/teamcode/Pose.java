@@ -7,6 +7,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -62,7 +63,7 @@ public class Pose
     Servo servoPhone                 = null;
     Servo servoJewel                 = null;
     ColorSensor colorJewel = null;
-
+    DistanceSensor glyphUpper = null;;
 
 //    Servo servoLiftLatch    = null;
 
@@ -245,6 +246,7 @@ public class Pose
         this.servoJewel      = this.hwMap.servo.get("servoJewel");
 
         this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
+        this.glyphUpper      = this.hwMap.get(DistanceSensor.class, "glyphDetectUp");
 
 
         //motor configurations
