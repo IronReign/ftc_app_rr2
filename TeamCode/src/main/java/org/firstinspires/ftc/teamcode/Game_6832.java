@@ -87,11 +87,17 @@ public class Game_6832 extends LinearOpMode {
 
 
     //drive train control variables
-    private double pwrDamper = .33;
+    private double pwrDamper = 1;
     private double pwrFwd = 0;
     private double pwrStf = 0;
     private double pwrRot = 0;
-    private double beaterDamper = .33;
+    private double pwrFwdL = 0;
+    private double pwrStfL = 0;
+    private double pwrFwdR = 0;
+    private double pwrStfR = 0;
+    private double beaterDamper = .5;
+    private boolean enableTank = false;
+    private long damperTimer = 0;
 
 
     //staging and timer variables
@@ -485,10 +491,24 @@ public class Game_6832 extends LinearOpMode {
             robot.resetMotors(true);
             joystickDriveStarted = true;
         }
+
         pwrFwd = pwrDamper * gamepad1.left_stick_y;
         pwrStf = pwrDamper * gamepad1.left_stick_x;
         pwrRot = -pwrDamper * gamepad1.right_stick_x;
-        robot.driveMixer(pwrFwd,pwrStf,pwrRot);
+
+        pwrFwdL = pwrDamper * gamepad1.left_stick_y;
+        pwrStfL = pwrDamper * gamepad1.left_stick_x;
+
+        pwrFwdR = pwrDamper * gamepad1.right_stick_y;
+        pwrStfR = pwrDamper * gamepad1.right_stick_x;
+
+        if(enableTank){
+            robot.driveMixerTank(pwrFwdL, pwrStfL, pwrFwdR, pwrStfR);
+        }
+
+        else {
+            robot.driveMixer(pwrFwd, pwrStf, pwrRot);
+        }
 
 //        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
             robot.glyphSystem.setMotorLeft(gamepad2.left_stick_x*beaterDamper);
@@ -499,10 +519,10 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleBelt();
         }
 
-        if(gamepad1.right_trigger > 0.5)
-            pwrDamper = 1;
-        else
-            pwrDamper = .33;
+//        if(gamepad1.right_trigger > 0.5)
+//            pwrDamper = 1;
+//        else
+//            pwrDamper = .33;
 
         if(gamepad1.a){
             robot.glyphSystem.lowerLift2();
@@ -528,9 +548,22 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
+        if(toggleAllowed(gamepad1.dpad_right, dpad_right)) {
+            damperTimer = futureTime(2f);
+            pwrDamper = .33;
+        }
+
+        if(damperTimer < System.nanoTime()){
+            pwrDamper = 1;
+        }
+
+        if(toggleAllowed(gamepad2.y, y)){
+            enableTank = !enableTank;
+        }
+
         if (gamepad1.dpad_down) robot.glyphSystem.goLiftMin();
         if (gamepad1.dpad_up) robot.glyphSystem.goLiftMax();
-        if (gamepad1.dpad_right) robot.glyphSystem.goLiftStack();
+        if (gamepad1.dpad_left) robot.glyphSystem.goLiftStack();
 
 //        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 

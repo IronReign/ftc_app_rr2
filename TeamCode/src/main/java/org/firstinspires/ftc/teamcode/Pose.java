@@ -533,13 +533,35 @@ public class Pose
 
         powerFrontLeft += rotate;
         powerBackLeft += rotate;
-        powerFrontRight -= rotate;
-        powerBackRight -= rotate;
+        powerFrontRight += -rotate;
+        powerBackRight += -rotate;
 
         motorFrontLeft.setPower(clampMotor(powerFrontLeft));
         motorBackLeft.setPower(clampMotor(powerBackLeft));
         motorFrontRight.setPower(clampMotor(powerFrontRight));
         motorBackRight.setPower(clampMotor(powerBackRight));
+
+    }
+
+    public void driveMixerTank(double fLeft, double sLeft, double fRight, double sRight){
+
+        powerBackRight = 0;
+        powerFrontRight = 0;
+        powerBackLeft = 0;
+        powerFrontLeft = 0;
+
+        powerFrontLeft = fLeft;
+        powerBackLeft = fLeft;
+
+        powerFrontLeft += -sLeft;
+        powerBackLeft += sLeft;
+
+        powerFrontRight = fRight;
+        powerBackRight = fRight;
+
+        powerFrontRight += sRight;
+        powerBackRight += -sRight;
+
 
     }
 
