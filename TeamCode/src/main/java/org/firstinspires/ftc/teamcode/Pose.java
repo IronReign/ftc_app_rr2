@@ -329,13 +329,13 @@ public class Pose
         motorRight.setPower(pwr - correction);
 
 */
-        if(strafe) driveMixer(0, pwr, correction);
-        else driveMixer(pwr, 0, correction);
+        if(strafe) driveMixerMec(0, pwr, correction);
+        else driveMixerMec(pwr, 0, correction);
     }
 
     public void stopAll(){
         glyphSystem.stopLift();
-        driveMixer(0, 0, 0);
+        driveMixerMec(0, 0, 0);
     }
 
     /**
@@ -382,7 +382,7 @@ public class Pose
         motorRight.setPower(pwr - correction);
 
 */
-        driveMixer(pwrFwd, pwrStf, correction);
+        driveMixerMec(pwrFwd, pwrStf, correction);
     }
 
 
@@ -441,7 +441,7 @@ public class Pose
             return false;
         }
         else { //destination achieved
-            driveMixer(0, 0, 0);
+            driveMixerMec(0, 0, 0);
             return true;
         }
     }
@@ -454,12 +454,12 @@ public class Pose
         driveIMU(kpDrive, kiDrive, kdDrive, 0, targetAngle, false); //if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
-            driveMixer(0,0,0);
+            driveMixerMec(0,0,0);
             return true;
         }
         if(turnTimer < System.nanoTime()){ //if the robot takes too long to turn within a threshold of the target (it gets stuck)
             turnTimerInit = false;
-            driveMixer(0,0,0);
+            driveMixerMec(0,0,0);
             return true;
         }
         return false;
@@ -515,27 +515,39 @@ public class Pose
         servoTester.setPosition(servoNormalize(servoTesterPos));
     }
 
-    public void driveMixer(double forward,double strafe ,double rotate){
+    /**
+     * drive method for a mecanum drive
+     *@param forward sets how much power will be provided in the forwards direction
+     *@param strafe sets how much power will be provided in the left strafe direction
+     *@param rotate sets how much power will be provided to clockwise rotation
+     */
+    public void driveMixerMec(double forward, double strafe , double rotate){
+
+        //reset the power of all motors
         powerBackRight = 0;
         powerFrontRight = 0;
         powerBackLeft = 0;
         powerFrontLeft = 0;
 
+        //set power in the forward direction
         powerFrontLeft = forward;
         powerBackLeft = forward;
         powerFrontRight = forward;
         powerBackRight = forward;
 
+        //set power in the left strafe direction
         powerFrontLeft += -strafe;
         powerFrontRight += strafe;
         powerBackLeft += strafe;
         powerBackRight += -strafe;
 
+        //set power in the clockwise rotational direction
         powerFrontLeft += rotate;
         powerBackLeft += rotate;
         powerFrontRight += -rotate;
         powerBackRight += -rotate;
 
+        //provide power to the motors
         motorFrontLeft.setPower(clampMotor(powerFrontLeft));
         motorBackLeft.setPower(clampMotor(powerBackLeft));
         motorFrontRight.setPower(clampMotor(powerFrontRight));
@@ -543,25 +555,98 @@ public class Pose
 
     }
 
-    public void driveMixerTank(double fLeft, double sLeft, double fRight, double sRight){
+    public void driveMixerMecTank(double fLeft, double sLeft, double fRight, double sRight){
 
+        //reset the power of all motors
         powerBackRight = 0;
         powerFrontRight = 0;
         powerBackLeft = 0;
         powerFrontLeft = 0;
 
+        //set the forward power of the left nacelle
         powerFrontLeft = fLeft;
         powerBackLeft = fLeft;
 
+        //set the strafe power of the left nacelle (positive is left)
         powerFrontLeft += -sLeft;
         powerBackLeft += sLeft;
 
+        //set the forward power of the right nacelle
         powerFrontRight = fRight;
         powerBackRight = fRight;
 
+        //set the strafe power of the right nacelle (positive is left)
         powerFrontRight += sRight;
         powerBackRight += -sRight;
 
+        //provide power to the motors
+        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
+        motorBackLeft.setPower(clampMotor(powerBackLeft));
+        motorFrontRight.setPower(clampMotor(powerFrontRight));
+        motorBackRight.setPower(clampMotor(powerBackRight));
+
+    }
+
+
+    /**
+     * drive method for a differential drive
+     * @param forward sets how much power will be provided in the forwards direction
+     * @param rotate sets how much power will be provided to clockwise rotation
+     */
+    public void driveMixerDiff (double forward, double rotate){
+
+        //reset the power of all motors
+        powerBackRight = 0;
+        powerFrontRight = 0;
+        powerBackLeft = 0;
+        powerFrontLeft = 0;
+
+        //set power in the forward direction
+        powerFrontLeft = forward;
+        powerBackLeft = forward;
+        powerFrontRight = forward;
+        powerBackRight = forward;
+
+        //set power in the clockwise rotational direction
+        powerFrontLeft += rotate;
+        powerBackLeft += rotate;
+        powerFrontRight += -rotate;
+        powerBackRight += -rotate;
+
+        //provide power to the motors
+        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
+        motorBackLeft.setPower(clampMotor(powerBackLeft));
+        motorFrontRight.setPower(clampMotor(powerFrontRight));
+        motorBackRight.setPower(clampMotor(powerBackRight));
+
+    }
+
+    /**
+     * tank drive method for a differential drive
+     * @param left power to give to the left nacelle
+     * @param right power to give the right nacelle
+     */
+    public void driveMixerDiffTank (double left, double right){
+
+        //reset the power of all motors
+        powerBackRight = 0;
+        powerFrontRight = 0;
+        powerBackLeft = 0;
+        powerFrontLeft = 0;
+
+        //set the power of the left nacelle
+        powerFrontLeft = left;
+        powerBackLeft = left;
+
+        //set the power of the right nacelle
+        powerFrontRight = right;
+        powerBackRight = right;
+
+        //provide power to the motors
+        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
+        motorBackLeft.setPower(clampMotor(powerBackLeft));
+        motorFrontRight.setPower(clampMotor(powerFrontRight));
+        motorBackRight.setPower(clampMotor(powerBackRight));
 
     }
 
@@ -617,11 +702,11 @@ public class Pose
 
         long targetPos = (long)(targetMeters * forwardTPM);
         if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
-            driveMixer(power, 0, 0);
+            driveMixerMec(power, 0, 0);
             return false;
         }
         else { //destination achieved
-            driveMixer(0, 0, 0);
+            driveMixerMec(0, 0, 0);
             return true;
         }
     }
@@ -637,11 +722,11 @@ public class Pose
 
         long targetPos = (long)(targetMeters * strafeTPM);
         if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){
-            driveMixer(0, power, 0);
+            driveMixerMec(0, power, 0);
             return false;
         }
         else {
-            driveMixer(0, 0, 0);
+            driveMixerMec(0, 0, 0);
             return true;
         }
     }
@@ -980,7 +1065,7 @@ public class Pose
 
         } else { //disable motors if given target not visible
             vuDepth = 0;
-            driveMixer(0,0,0);
+            driveMixerMec(0,0,0);
         }//else
 
         return vuDepth - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
