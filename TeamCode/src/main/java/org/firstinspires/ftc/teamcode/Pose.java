@@ -418,13 +418,31 @@ public class Pose
 //    }//getJewelConfig
 
 
+    /**
+     * Drive forwards for a set power while maintaining an IMU heading using PID
+     * @param Kp proportional multiplier for PID
+     * @param Ki integral multiplier for PID
+     * @param Kd derivative proportional for PID
+     * @param pwr set the forward power
+     * @param targetAngle the heading the robot will try to maintain while driving
+     */
     public void driveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
         movePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
 
+    /**
+     * Do a combination of forwards drive and strafe while maintaining an IMU heading using PID
+     * @param Kp proportional multiplier for PID
+     * @param Ki integral multiplier for PID
+     * @param Kd derivative proportional for PID
+     * @param pwrFwd set the forward power
+     * @param pwrStf set the power in the left strafe direction
+     * @param targetAngle the heading the robot will try to maintain while driving
+     */
     public void driveIMUMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double targetAngle){
         movePIDMixer(Kp, Ki, Kd, pwrFwd, pwrStf, poseHeading, targetAngle);
     }
+
 
     public boolean driveIMUDistance(double Kp, double pwr, double targetAngle, boolean forwardOrLeft, double targetMeters, boolean strafe){
         if(!forwardOrLeft){
@@ -446,7 +464,12 @@ public class Pose
         }
     }
 
-    public boolean rotateIMU(double targetAngle, double maxTime){ //uses default pose PID constants and has end conditions
+    /**
+     * Rotate to a specific heading with a time cutoff in case the robot gets stuck and cant complete the turn otherwise
+     * @param targetAngle the heading the robot will attempt to turn to
+     * @param maxTime the maximum amount of time allowed to pass before the sequence ends
+     */
+    public boolean rotateIMU(double targetAngle, double maxTime){
         if(!turnTimerInit){
             turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
             turnTimerInit = true;
@@ -465,42 +488,57 @@ public class Pose
         return false;
     }
 
-    public void raiseGlyph(){
-        motorLift.setPower(.5);
-    }
-    public void lowerGlyph(){
-        motorLift.setPower(-.5);
-    }
-    public void stopGlyph(){
-        motorLift.setPower(0);
-    }
-
-
-
-
-
+    /**
+     * the maintain heading function used in demo: holds the heading read on initial button press
+     * @param buttonState the active state of the button; if true, hold the current position. if false, do nothing
+     */
     public void maintainHeading(boolean buttonState){
+
+        //if the button is currently down, maintain the set heading
         if(buttonState) {
+            //if this is the first time the button has been down, then save the heading that the robot will hold at and set a variable to tell that the heading has been saved
             if (!maintainHeadingInit) {
                 poseSavedHeading = poseHeading;
-                maintainHeadingInit = true;}
+                maintainHeadingInit = true;
+            }
+            //hold the saved heading with PID
             driveIMU(kpDrive, kiDrive, kdDrive, 0, poseSavedHeading, false);
         }
+
+        //if the button is not down, set to make sure the correct heading will be saved on the next button press
         if(!buttonState){
             maintainHeadingInit = false;
         }
     }
 
+    /**
+     * assign the current heading of the robot to zero
+     */
     public void setZeroHeading(){
         setHeading(0);
     }
+
+    /**
+     * assign the current heading of the robot to a specific angle
+     * @param angle the value that the current heading will be assigned to
+     */
     public void setHeading(double angle){
         poseHeading = angle;
         initialized = false; //triggers recalc of heading offset at next IMU update cycle
     }
 
-    public void servoTester(boolean bigUp, boolean smallUp, boolean smallDown, boolean bigDown){
-        if(bigUp){
+    /**
+     * a method written to test servos by plugging them into a designated servo tester port on the REV module
+     * designed to work best with debounced gamepad buttons
+     * @param largeUp if true, increase PWM being sent to the servo tester by a large amount
+     * @param smallUp if true, increase PWM being sent to the servo tester by a small amount
+     * @param smallDown if true, decrease PWM being sent to the servo tester by a small amount
+     * @param largeDown if true, decrease PWM being sent to the servo tester by a large amount
+     */
+    public void servoTester(boolean largeUp, boolean smallUp, boolean smallDown, boolean largeDown){
+
+        //check to see if the PWM value being sent to the servo should be altered
+        if(largeUp){
             servoTesterPos += 100;
         }
         if(smallUp){
@@ -509,17 +547,19 @@ public class Pose
         if(smallDown){
             servoTesterPos -= 25;
         }
-        if(bigDown){
+        if(largeDown){
             servoTesterPos -= 100;
         }
+
+        //send the PWM value to the servo regardless of if it is altered or not
         servoTester.setPosition(servoNormalize(servoTesterPos));
     }
 
     /**
      * drive method for a mecanum drive
-     *@param forward sets how much power will be provided in the forwards direction
-     *@param strafe sets how much power will be provided in the left strafe direction
-     *@param rotate sets how much power will be provided to clockwise rotation
+     * @param forward sets how much power will be provided in the forwards direction
+     * @param strafe sets how much power will be provided in the left strafe direction
+     * @param rotate sets how much power will be provided to clockwise rotation
      */
     public void driveMixerMec(double forward, double strafe , double rotate){
 
