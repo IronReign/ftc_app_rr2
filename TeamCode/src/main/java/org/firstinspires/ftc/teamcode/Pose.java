@@ -156,6 +156,16 @@ public class Pose
     private int beaconState = 0; //switch variable that controls progress through the beacon pressing sequence
 
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                                                                  ////
+    ////                                 Constructors                                     ////
+    ////                                                                                  ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+
     /**
      * Create a Pose instance that stores all real world position/orientation elements:
      * <var>x</var>, <var>y</var>, <var>heading</var>, and <var>speed</var>.
@@ -210,10 +220,16 @@ public class Pose
 
     }
 
-    public void resetTPM(){
-        forwardTPM = 2493;
-        strafeTPM = 3145;
-    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                                                                  ////
+    ////                                 Init/Update                                      ////
+    ////                                                                                  ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+
 
     /**
      * Initializes motors, servos, lights and sensors from a given hardware map
@@ -277,9 +293,165 @@ public class Pose
         headLampOn();
     }
 
+
+    /**
+     * update the current location of the robot. This implementation gets heading and orientation
+     * from the Bosch BNO055 IMU and assumes a simple differential steer robot with left and right motor
+     * encoders.
+     *
+     *
+     * The current naive implementation assumes an unobstructed robot - it cannot account
+     * for running into objects and assumes no slippage in the wheel encoders.  Debris
+     * on the field and the mountain ramps will cause problems for this implementation. Further
+     * work could be done to compare odometry against IMU integrated displacement calculations to
+     * detect stalls and slips
+     *
+     * This method should be called regularly - about every 20 - 30 milliseconds or so.
+     *
+     * @param imu
+     * @param ticksLeft
+     * @param ticksRight
+     */
+    public void update(BNO055IMU imu, long ticksLeft, long ticksRight){
+        long currentTime = System.nanoTime();
+        imuAngles= imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        if (!initialized){
+            //first time in - we assume that the robot has not started moving and that orientation values are set to the current absolute orientation
+            //so first set of imu readings are effectively offsets
+
+
+            offsetHeading = wrapAngleMinus(poseHeading, imuAngles.firstAngle);
+            offsetRoll = wrapAngleMinus(imuAngles.secondAngle, poseRoll);
+            offsetPitch = wrapAngleMinus(imuAngles.thirdAngle, posePitch);
+
+            initialized = true;
+        }
+
+
+        poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
+        posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
+        poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
+
+        //double displacement = (((double)(ticksRight - ticksRightPrev)/ticksPerMeterRight) + ((double)(ticksLeft - ticksLeftPrev)/ticksPerMeterLeft))/2.0;
+
+        // we haven't worked out the trig of calculating displacement from any driveMixer combination, so
+        // for now we are just restricting ourselves to cardinal relative directions of pure forward, backward, left and right
+        // so no diagonals or rotations - if we do those then our absolute positioning fails
+
+        switch (moveMode) {
+            case forward:
+            case backward:
+                displacement = (getAverageTicks() - displacementPrev) * forwardTPM;
+                odometer += Math.abs(displacement);
+                poseHeadingRad = Math.toRadians(poseHeading);
+                break;
+            case left:
+                displacement = (getAverageAbsTicks() - displacementPrev) * strafeTPM; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
+                poseHeadingRad = Math.toRadians(poseHeading)- Math.PI/2; //actual heading is rotated 90 degrees counterclockwise
+
+                break;
+            case right:
+                displacement = (getAverageAbsTicks() - displacementPrev) * strafeTPM; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
+                poseHeadingRad = Math.toRadians(poseHeading) + Math.PI/2; //actual heading is rotated 90 degrees clockwise
+
+                break;
+            default:
+                displacement=0; //when rotating or in an undefined moveMode, ignore/reset displacement
+                displacementPrev = 0;
+                break;
+        }
+
+        odometer += Math.abs(displacement);
+        poseSpeed = displacement / (double)(currentTime - this.timeStamp)*1000000; //meters per second when ticks per meter is calibrated
+
+        timeStamp = currentTime;
+        displacementPrev = displacement;
+
+        poseX += displacement * Math.cos(poseHeadingRad);
+        poseY += displacement * Math.sin(poseHeadingRad);
+
+    }
+
+    public void updateSensors(){
+        update(imu, 0, 0);
+    }
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                                                                  ////
+    ////                               Movement/Actions                                   ////
+    ////                                                                                  ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /**
+     *
+     * @param forward
+     * @param targetMeters
+     * @param power
+     * @return
+     */
+    public boolean driveForward(boolean forward, double targetMeters, double power){
+        if(!forward){
+            moveMode = moveMode.backward;
+            targetMeters = -targetMeters;
+            power = -power;
+        }
+        else moveMode = moveMode.forward;
+
+        long targetPos = (long)(targetMeters * forwardTPM);
+        if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
+            driveMixerMec(power, 0, 0);
+            return false;
+        }
+        else { //destination achieved
+            driveMixerMec(0, 0, 0);
+            return true;
+        }
+    }
+
+
+    /**
+     *
+     * @param left
+     * @param targetMeters
+     * @param power
+     * @return
+     */
+    public boolean driveStrafe(boolean left, double targetMeters, double power){
+
+        if(!left){
+            moveMode = moveMode.right;
+            targetMeters = -targetMeters;
+            power = -power;
+        }
+        else moveMode = moveMode.left;
+
+        long targetPos = (long)(targetMeters * strafeTPM);
+        if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){
+            driveMixerMec(0, power, 0);
+            return false;
+        }
+        else {
+            driveMixerMec(0, 0, 0);
+            return true;
+        }
+    }
+
+
+    /**
+     * turn on the robot's headlamps
+     */
     public void headLampOn(){
         headLamp.setPower(1);
     }
+
+    /**
+     * turn off the robot's headlamps
+     */
     public void headLampOff(){
         headLamp.setPower(0);
     }
@@ -333,6 +505,9 @@ public class Pose
         else driveMixerMec(pwr, 0, correction);
     }
 
+    /**
+     * Stops all motors on the robot
+     */
     public void stopAll(){
         glyphSystem.stopLift();
         driveMixerMec(0, 0, 0);
@@ -361,6 +536,8 @@ public class Pose
         drivePID.setContinuous();
         drivePID.setInput(currentAngle);
         double correction = drivePID.performPID();
+
+        //logging section that can be reactivated for debugging
         /*ArrayList toUpdate = new ArrayList();
         toUpdate.add((PID.m_deltaTime));
         toUpdate.add(Double.valueOf(PID.m_error));
@@ -386,38 +563,6 @@ public class Pose
     }
 
 
-//
-//    public double getJewelConfig(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
-//
-//        //double vuDepth = 0;
-//        double pwr = 0;
-//
-//        if (beacon.getPose() != null) {
-//            vuTrans = beacon.getRawPose().getTranslation();
-//
-//            //todo - add a new transform that will shift our target left or right depending on beacon analysis
-//
-//            if(offset){vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));}
-//            else vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
-//            vuDepth = vuTrans.get(2);
-//
-//            if (turnOnly)
-//                pwr = 0; //(vuDepth - bufferDistance/1200.0);
-//            else
-//                // this is a very simple proportional on the distance to target - todo - convert to PID control
-//                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
-//            Log.i("Beacon Angle", String.valueOf(vuAngle));
-//            movePID(kpDrive, kiDrive, kdDrive, pwr, -vuAngle, 0, false);
-//
-//        } else { //disable motors if given target not visible
-//            vuDepth = 0;
-//            driveMixer(0,0,0);
-//        }//else
-//
-//        return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
-//    }//getJewelConfig
-
-
     /**
      * Drive forwards for a set power while maintaining an IMU heading using PID
      * @param Kp proportional multiplier for PID
@@ -429,6 +574,7 @@ public class Pose
     public void driveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
         movePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
+
 
     /**
      * Do a combination of forwards drive and strafe while maintaining an IMU heading using PID
@@ -442,6 +588,7 @@ public class Pose
     public void driveIMUMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double targetAngle){
         movePIDMixer(Kp, Ki, Kd, pwrFwd, pwrStf, poseHeading, targetAngle);
     }
+
 
     /**
      * Drive with a set power for a set distance while maintaining an IMU heading using PID
@@ -472,6 +619,7 @@ public class Pose
         }
     }
 
+
     /**
      * Rotate to a specific heading with a time cutoff in case the robot gets stuck and cant complete the turn otherwise
      * @param targetAngle the heading the robot will attempt to turn to
@@ -496,6 +644,7 @@ public class Pose
         return false;
     }
 
+
     /**
      * the maintain heading function used in demo: holds the heading read on initial button press
      * @param buttonState the active state of the button; if true, hold the current position. if false, do nothing
@@ -519,21 +668,6 @@ public class Pose
         }
     }
 
-    /**
-     * assign the current heading of the robot to zero
-     */
-    public void setZeroHeading(){
-        setHeading(0);
-    }
-
-    /**
-     * assign the current heading of the robot to a specific angle
-     * @param angle the value that the current heading will be assigned to
-     */
-    public void setHeading(double angle){
-        poseHeading = angle;
-        initialized = false; //triggers recalc of heading offset at next IMU update cycle
-    }
 
     /**
      * a method written to test servos by plugging them into a designated servo tester port on the REV module
@@ -562,6 +696,18 @@ public class Pose
         //send the PWM value to the servo regardless of if it is altered or not
         servoTester.setPosition(servoNormalize(servoTesterPos));
     }
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                                                                  ////
+    ////                         Drive Platform Mixing Methods                            ////
+    ////                                                                                  ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+
 
     /**
      * drive method for a mecanum drive
@@ -603,6 +749,14 @@ public class Pose
 
     }
 
+
+    /**
+     * tank drive mixer for a mecanum drive
+     * @param fLeft forwards power power to give to the left nacelle
+     * @param sLeft strafe power power to give to the left nacelle
+     * @param fRight forwards power to give to the right nacelle
+     * @param sRight forwards power to give to the right nacelle
+     */
     public void driveMixerMecTank(double fLeft, double sLeft, double fRight, double sRight){
 
         //reset the power of all motors
@@ -669,6 +823,7 @@ public class Pose
 
     }
 
+
     /**
      * tank drive method for a differential drive
      * @param left power to give to the left nacelle
@@ -698,6 +853,11 @@ public class Pose
 
     }
 
+
+    /**
+     * Reset the encoder readings on all drive motors
+     * @param enableEncoders if true, the motors will continue to have encoders active after reset
+     */
     public void resetMotors(boolean enableEncoders){
         motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -718,17 +878,16 @@ public class Pose
 
     }
 
-    public long getAverageTicks(){
-        long averageTicks = (motorFrontLeft.getCurrentPosition() + motorBackLeft.getCurrentPosition() + motorFrontRight.getCurrentPosition() + motorBackRight.getCurrentPosition())/4;
-        return averageTicks;
-    }
-    public long getAverageAbsTicks(){
-        long averageTicks = (Math.abs(motorFrontLeft.getCurrentPosition()) + Math.abs(motorBackLeft.getCurrentPosition()) + Math.abs(motorFrontRight.getCurrentPosition()) + Math.abs(motorBackRight.getCurrentPosition()))/4;
-        return averageTicks;
-    }
 
     public double clampMotor(double power) { return clampDouble(-1, 1, power); }
 
+
+    /**
+     * clamp a double value to put it within a given range
+     * @param min lower bound of the range
+     * @param max upper bound of the range
+     * @param value double being clamped to the given range
+     */
     public double clampDouble(double min, double max, double value)
     {
         double result = value;
@@ -740,61 +899,61 @@ public class Pose
     }
 
 
-    public boolean driveForward(boolean forward, double targetMeters, double power){
-        if(!forward){
-            moveMode = moveMode.backward;
-            targetMeters = -targetMeters;
-            power = -power;
-        }
-        else moveMode = moveMode.forward;
 
-        long targetPos = (long)(targetMeters * forwardTPM);
-        if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
-            driveMixerMec(power, 0, 0);
-            return false;
-        }
-        else { //destination achieved
-            driveMixerMec(0, 0, 0);
-            return true;
-        }
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                                                                  ////
+    ////                           Variable Get/Set Method                                ////
+    ////                                                                                  ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    /**
+     * retrieve the average value of ticks on all motors
+     */
+    public long getAverageTicks(){
+        long averageTicks = (motorFrontLeft.getCurrentPosition() + motorBackLeft.getCurrentPosition() + motorFrontRight.getCurrentPosition() + motorBackRight.getCurrentPosition())/4;
+        return averageTicks;
     }
 
-    public boolean driveStrafe(boolean left, double targetMeters, double power){
 
-        if(!left){
-            moveMode = moveMode.right;
-            targetMeters = -targetMeters;
-            power = -power;
-        }
-        else moveMode = moveMode.left;
-
-        long targetPos = (long)(targetMeters * strafeTPM);
-        if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){
-            driveMixerMec(0, power, 0);
-            return false;
-        }
-        else {
-            driveMixerMec(0, 0, 0);
-            return true;
-        }
+    /**
+     * retrieve the average of the absolute value of ticks on all motors
+     */
+    public long getAverageAbsTicks(){
+        long averageTicks = (Math.abs(motorFrontLeft.getCurrentPosition()) + Math.abs(motorBackLeft.getCurrentPosition()) + Math.abs(motorFrontRight.getCurrentPosition()) + Math.abs(motorBackRight.getCurrentPosition()))/4;
+        return averageTicks;
     }
 
-//    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
-//        moveMode = moveMode.rotate;
-//        if(!clockwise){
-//            targetAngle = -targetAngle;
-//            power = -power;
-//        }
-//        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
-//        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
-//            driveMixer(0, 0, power);
-//            return false;
-//        }
-//        else {
-//            driveMixer(0, 0, 0);
-//            return true;
-//        }
-//    }
+
+    /**
+     * clamp a double to match the power range of a motor
+     * @param power the double value being clamped to motor power range
+     */
+
+    /**
+     * assign the current heading of the robot to zero
+     */
+    public void setZeroHeading(){
+        setHeading(0);
+    }
+
+    /**
+     * assign the current heading of the robot to a specific angle
+     * @param angle the value that the current heading will be assigned to
+     */
+    public void setHeading(double angle){
+        poseHeading = angle;
+        initialized = false; //triggers recalc of heading offset at next IMU update cycle
+    }
+
+    public void resetTPM(){
+        forwardTPM = 2493;
+        strafeTPM = 3145;
+    }
+
 
 
     /**
@@ -902,94 +1061,11 @@ public class Pose
         this.strafeTPM = (int)TPM_Strafe;
     }
 
-    public void updateSensors(){
-        update(imu, 0, 0);
-    }
-
     public boolean doesJewelMatch(boolean isBlue){
         if(isBlue){
             return (colorJewel.blue() > colorJewel.red());
         }
         return (colorJewel.red() > colorJewel.blue());
-    }
-
-    /**
-     * update the current location of the robot. This implementation gets heading and orientation
-     * from the Bosch BNO055 IMU and assumes a simple differential steer robot with left and right motor
-     * encoders.
-     *
-     *
-     * The current naive implementation assumes an unobstructed robot - it cannot account
-     * for running into objects and assumes no slippage in the wheel encoders.  Debris
-     * on the field and the mountain ramps will cause problems for this implementation. Further
-     * work could be done to compare odometry against IMU integrated displacement calculations to
-     * detect stalls and slips
-     *
-     * This method should be called regularly - about every 20 - 30 milliseconds or so.
-     *
-     * @param imu
-     * @param ticksLeft
-     * @param ticksRight
-     */
-
-    public void update(BNO055IMU imu, long ticksLeft, long ticksRight){
-        long currentTime = System.nanoTime();
-        imuAngles= imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
-        if (!initialized){
-            //first time in - we assume that the robot has not started moving and that orientation values are set to the current absolute orientation
-            //so first set of imu readings are effectively offsets
-
-
-            offsetHeading = wrapAngleMinus(poseHeading, imuAngles.firstAngle);
-            offsetRoll = wrapAngleMinus(imuAngles.secondAngle, poseRoll);
-            offsetPitch = wrapAngleMinus(imuAngles.thirdAngle, posePitch);
-
-            initialized = true;
-        }
-
-
-        poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
-        posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
-        poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
-
-        //double displacement = (((double)(ticksRight - ticksRightPrev)/ticksPerMeterRight) + ((double)(ticksLeft - ticksLeftPrev)/ticksPerMeterLeft))/2.0;
-
-        // we haven't worked out the trig of calculating displacement from any driveMixer combination, so
-        // for now we are just restricting ourselves to cardinal relative directions of pure forward, backward, left and right
-        // so no diagonals or rotations - if we do those then our absolute positioning fails
-
-        switch (moveMode) {
-            case forward:
-            case backward:
-                displacement = (getAverageTicks() - displacementPrev) * forwardTPM;
-                odometer += Math.abs(displacement);
-                poseHeadingRad = Math.toRadians(poseHeading);
-                break;
-            case left:
-                displacement = (getAverageAbsTicks() - displacementPrev) * strafeTPM; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
-                poseHeadingRad = Math.toRadians(poseHeading)- Math.PI/2; //actual heading is rotated 90 degrees counterclockwise
-
-                break;
-            case right:
-                displacement = (getAverageAbsTicks() - displacementPrev) * strafeTPM; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
-                poseHeadingRad = Math.toRadians(poseHeading) + Math.PI/2; //actual heading is rotated 90 degrees clockwise
-
-                break;
-            default:
-                displacement=0; //when rotating or in an undefined moveMode, ignore/reset displacement
-                displacementPrev = 0;
-                break;
-        }
-
-        odometer += Math.abs(displacement);
-        poseSpeed = displacement / (double)(currentTime - this.timeStamp)*1000000; //meters per second when ticks per meter is calibrated
-
-        timeStamp = currentTime;
-        displacementPrev = displacement;
-
-        poseX += displacement * Math.cos(poseHeadingRad);
-        poseY += displacement * Math.sin(poseHeadingRad);
-
     }
 
     public long getTicksLeftPrev()

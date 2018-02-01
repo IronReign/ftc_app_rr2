@@ -121,7 +121,12 @@ public class GlyphSystem {
     }
 
     public void stopLift(){
+
         motorLift.setPower(0);
+        stopBelt();
+        setMotorLeft(0);
+        setMotorRight(0);
+
     }
 
     public void raiseLift(){
