@@ -425,7 +425,7 @@ public class Pose
      * @param Kd derivative proportional for PID
      * @param pwr set the forward power
      * @param targetAngle the heading the robot will try to maintain while driving
-     */
+    */
     public void driveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
         movePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
@@ -443,7 +443,15 @@ public class Pose
         movePIDMixer(Kp, Ki, Kd, pwrFwd, pwrStf, poseHeading, targetAngle);
     }
 
-
+    /**
+     * Drive with a set power for a set distance while maintaining an IMU heading using PID
+     * @param Kp proportional multiplier for PID
+     * @param pwr set the forward power
+     * @param targetAngle the heading the robot will try to maintain while driving
+     * @param forwardOrLeft is the robot driving in the forwards/left (positive) directions or backwards/right (negative) directions
+     * @param targetMeters the target distance (in meters)
+     * @param strafe tells if the robot driving forwards/backwards or left/right
+     */
     public boolean driveIMUDistance(double Kp, double pwr, double targetAngle, boolean forwardOrLeft, double targetMeters, boolean strafe){
         if(!forwardOrLeft){
             moveMode = moveMode.backward;
