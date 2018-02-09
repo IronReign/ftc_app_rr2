@@ -511,8 +511,8 @@ public class Game_6832 extends LinearOpMode {
         }
 
 //        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
-            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_x*beaterDamper);
-            robot.glyphSystem.setMotorRight(gamepad2.right_stick_x*beaterDamper);
+            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
+            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
 //        }
 
         if(toggleAllowed(gamepad2.a, a)){
@@ -709,6 +709,19 @@ public class Game_6832 extends LinearOpMode {
             case 12:
                 if(autoTimer < System.nanoTime()){
                     robot.glyphSystem.hold();
+                    autoSetupStage++;
+                    robot.resetMotors(true);
+                }
+                break;
+            case 13:
+                if(robot.rotateIMU(0, 1)){
+                    robot.resetMotors(true);
+                    autoSetupStage++;
+                }
+                break;
+            case 14:
+                if(robot.driveForward(true, .3, .5)){
+                    robot.resetMotors(true);
                     robot.glyphSystem.goLiftAuto2();
                     autoSetupStage = 0;
                     return true;
@@ -894,21 +907,21 @@ public class Game_6832 extends LinearOpMode {
                 if(isBlue) {
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(320, 1.5)) {
+                            if (robot.rotateIMU(330, 1.5)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if (robot.rotateIMU(310, 1.5)) {
+                            if (robot.rotateIMU(320, 1.5)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(290, 1.5)) {
+                            if (robot.rotateIMU(300, 1.5)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.goLiftAuto();
                                 autoStage++;
@@ -919,21 +932,21 @@ public class Game_6832 extends LinearOpMode {
                 else{
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(40, 1.5)) {
+                            if (robot.rotateIMU(30, 1.5)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if (robot.rotateIMU(50, 1.5)) {
+                            if (robot.rotateIMU(40, 1.5)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(70, 1.5)) {
+                            if (robot.rotateIMU(60, 1.5)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.goLiftAuto();
                                 autoStage++;
