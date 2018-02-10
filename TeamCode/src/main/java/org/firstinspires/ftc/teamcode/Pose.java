@@ -63,7 +63,7 @@ public class Pose
     Servo servoPhone                 = null;
     Servo servoJewel                 = null;
     ColorSensor colorJewel = null;
-    DistanceSensor glyphUpper = null;;
+    //DistanceSensor glyphUpper = null;;
 
 //    Servo servoLiftLatch    = null;
 
@@ -262,8 +262,7 @@ public class Pose
         this.servoJewel      = this.hwMap.servo.get("servoJewel");
 
         this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
-        this.glyphUpper      = this.hwMap.get(DistanceSensor.class, "glyphDetectUp");
-
+        //this.glyphUpper      = this.hwMap.get(DistanceSensor.class, "glyphDetectUp");
 
         //motor configurations
 

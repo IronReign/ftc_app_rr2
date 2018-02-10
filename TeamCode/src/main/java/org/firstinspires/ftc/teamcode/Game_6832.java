@@ -542,7 +542,15 @@ public class Game_6832 extends LinearOpMode {
         if(gamepad1.y){
             robot.glyphSystem.raiseLift2();
         }
+        if(gamepad1.x){ //get phone up out of the way
 
+            robot.glyphSystem.wideOpenGrip();
+            runtime.reset();
+            while (opModeIsActive() && (runtime.seconds() < 1.0)) {
+                telemetry.update();
+            }
+            robot.glyphSystem.tiltPhoneUp();
+        }
 
         if(toggleAllowed(gamepad1.b, b)){
             robot.glyphSystem.toggleGrip();
@@ -592,8 +600,8 @@ public class Game_6832 extends LinearOpMode {
         switch(autoSetupStage) {
             case 0:
                 robot.setZeroHeading();
-                robot.glyphSystem.tiltPhoneDown();
                 robot.glyphSystem.wideOpenGrip();
+                robot.glyphSystem.tiltPhoneDown();
                 robot.jewel.lowerArm();
                 autoSetupStage++;
                 break;
@@ -606,12 +614,20 @@ public class Game_6832 extends LinearOpMode {
 //                robot.glyphSystem.goLiftAuto();
                 if (autoTimer < System.nanoTime()) {
                     savedVuMarkCodex = getRelicCodex();
-                    robot.glyphSystem.collect();
                     robot.glyphSystem.tiltPhoneUp();
+                    autoTimer = futureTime(1.0f);
                     autoSetupStage++;
                 }
                 break;
-            case 3:
+            case 3: //get the glyph in front after phone is out of the way
+//                robot.glyphSystem.goLiftAuto();
+                if (autoTimer < System.nanoTime()) {
+
+                    robot.glyphSystem.collect();
+                    autoSetupStage++;
+                }
+                break;
+            case 4:
                 if (robot.driveForward(false, .05, .15)) {
                     autoTimer = futureTime(3.0f);
                     robot.glyphSystem.closeGrip();
@@ -622,7 +638,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
 
-            case 4:
+            case 5:
                 if(autoTimer < System.nanoTime()){
                     robot.glyphSystem.hold();
                     robot.resetMotors(true);
@@ -630,14 +646,14 @@ public class Game_6832 extends LinearOpMode {
                 }
             break;
 
-            case 5:
+            case 6:
                 if (robot.driveForward(true, .02, .35)) {
 //                    autoTimer = futureTime(3.0f);
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
                 break;
-            case 6:
+            case 7:
                 if (autoTimer < System.nanoTime()) {
                     robot.resetMotors(true);
                     jewelMatches = robot.doesJewelMatch(isBlue);
@@ -653,7 +669,7 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 }
                 break;
-            case 7: //small turn to knock off jewel
+            case 8: //small turn to knock off jewel
 //                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
 //                    if(robot.rotateIMU(13, 2.5)){
 //                        autoTimer = futureTime(1.5f);
@@ -674,7 +690,7 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 }
                 break;
-            case 8:
+            case 9:
                 if(robot.getRoll() > 0 && robot.getRoll() < 180){
                     robot.resetMotors(true);
                     robot.driveMixerMec(0,0,0);
@@ -685,13 +701,13 @@ public class Game_6832 extends LinearOpMode {
 //                    autoSetupStage++;
 //                }
                 break;
-            case 9:
+            case 10:
                 if (robot.driveForward(false, .01, .75)) {
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
                 break;
-            case 10: //lift jewel arm
+            case 11: //lift jewel arm
                 robot.jewel.liftArm();
 //                if (autoTimer < System.nanoTime()) {
                     autoSetupStage++;
@@ -699,27 +715,27 @@ public class Game_6832 extends LinearOpMode {
 //                }
 
                 break;
-            case 11:
+            case 12:
                 if(autoTimer < System.nanoTime()){
                     robot.glyphSystem.collect();
                     autoTimer = futureTime(1.5f);
                     autoSetupStage++;
                 }
                 break;
-            case 12:
+            case 13:
                 if(autoTimer < System.nanoTime()){
                     robot.glyphSystem.hold();
                     autoSetupStage++;
                     robot.resetMotors(true);
                 }
                 break;
-            case 13:
+            case 14:
                 if(robot.rotateIMU(0, 1)){
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
                 break;
-            case 14:
+            case 15:
                 if(robot.driveForward(true, .3, .5)){
                     robot.resetMotors(true);
                     robot.glyphSystem.goLiftAuto2();
@@ -1279,11 +1295,11 @@ public class Game_6832 extends LinearOpMode {
                         return String.valueOf(autoStage);
                     }
                 })
-                .addData("glyph distance", new Func<String>() {
-                    @Override public String value() {
-                        return String.valueOf(robot.glyphUpper.getDistance(DistanceUnit.CM));
-                    }
-                })
+                //.addData("glyph distance", new Func<String>() {
+                //    @Override public String value() {
+                //        return String.valueOf(robot.glyphUpper.getDistance(DistanceUnit.CM));
+                //    }
+                //})
 //                .addData("TicksFL", new Func<String>() {
 //                    @Override public String value() {
 //                        return Long.toString(robot.motorFront.getCurrentPosition());
