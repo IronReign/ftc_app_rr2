@@ -107,10 +107,13 @@ public class GlyphSystem {
         if(servoBeltRight.getPosition() == servoNormalize(beltOff)){
             servoBeltLeft.setPosition(servoNormalize(beltOn));
             servoBeltRight.setPosition(servoNormalize(beltOn));
+            collect();
+
         }
         else{
             servoBeltLeft.setPosition(servoNormalize(beltOff));
             servoBeltRight.setPosition(servoNormalize(beltOff));
+            hold();
         }
     }
 
