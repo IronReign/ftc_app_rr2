@@ -271,7 +271,7 @@ public class Pose
         this.motorLift.setDirection(DcMotorSimple.Direction.FORWARD);
         this.motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        this.servoJewelRight.setDirection(Servo.Direction.REVERSE);
+        this.servoJewelLeft.setDirection(Servo.Direction.REVERSE);
 //        this.motorGripRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.servoLiftLeft.setDirection(Servo.Direction.REVERSE);
 
