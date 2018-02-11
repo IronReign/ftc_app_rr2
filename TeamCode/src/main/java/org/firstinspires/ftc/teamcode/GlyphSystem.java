@@ -49,8 +49,8 @@ public class GlyphSystem {
     }
 
     public void collect(){
-        motorLeft.setPower(.60);
-        motorRight.setPower(-.60);
+        motorLeft.setPower(.90);
+        motorRight.setPower(-.90);
     }
 
     public void hold(){

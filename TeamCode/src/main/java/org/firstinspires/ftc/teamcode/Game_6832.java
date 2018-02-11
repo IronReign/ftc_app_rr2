@@ -95,7 +95,7 @@ public class Game_6832 extends LinearOpMode {
     private double pwrStfL = 0;
     private double pwrFwdR = 0;
     private double pwrStfR = 0;
-    private double beaterDamper = .5;
+    private double beaterDamper = .75;
     private boolean enableTank = false;
     private long damperTimer = 0;
 
@@ -511,14 +511,22 @@ public class Game_6832 extends LinearOpMode {
         }
 
 //        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
-            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
-            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
+//            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
+//            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
 //        }
 
         if(toggleAllowed(gamepad2.a, a)){
             robot.glyphSystem.toggleBelt();
         }
 
+
+        if(.4 < robot.glyphSystem.servoBeltLeft.getPosition() && robot.glyphSystem.servoBeltLeft.getPosition() < .6){
+            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
+            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
+        }
+        else{
+            robot.glyphSystem.collect();
+        }
 //        if(gamepad1.right_trigger > 0.5)
 //            pwrDamper = 1;
 //        else
@@ -600,8 +608,8 @@ public class Game_6832 extends LinearOpMode {
         switch(autoSetupStage) {
             case 0:
                 robot.setZeroHeading();
-                robot.glyphSystem.wideOpenGrip();
                 robot.glyphSystem.tiltPhoneDown();
+                robot.glyphSystem.wideOpenGrip();
                 robot.jewel.lowerArm();
                 autoSetupStage++;
                 break;
@@ -614,7 +622,7 @@ public class Game_6832 extends LinearOpMode {
 //                robot.glyphSystem.goLiftAuto();
                 if (autoTimer < System.nanoTime()) {
                     savedVuMarkCodex = getRelicCodex();
-                    robot.glyphSystem.tiltPhoneUp();
+
                     autoTimer = futureTime(1.0f);
                     autoSetupStage++;
                 }
@@ -718,6 +726,7 @@ public class Game_6832 extends LinearOpMode {
             case 12:
                 if(autoTimer < System.nanoTime()){
                     robot.glyphSystem.collect();
+                    robot.glyphSystem.tiltPhoneUp();
                     autoTimer = futureTime(1.5f);
                     autoSetupStage++;
                 }
