@@ -31,7 +31,7 @@ public class GlyphSystem {
     boolean gripOpen = false;
     int gripOpenPos = 1544; //1400
     //int gripClosedPos = 1900;
-    int gripClosedPos=1648;
+    int gripClosedPos=1735;
     int gripTightPos=1700;
     int gripWideOpenPos = 1381;
 
@@ -72,6 +72,11 @@ public class GlyphSystem {
     public void closeGrip() {
         gripOpen = false;
         servoGrip.setPosition(servoNormalize(gripClosedPos));
+    }
+
+    public void closeGripTight() {
+        gripOpen = false;
+        servoGrip.setPosition(servoNormalize(gripTightPos));
     }
 
     public void releaseGrip() {

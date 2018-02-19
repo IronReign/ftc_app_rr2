@@ -244,6 +244,9 @@ public class Pose
          * to 'get' must correspond to the names assigned during the robot configuration
          * step (using the FTC Robot Controller app on the phone).
          */
+
+
+               
         this.motorFrontLeft  = this.hwMap.dcMotor.get("motorFrontLeft");
         this.motorFrontRight = this.hwMap.dcMotor.get("motorFrontRight");
         this.motorBackLeft   = this.hwMap.dcMotor.get("motorBackLeft");
