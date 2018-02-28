@@ -7,7 +7,6 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -54,7 +53,8 @@ public class Pose
 //    DcMotor motorLauncher            = null; //flywheel motor
     DcMotor motorLift                = null; //cap ball lift motor
     DcMotor headLamp                 = null; //front white LED string
-    Servo servoGrip                  = null; //servoGrip for Glyphs and Relics
+    Servo servoGripRight             = null; //servoGripRight for Glyphs and Relics
+    Servo servoGripLeft              = null;
     Servo servoJewelLeft             = null; //deploys the arm that knocks off the jewel
     Servo servoJewelRight            = null; //deploys the arm that knocks off the jewel
     Servo servoTester                = null;
@@ -69,6 +69,7 @@ public class Pose
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
+    BNO055IMU imuLift;
 
 
     private double powerFrontLeft  = 0;
@@ -112,8 +113,9 @@ public class Pose
     private double poseSavedHeading = 0.0;
 
     //scoring objects and related variables
-    public GlyphSystem glyphSystem;
+//    public GlyphSystem glyphSystem;
     public JewelArm jewel;
+    public GlyphSystem2 glyphSystem;
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
@@ -251,9 +253,10 @@ public class Pose
         this.motorFrontRight = this.hwMap.dcMotor.get("motorFrontRight");
         this.motorBackLeft   = this.hwMap.dcMotor.get("motorBackLeft");
         this.motorBackRight  = this.hwMap.dcMotor.get("motorBackRight");
-        this.motorLift       = this.hwMap.dcMotor.get("motorLift");
+        this.motorLift       = this.hwMap.dcMotor.get("motorBelt");
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
-        this.servoGrip       = this.hwMap.servo.get("servoGrip");
+        this.servoGripRight  = this.hwMap.servo.get("servoGripRight");
+        this.servoGripLeft   = this.hwMap.servo.get("servoGripLeft");
         this.servoJewelLeft  = this.hwMap.servo.get("servoJewelLeft");
         this.servoJewelRight = this.hwMap.servo.get("servoJewelRight");
         this.servoTester     = this.hwMap.servo.get("servoTester");
@@ -277,10 +280,11 @@ public class Pose
         this.servoJewelLeft.setDirection(Servo.Direction.REVERSE);
 //        this.motorGripRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.servoLiftLeft.setDirection(Servo.Direction.REVERSE);
+        this.servoGripLeft.setDirection(Servo.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
-        this.glyphSystem = new GlyphSystem(motorLift, servoGrip, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
+//        this.glyphSystem = new GlyphSystem(motorLift, servoGripRight, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
         this.jewel = new JewelArm(servoJewelLeft,servoJewelRight, colorJewel, servoJewel);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
@@ -289,8 +293,20 @@ public class Pose
         parametersIMU.loggingEnabled       = true;
         parametersIMU.loggingTag           = "IMU";
 
+        BNO055IMU.Parameters parametersIMULift = new BNO055IMU.Parameters();
+        parametersIMULift.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMULift.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMULift.loggingEnabled       = true;
+        parametersIMULift.loggingTag           = "IMU";
+
+
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
+
+        imuLift = hwMap.get(BNO055IMU.class, "imuLift");
+        imuLift.initialize(parametersIMULift);
+
+        this.glyphSystem = new GlyphSystem2(motorLift, servoGripRight, servoGripLeft, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone, imuLift);
 
         headLampOn();
     }
@@ -326,9 +342,12 @@ public class Pose
             offsetRoll = wrapAngleMinus(imuAngles.secondAngle, poseRoll);
             offsetPitch = wrapAngleMinus(imuAngles.thirdAngle, posePitch);
 
+            glyphSystem.initIMU();
+
             initialized = true;
         }
 
+        glyphSystem.update();
 
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);

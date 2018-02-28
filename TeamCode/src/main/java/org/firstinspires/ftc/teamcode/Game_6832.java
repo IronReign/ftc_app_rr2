@@ -538,6 +538,15 @@ public class Game_6832 extends LinearOpMode {
         if(gamepad1.a){
             robot.glyphSystem.lowerLift2();
         }
+
+        else if(gamepad1.y){
+            robot.glyphSystem.raiseLift2();
+        }
+
+        else{
+            robot.glyphSystem.stopBelt();
+        }
+        
         if(robot.glyphSystem.getMotorLiftPosition() < 510) {
             if (gamepad2.dpad_up) {
                 robot.jewel.liftArm();
@@ -550,9 +559,7 @@ public class Game_6832 extends LinearOpMode {
             robot.jewel.liftArm();
         }
 
-        if(gamepad1.y){
-            robot.glyphSystem.raiseLift2();
-        }
+
         if(gamepad1.x){ //get phone up out of the way
 
             robot.glyphSystem.wideOpenGrip();
