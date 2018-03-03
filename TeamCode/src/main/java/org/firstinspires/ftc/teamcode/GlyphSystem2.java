@@ -4,6 +4,8 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 /**
@@ -48,11 +50,11 @@ public class GlyphSystem2 {
 
 
     boolean gripOpen = false;
-    int gripOpenPos = 1200; //1544
+    int gripOpenPos = 1350; //1544
     //int gripClosedPos = 1900;
-    int gripClosedPos=1000; //1735
-    int gripTightPos= 900; //1700
-    int gripWideOpenPos = 1250; //1381
+    int gripClosedPos=1200; //1735
+    int gripTightPos= 1100; //1700
+    int gripWideOpenPos = 1450; //1381
 
     public GlyphSystem2(DcMotor motorLift, Servo servoGripRight, Servo servoGripLeft, DcMotor motorLeft, DcMotor motorRight, Servo servoBeltLeft, Servo servoBeltRight, Servo servoPhone, BNO055IMU imu){
 
@@ -258,12 +260,19 @@ public class GlyphSystem2 {
     }
 
     public void initIMU (){
+
+        imuAngles= imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+
         offsetHeading = wrapAngleMinus(yaw, imuAngles.firstAngle);
         offsetRoll = wrapAngleMinus(imuAngles.secondAngle, roll);
         offsetPitch = wrapAngleMinus(imuAngles.thirdAngle, pitch);
+
     }
 
     public void update (){
+
+        imuAngles= imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+
         yaw = wrapAngle(imuAngles.firstAngle, offsetHeading);
         pitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         roll = wrapAngle(imuAngles.secondAngle, offsetRoll);

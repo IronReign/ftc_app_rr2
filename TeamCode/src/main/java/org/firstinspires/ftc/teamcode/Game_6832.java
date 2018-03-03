@@ -518,9 +518,41 @@ public class Game_6832 extends LinearOpMode {
 //            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
 //        }
 
-        if(toggleAllowed(gamepad2.a, a)){
+        if(toggleAllowed(gamepad1.a, a)){
             robot.glyphSystem.toggleBelt();
         }
+
+
+        if(toggleAllowed(gamepad1.x, x)){
+            robot.glyphSystem.toggleGrip();
+        }
+
+
+//        if(gamepad1.a){
+//            robot.glyphSystem.lowerLift2();
+//        }
+//
+//        else if(gamepad1.y){
+//            robot.glyphSystem.raiseLift2();
+//        }
+//
+//        else{
+//            robot.glyphSystem.stopBelt();
+//        }
+//
+//       if(toggleAllowed(gamepad1.b, b)){
+//          robot.glyphSystem.toggleGrip();
+//        }
+//
+//        if(gamepad1.x){ //get phone up out of the way
+//
+//            robot.glyphSystem.wideOpenGrip();
+//            runtime.reset();
+//            while (opModeIsActive() && (runtime.seconds() < 1.0)) {
+//                telemetry.update();
+//            }
+//            robot.glyphSystem.tiltPhoneUp();
+//        }
 
 
         if(.4 < robot.glyphSystem.servoBeltLeft.getPosition() && robot.glyphSystem.servoBeltLeft.getPosition() < .6){
@@ -535,18 +567,9 @@ public class Game_6832 extends LinearOpMode {
 //        else
 //            pwrDamper = .33;
 
-        if(gamepad1.a){
-            robot.glyphSystem.lowerLift2();
-        }
 
-        else if(gamepad1.y){
-            robot.glyphSystem.raiseLift2();
-        }
 
-        else{
-            robot.glyphSystem.stopBelt();
-        }
-        
+
         if(robot.glyphSystem.getMotorLiftPosition() < 510) {
             if (gamepad2.dpad_up) {
                 robot.jewel.liftArm();
@@ -560,19 +583,9 @@ public class Game_6832 extends LinearOpMode {
         }
 
 
-        if(gamepad1.x){ //get phone up out of the way
 
-            robot.glyphSystem.wideOpenGrip();
-            runtime.reset();
-            while (opModeIsActive() && (runtime.seconds() < 1.0)) {
-                telemetry.update();
-            }
-            robot.glyphSystem.tiltPhoneUp();
-        }
 
-        if(toggleAllowed(gamepad1.b, b)){
-            robot.glyphSystem.toggleGrip();
-        }
+
 
         if(toggleAllowed(gamepad1.dpad_right, dpad_right)) {
             damperTimer = futureTime(2f);
@@ -1252,28 +1265,43 @@ public class Game_6832 extends LinearOpMode {
         10 = start button
         */
 
-        if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
+//        if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
+//
+//            state--;
+//            if (state < 0) {
+//                state = 9;
+//            }
+//            robot.resetMotors(true);
+//            active = false;
+//            resetAuto();
+//            codexFlashStage = 0;
+//        }
+//
+//        if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
+//
+//            state++;
+//            if (state > 9) {
+//                state = 0;
+//            }
+//            robot.resetMotors(true);
+//            active = false;
+//            resetAuto();
+//            codexFlashStage = 0;
+//        }
 
-            state--;
-            if (state < 0) {
-                state = 9;
+        if (!active) {
+            if(toggleAllowed(gamepad1.b, b)){
+
+                state++;
+                if (state > 9) {
+                    state = 0;
+                }
+                robot.resetMotors(true);
+                active = false;
+                resetAuto();
+                codexFlashStage = 0;
+
             }
-            robot.resetMotors(true);
-            active = false;
-            resetAuto();
-            codexFlashStage = 0;
-        }
-
-        if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
-
-            state++;
-            if (state > 9) {
-                state = 0;
-            }
-            robot.resetMotors(true);
-            active = false;
-            resetAuto();
-            codexFlashStage = 0;
         }
 
         if (toggleAllowed(gamepad1.start, startBtn)) {

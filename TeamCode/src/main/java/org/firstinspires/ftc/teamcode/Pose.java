@@ -297,7 +297,7 @@ public class Pose
         parametersIMULift.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
         parametersIMULift.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parametersIMULift.loggingEnabled       = true;
-        parametersIMULift.loggingTag           = "IMU";
+        parametersIMULift.loggingTag           = "IMULift";
 
 
         imu = hwMap.get(BNO055IMU.class, "imu");
