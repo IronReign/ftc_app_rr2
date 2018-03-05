@@ -504,6 +504,8 @@ public class Game_6832 extends LinearOpMode {
         pwrStf = pwrDamper * gamepad1.left_stick_x;
         pwrRot = -pwrDamper * gamepad1.right_stick_x;
 
+        pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
+
         pwrFwdL = pwrDamper * gamepad1.left_stick_y;
         pwrStfL = pwrDamper * gamepad1.left_stick_x;
 
@@ -522,6 +524,14 @@ public class Game_6832 extends LinearOpMode {
 //            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
 //            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
 //        }
+
+        if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
+            if(pwrDamper != .33){
+                pwrDamper = 33;
+            }
+            else
+                pwrDamper = 1.0;
+        }
 
         if(toggleAllowed(gamepad1.a, a)){
             robot.glyphSystem.toggleBelt();
@@ -578,8 +588,8 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(.4 < robot.glyphSystem.servoBeltLeft.getPosition() && robot.glyphSystem.servoBeltLeft.getPosition() < .6){
-            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
-            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
+            robot.glyphSystem.setMotorLeft(gamepad1.right_stick_y*beaterDamper);
+            robot.glyphSystem.setMotorRight(-gamepad1.right_stick_y*beaterDamper);
         }
         else{
             robot.glyphSystem.collect();
@@ -609,14 +619,14 @@ public class Game_6832 extends LinearOpMode {
 
 
 
-        if(toggleAllowed(gamepad1.dpad_right, dpad_right)) {
-            damperTimer = futureTime(2f);
-            pwrDamper = .33;
-        }
+//        if(toggleAllowed(gamepad1.dpad_right, dpad_right)) {
+//            damperTimer = futureTime(2f);
+//            pwrDamper = .33;
+//        }
 
-        if(damperTimer < System.nanoTime()){
-            pwrDamper = 1;
-        }
+//        if(damperTimer < System.nanoTime()){
+//            pwrDamper = 1;
+//        }
 
         if(toggleAllowed(gamepad2.y, y)){
             enableTank = !enableTank;
