@@ -30,8 +30,9 @@ public class GlyphSystem2 {
     private int liftAuto2 = 1500;
     private int beltOn = 2000;
     private int beltOff = 1500;
-    private int phoneUp = 900; //1250
-    private int phoneDown = 2105; //1850
+    private int phoneUp = 1700; //900
+    private int phoneDown = 900; //2105
+    private double phonePWMPerDegree = 8.889;
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
 
     private double offsetHeading;
@@ -82,6 +83,14 @@ public class GlyphSystem2 {
 
         motorLeft.setPower(0);
         motorRight.setPower(0);
+    }
+
+    public int maintainPhoneTilt(){
+        double pos = phoneDown + (360 - roll)*phonePWMPerDegree;
+        if(pos>phoneUp) pos = phoneUp;
+        if(pos<phoneDown) pos = phoneDown;
+        servoPhone.setPosition(servoNormalize((int)pos));
+        return (int)pos;
     }
 
     public void toggleGrip(){
@@ -201,7 +210,7 @@ public class GlyphSystem2 {
 
     public void lowerLift2 (){
         motorBelt.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorBelt.setPower(.5);
+        motorBelt.setPower(-.5);
     }
 
     public void stopBelt() {

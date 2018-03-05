@@ -495,6 +495,11 @@ public class Game_6832 extends LinearOpMode {
             joystickDriveStarted = true;
         }
 
+        if(robot.glyphSystem.roll < 345 && robot.glyphSystem.roll > 180)
+            robot.glyphSystem.maintainPhoneTilt();
+        else
+            robot.glyphSystem.tiltPhoneUp();
+
         pwrFwd = pwrDamper * gamepad1.left_stick_y;
         pwrStf = pwrDamper * gamepad1.left_stick_x;
         pwrRot = -pwrDamper * gamepad1.right_stick_x;
@@ -527,6 +532,18 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
+        if(gamepad1.dpad_up){
+            robot.glyphSystem.raiseLift2();
+        }
+
+        else if(gamepad1.dpad_down){
+            robot.glyphSystem.lowerLift2();
+        }
+
+        else{
+            robot.glyphSystem.stopBelt();
+        }
+
 
 //        if(gamepad1.a){
 //            robot.glyphSystem.lowerLift2();
@@ -553,6 +570,11 @@ public class Game_6832 extends LinearOpMode {
 //            }
 //            robot.glyphSystem.tiltPhoneUp();
 //        }
+//
+//        if (gamepad1.dpad_down) robot.glyphSystem.goLiftMin();
+//        if (gamepad1.dpad_up) robot.glyphSystem.goLiftMax();
+//        if (gamepad1.dpad_left) robot.glyphSystem.goLiftStack();
+
 
 
         if(.4 < robot.glyphSystem.servoBeltLeft.getPosition() && robot.glyphSystem.servoBeltLeft.getPosition() < .6){
@@ -600,9 +622,7 @@ public class Game_6832 extends LinearOpMode {
             enableTank = !enableTank;
         }
 
-        if (gamepad1.dpad_down) robot.glyphSystem.goLiftMin();
-        if (gamepad1.dpad_up) robot.glyphSystem.goLiftMax();
-        if (gamepad1.dpad_left) robot.glyphSystem.goLiftStack();
+
 
 //        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
 
@@ -1299,7 +1319,7 @@ public class Game_6832 extends LinearOpMode {
                 robot.resetMotors(true);
                 active = false;
                 resetAuto();
-                codexFlashStage = 0;
+                    codexFlashStage = 0;
 
             }
         }
@@ -1413,6 +1433,11 @@ public class Game_6832 extends LinearOpMode {
 //                });
 //
         telemetry.addLine()
+//                .addData("phone pos", new Func<String>() {
+//                    @Override public String value() {
+//                        return Integer.toString(robot.glyphSystem.maintainPhoneTilt());
+//                    }
+//                })
                 .addData("status", new Func<String>() {
                     @Override public String value() {
                         return robot.imu.getSystemStatus().toShortString();
@@ -1423,17 +1448,17 @@ public class Game_6832 extends LinearOpMode {
                         return robot.imu.getCalibrationStatus().toString();
                     }
                 })
-                .addData("Jewel Red", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.colorJewel.red();
-                    }
-                })
-
-                .addData("Jewel Blue", new Func<String>() {
-                    @Override public String value() {
-                        return "" + robot.colorJewel.blue();
-                    }
-                })
+//                .addData("Jewel Red", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.colorJewel.red();
+//                    }
+//                })
+//
+//                .addData("Jewel Blue", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + robot.colorJewel.blue();
+//                    }
+//                })
 
                 .addData("Relic Codex", new Func<String>() {
                     @Override public String value() {
@@ -1465,16 +1490,16 @@ public class Game_6832 extends LinearOpMode {
                         return Double.toString(robot.getRoll());
                     }
                 })
-                .addData("vuPwr", new Func<String>() {
+                .addData("glyph roll", new Func<String>() {
                     @Override public String value() {
                         //return formatAngle(angles.angleUnit, angles.firstAngle);
-                        return Double.toString(vuPwr);
+                        return Double.toString(robot.glyphSystem.roll);
                     }
                 })
-                .addData("vuDist", new Func<String>() {
+                .addData("glyph ticks", new Func<String>() {
                     @Override public String value() {
                         //return formatAngle(angles.angleUnit, angles.firstAngle);
-                        return Double.toString(robot.getVuDepth());
+                        return Integer.toString(robot.glyphSystem.getMotorLiftPosition());
                     }
                 });
 //                .addData("headingRaw", new Func<String>() {
