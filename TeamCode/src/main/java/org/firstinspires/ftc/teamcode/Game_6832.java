@@ -32,6 +32,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import android.view.View;
+
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -85,6 +87,10 @@ public class Game_6832 extends LinearOpMode {
     private int state = 0;
     private boolean isBlue = false;
 
+
+    private boolean liftDeposit = false;
+    private boolean liftVerticalDeposit = false;
+    private boolean liftHome = false;
 
     //drive train control variables
     private double pwrDamper = 1;
@@ -497,12 +503,16 @@ public class Game_6832 extends LinearOpMode {
 
         if(robot.glyphSystem.roll < 345 && robot.glyphSystem.roll > 180)
             robot.glyphSystem.maintainPhoneTilt();
-        else
-            robot.glyphSystem.tiltPhoneUp();
+        else{
+            if(toggleAllowed(gamepad1.b, b)){
+                robot.glyphSystem.togglePhoneTilt();
+            }
+        }
+
 
         pwrFwd = pwrDamper * gamepad1.left_stick_y;
         pwrStf = pwrDamper * gamepad1.left_stick_x;
-        pwrRot = -pwrDamper * gamepad1.right_stick_x;
+        pwrRot = -pwrDamper * .75 * gamepad1.right_stick_x;
 
         pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
 
@@ -527,7 +537,7 @@ public class Game_6832 extends LinearOpMode {
 
         if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
             if(pwrDamper != .33){
-                pwrDamper = 33;
+                pwrDamper = .33;
             }
             else
                 pwrDamper = 1.0;
@@ -542,17 +552,55 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
-        if(gamepad1.dpad_up){
-            robot.glyphSystem.raiseLift2();
-        }
-
-        else if(gamepad1.dpad_down){
-            robot.glyphSystem.lowerLift2();
+        if(robot.glyphSystem.motorLift.getCurrentPosition() < 100) {
+            if (gamepad1.dpad_up) {
+                robot.glyphSystem.raiseLift2();
+            } else if (gamepad1.dpad_down) {
+                robot.glyphSystem.lowerLift2();
+            } else {
+                robot.glyphSystem.stopBelt();
+            }
         }
 
         else{
-            robot.glyphSystem.stopBelt();
+            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+                if(robot.glyphSystem.motorLift.getTargetPosition() == robot.glyphSystem.liftDeposit){
+                     liftVerticalDeposit = true;
+                     liftDeposit = false;
+                     liftHome = false;
+                }
+                else {
+                    liftVerticalDeposit = false;
+                    liftDeposit = true;
+                    liftHome = false;
+                }
+            }
+            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+                liftVerticalDeposit = false;
+                liftDeposit = false;
+                liftHome = true;
+            }
         }
+
+        if(liftHome){
+            if(robot.glyphSystem.goHome()){
+                liftHome = false;
+            }
+        }
+
+        if(liftDeposit){
+            if(robot.glyphSystem.goLiftDeposit()){
+                liftDeposit = false;
+            }
+        }
+
+        if(liftVerticalDeposit){
+            if(robot.glyphSystem.goLiftVerticalDeposit()){
+                liftVerticalDeposit = false;
+            }
+        }
+
+
 
 
 //        if(gamepad1.a){

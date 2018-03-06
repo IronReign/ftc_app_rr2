@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 public class GlyphSystem2 {
 
-    DcMotor motorBelt = null;
+    DcMotor motorLift = null;
     DcMotor motorLeft = null;
     DcMotor motorRight = null;
     Servo servoGripRight = null;
@@ -34,6 +34,14 @@ public class GlyphSystem2 {
     private int phoneDown = 900; //2105
     private double phonePWMPerDegree = 8.889;
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
+
+    public int liftDeposit = 900;
+    public int liftVerticalDeposit =  1280;
+    public int liftRecoveryPos = 560;
+    public int liftCollect = -3875;
+
+    private int liftStage = 0;
+    private long liftTimer = 0;
 
     private double offsetHeading;
     private double offsetPitch;
@@ -60,7 +68,7 @@ public class GlyphSystem2 {
     public GlyphSystem2(DcMotor motorLift, Servo servoGripRight, Servo servoGripLeft, DcMotor motorLeft, DcMotor motorRight, Servo servoBeltLeft, Servo servoBeltRight, Servo servoPhone, BNO055IMU imu){
 
         this.imu = imu;
-        this.motorBelt = motorLift;
+        this.motorLift = motorLift;
         this.servoGripRight = servoGripRight;
         this.servoGripLeft = servoGripLeft;
         this.motorLeft = motorLeft;
@@ -96,6 +104,7 @@ public class GlyphSystem2 {
     public void toggleGrip(){
         if (gripOpen) {
             gripOpen = false;
+
             servoGripRight.setPosition(servoNormalize(gripClosedPos));
             servoGripLeft.setPosition(servoNormalize(gripClosedPos));
         }
@@ -137,6 +146,155 @@ public class GlyphSystem2 {
         servoPhone.setPosition(servoNormalize(phoneDown));
     }
 
+
+    public void togglePhoneTilt() {
+        if(servoPhone.getPosition() == servoNormalize(phoneUp)){
+            tiltPhoneDown();
+        }
+        else{
+            tiltPhoneUp();
+        }
+    }
+
+    public boolean goLiftCollect(){
+        switch (liftStage){
+            case 0:
+                tiltPhoneUp();
+                motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorLeft.setPower(.6);
+                liftStage++;
+                break;
+            case 1:
+                if(motorLift.getCurrentPosition() > liftDeposit - 200) {
+                    motorLift.setPower(.2);
+                    motorLift.setTargetPosition(liftRecoveryPos);
+                    liftTimer = futureTime(1.5f);
+                }
+                if(System.nanoTime() > liftTimer) {
+                    liftStage++;
+                    liftTimer = futureTime(5.0f);
+                }
+                break;
+            case 2:
+                motorLift.setPower(.6);
+                motorLift.setTargetPosition(liftCollect);
+                if(System.nanoTime() > liftTimer){
+                    liftStage = 0;
+                    return true;
+                }
+                break;
+            case 3:
+                break;
+        }
+        if(motorLift.getMode() != DcMotor.RunMode.RUN_TO_POSITION){
+            liftStage = 0;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean goLiftDeposit(){
+        switch (liftStage){
+            case 0:
+                tiltPhoneUp();
+                motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorLeft.setPower(.6);
+                liftStage++;
+                break;
+            case 1:
+                motorLift.setTargetPosition(liftDeposit);
+                liftTimer = futureTime(5f);
+                liftStage++;
+                break;
+            case 2:
+                if(liftTimer < System.nanoTime()){
+                    liftStage = 0;
+                    return true;
+                }
+                break;
+        }
+        if(motorLift.getMode() != DcMotor.RunMode.RUN_TO_POSITION){
+            liftStage = 0;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean goLiftVerticalDeposit(){
+        switch (liftStage){
+            case 0:
+                tiltPhoneUp();
+                motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorLeft.setPower(.6);
+                liftStage++;
+                break;
+            case 1:
+                motorLift.setTargetPosition(liftVerticalDeposit);
+                liftTimer = futureTime(5f);
+                liftStage++;
+                break;
+            case 2:
+                if(liftTimer < System.nanoTime()){
+                    liftStage = 0;
+                    return true;
+                }
+                break;
+        }
+        if(motorLift.getMode() != DcMotor.RunMode.RUN_TO_POSITION){
+            liftStage = 0;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean goHome(){
+        switch (liftStage){
+            case 0:
+                tiltPhoneUp();
+                motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorLeft.setPower(.6);
+                liftStage++;
+                break;
+            case 1:
+                if(motorLift.getCurrentPosition() > liftDeposit - 200) {
+                    motorLift.setPower(.2);
+                    motorLift.setTargetPosition(liftRecoveryPos);
+                    liftTimer = futureTime(1.5f);
+                }
+                if(System.nanoTime() > liftTimer) {
+                    liftStage++;
+                    liftTimer = futureTime(3.0f);
+                }
+                break;
+            case 2:
+                motorLift.setPower(.6);
+                motorLift.setTargetPosition(0);
+                if(System.nanoTime() > liftTimer){
+                    liftStage = 0;
+                    return true;
+                }
+                break;
+            case 3:
+                break;
+        }
+        if(motorLift.getMode() != DcMotor.RunMode.RUN_TO_POSITION){
+            liftStage = 0;
+            return true;
+        }
+        return false;
+
+    }
+
+
+    public void resetLiftStage(){
+        liftStage = 0;
+    }
+
+    long futureTime(float seconds){
+        return System.nanoTime() + (long) (seconds * 1e9);
+    }
+
+
     public void liftBelt () {
         servoBeltLeft.setPosition(servoNormalize(beltOn));
         servoBeltRight.setPosition(servoNormalize(beltOn));
@@ -172,7 +330,7 @@ public class GlyphSystem2 {
 
     public void stopLift(){
 
-        motorBelt.setPower(0);
+        motorLift.setPower(0);
         stopBelt();
         setMotorLeft(0);
         setMotorRight(0);
@@ -180,64 +338,64 @@ public class GlyphSystem2 {
     }
 
     public void raiseLift(){
-        if(motorBelt.getCurrentPosition() < liftMax) motorBelt.setPower(.5);
-        else motorBelt.setPower(0);
+        if(motorLift.getCurrentPosition() < liftMax) motorLift.setPower(.5);
+        else motorLift.setPower(0);
     }
     public void lowerLift(){
-        if(motorBelt.getCurrentPosition() > liftMin) motorBelt.setPower(-.5);
-        else motorBelt.setPower(0);
+        if(motorLift.getCurrentPosition() > liftMin) motorLift.setPower(-.5);
+        else motorLift.setPower(0);
     }
 
 //    public void raiseLift2(){
-//        if (motorBelt.getCurrentPosition() < liftMax && motorBelt.getTargetPosition() < liftMax) {
-//            motorBelt.setTargetPosition((int) Math.min(motorBelt.getCurrentPosition() + liftPlanck, liftMax));
-//            motorBelt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//            motorBelt.setPower(1);
+//        if (motorLift.getCurrentPosition() < liftMax && motorLift.getTargetPosition() < liftMax) {
+//            motorLift.setTargetPosition((int) Math.min(motorLift.getCurrentPosition() + liftPlanck, liftMax));
+//            motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            motorLift.setPower(1);
 //        }
 //    }
 //    public void lowerLift2() {
-//        if (motorBelt.getCurrentPosition() > liftMin && motorBelt.getTargetPosition() > liftMin) {
-//            motorBelt.setTargetPosition((int) Math.max(motorBelt.getCurrentPosition() - liftPlanck, liftMin));
-//            motorBelt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//            motorBelt.setPower(.8);
+//        if (motorLift.getCurrentPosition() > liftMin && motorLift.getTargetPosition() > liftMin) {
+//            motorLift.setTargetPosition((int) Math.max(motorLift.getCurrentPosition() - liftPlanck, liftMin));
+//            motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            motorLift.setPower(.8);
 //        }
 //    }
 
     public void raiseLift2 (){
-        motorBelt.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorBelt.setPower(.5);
+        motorLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLift.setPower(.5);
     }
 
     public void lowerLift2 (){
-        motorBelt.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorBelt.setPower(-.5);
+        motorLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLift.setPower(-.5);
     }
 
     public void stopBelt() {
-        motorBelt.setPower(0);
+        motorLift.setPower(0);
     }
 
     public void goLiftMax() {
 
-            motorBelt.setTargetPosition(liftMax);
-            motorBelt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motorBelt.setPower(1);
+            motorLift.setTargetPosition(liftMax);
+            motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLift.setPower(1);
 
     }
 
     public void goLiftAuto() {
 
-        motorBelt.setTargetPosition(liftAuto);
-        motorBelt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorBelt.setPower(1);
+        motorLift.setTargetPosition(liftAuto);
+        motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLift.setPower(1);
 
     }
 
     public void goLiftAuto2() {
 
-        motorBelt.setTargetPosition(liftAuto2);
-        motorBelt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorBelt.setPower(1);
+        motorLift.setTargetPosition(liftAuto2);
+        motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLift.setPower(1);
 
     }
 
@@ -245,22 +403,22 @@ public class GlyphSystem2 {
 
     public void goLiftMin() {
 
-        motorBelt.setTargetPosition(liftMin);
-        motorBelt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorBelt.setPower(1);
+        motorLift.setTargetPosition(liftMin);
+        motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLift.setPower(1);
 
     }
 
     public void goLiftStack() {
 
-        motorBelt.setTargetPosition(liftStack);
-        motorBelt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorBelt.setPower(1);
+        motorLift.setTargetPosition(liftStack);
+        motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLift.setPower(1);
 
     }
 
     public int getMotorLiftPosition(){
-        return motorBelt.getCurrentPosition();
+        return motorLift.getCurrentPosition();
     }
 
     public static double servoNormalize(int pulse){

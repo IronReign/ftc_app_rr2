@@ -253,7 +253,7 @@ public class Pose
         this.motorFrontRight = this.hwMap.dcMotor.get("motorFrontRight");
         this.motorBackLeft   = this.hwMap.dcMotor.get("motorBackLeft");
         this.motorBackRight  = this.hwMap.dcMotor.get("motorBackRight");
-        this.motorLift       = this.hwMap.dcMotor.get("motorBelt");
+        this.motorLift       = this.hwMap.dcMotor.get("motorLift");
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.servoGripRight  = this.hwMap.servo.get("servoGripRight");
         this.servoGripLeft   = this.hwMap.servo.get("servoGripLeft");

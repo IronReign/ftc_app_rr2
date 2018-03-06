@@ -97,6 +97,15 @@ public class GlyphSystem {
         servoPhone.setPosition(servoNormalize(phoneDown));
     }
 
+    public void togglePhoneTilt() {
+        if(servoPhone.getPosition() == servoNormalize(phoneUp)){
+            tiltPhoneDown();
+        }
+        else{
+            tiltPhoneUp();
+        }
+    }
+
     public void liftBelt () {
         servoBeltLeft.setPosition(servoNormalize(beltOn));
         servoBeltRight.setPosition(servoNormalize(beltOn));
