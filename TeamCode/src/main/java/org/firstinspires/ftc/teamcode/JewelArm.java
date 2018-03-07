@@ -20,6 +20,13 @@ public class JewelArm {
     private int jewelLeft = 900;
     private int jewelMid = 1500;
     private int jewelRight = 2100;
+
+    public float jewelDeployTime = 2.75f;
+    public float thiefDeployTime = 1.5f;
+    public long jewelTimer = 0;
+    public long thiefTimer = -0;
+    public int jewelStage = 0;
+
     public int jewelPos;
 
     public JewelArm(Servo servoJewelLeft, Servo servoJewelRight, ColorSensor colorJewel, Servo servoJewel){
@@ -34,6 +41,60 @@ public class JewelArm {
         servoJewelRight.setPosition(servoNormalize(jewelStartPos));
         jewelPos = jewelStartPos;
     }
+
+    public boolean extendArm(){
+        switch(jewelStage){
+            case 0:
+                jewelTimer = futureTime(jewelDeployTime);
+                thiefTimer = futureTime(thiefDeployTime);
+                jewelStage++;
+                servoJewelLeft.setPosition(0);
+                break;
+            case 1:
+                if(System.nanoTime() > thiefTimer){
+                    center();
+                    jewelStage++;
+                }
+                break;
+            case 2:
+                if(System.nanoTime() > jewelTimer){
+                    jewelStage = 0;
+                    servoJewelLeft.setPosition(.5);
+                    return true;
+                }
+                break;
+
+        }
+        return false;
+    }
+
+    public boolean retractArm(){
+        switch(jewelStage){
+            case 0:
+                jewelTimer = futureTime(jewelDeployTime);
+                thiefTimer = futureTime(jewelDeployTime - thiefDeployTime);
+                jewelStage++;
+                servoJewelLeft.setPosition(1);
+                break;
+            case 1:
+                if(System.nanoTime() > thiefTimer){
+                    hitLeft();
+                    jewelStage++;
+                }
+                break;
+            case 2:
+                if(System.nanoTime() > jewelTimer){
+                    jewelStage = 0;
+                    servoJewelLeft.setPosition(.5);
+                    return true;
+                }
+                break;
+
+        }
+        return false;
+    }
+
+
 
     public void liftArm(){
         servoJewelLeft.setPosition(servoNormalize(jewelUpPos));
@@ -59,6 +120,10 @@ public class JewelArm {
     public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
+    }
+
+    long futureTime(float seconds){
+        return System.nanoTime() + (long) (seconds * 1e9);
     }
 
 }
