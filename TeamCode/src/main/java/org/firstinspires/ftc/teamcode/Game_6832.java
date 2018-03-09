@@ -181,7 +181,7 @@ public class Game_6832 extends LinearOpMode {
         relicCodex.get(0).setName("RelicTemplate");
 
         robot.glyphSystem.closeGrip();
-        robot.jewel.hitLeft();
+        robot.jewel.hitRight();
 
 
         relicTemplate = relicCodex.get(0);
@@ -556,54 +556,55 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
-        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50) {
+//        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50) {
             if (gamepad1.dpad_up) {
                 robot.glyphSystem.raiseLift2();
             } else if (gamepad1.dpad_down) {
+                robot.glyphSystem.tiltPhoneUp();
                 robot.glyphSystem.lowerLift2();
             } else {
                 robot.glyphSystem.stopBelt();
             }
-        }
+//        }
 
-        else{
-            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
-                if(robot.glyphSystem.motorLift.getCurrentPosition() > robot.glyphSystem.liftDeposit - 15){
-                     liftVerticalDeposit = true;
-                     liftDeposit = false;
-                     liftHome = false;
-                }
-                else {
-                    liftVerticalDeposit = false;
-                    liftDeposit = true;
-                    liftHome = false;
-                }
-            }
-            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
-                liftVerticalDeposit = false;
-                liftDeposit = false;
-                liftHome = true;
-            }
-        }
-
-        if(liftHome){
-            if(robot.glyphSystem.goHome()){
-                liftHome = false;
-            }
-        }
-
-        if(liftDeposit){
-            if(robot.glyphSystem.goLiftDeposit()){
-                liftDeposit = false;
-            }
-        }
-
-        if(liftVerticalDeposit){
-            if(robot.glyphSystem.goLiftVerticalDeposit()){
-                liftVerticalDeposit = false;
-            }
-        }
-
+//        else{
+//            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+//                if(robot.glyphSystem.motorLift.getCurrentPosition() > robot.glyphSystem.liftDeposit - 15){
+//                     liftVerticalDeposit = true;
+//                     liftDeposit = false;
+//                     liftHome = false;
+//                }
+//                else {
+//                    liftVerticalDeposit = false;
+//                    liftDeposit = true;
+//                    liftHome = false;
+//                }
+//            }
+//            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+//                liftVerticalDeposit = false;
+//                liftDeposit = false;
+//                liftHome = true;
+//            }
+//        }
+//
+//        if(liftHome){
+//            if(robot.glyphSystem.goHome()){
+//                liftHome = false;
+//            }
+//        }
+//
+//        if(liftDeposit){
+//            if(robot.glyphSystem.goLiftDeposit()){
+//                liftDeposit = false;
+//            }
+//        }
+//
+//        if(liftVerticalDeposit){
+//            if(robot.glyphSystem.goLiftVerticalDeposit()){
+//                liftVerticalDeposit = false;
+//            }
+//        }
+//
 
 
 
@@ -1031,127 +1032,274 @@ public class Game_6832 extends LinearOpMode {
     public void autonomous(){
         switch(autoStage){
             case 0:
-                if(autoSetup()) {
-                    autoStage = 8;
-                    state = 0;
-                    active = false;
+                robot.setZeroHeading();
+                robot.resetMotors(true);
+                robot.glyphSystem.tiltPhoneDown();
+                robot.glyphSystem.closeGrip();
+                robot.glyphSystem.collect();
+                savedVuMarkCodex = getRelicCodex();
+                autoStage++;
+                break;
+            case 1:
+                if(robot.jewel.extendArm()){
+                    robot.glyphSystem.hold();
+                    autoStage++;
                 }
                 break;
-            case 8: //turn parallel to the wall
-                if(isBlue){
-                    if(robot.rotateIMU(90, 3.5)){
-                        robot.resetMotors(true);
-                        autoStage++;
+            case 2: //scan vuforia target and deploy jewel arm
+//                robot.glyphSystem.goLiftAuto();
+//                if (autoTimer < System.nanoTime()) {
+//
+//
+//                    autoTimer = futureTime(1.0f);
+                autoStage++;
+//                }
+                break;
+            case 3: //get the glyph in front after phone is out of the way
+//                robot.glyphSystem.goLiftAuto();
+//                if (autoTimer < System.nanoTime()) {
+//
+//                    robot.glyphSystem.collect();
+                autoStage++;
+//                }
+                break;
+            case 4:
+//                if (robot.driveForward(false, .05, .15)) {
+//                    autoTimer = futureTime(3.0f);
+//                    robot.glyphSystem.closeGripTight();
+////                    robot.glyphSystem.hold();
+//                    robot.glyphSystem.goLiftAuto();
+                robot.resetMotors(true);
+                autoStage++;
+//                }
+                break;
+
+            case 5:
+//                if(autoTimer < System.nanoTime()){
+//                    robot.glyphSystem.hold();
+//                    robot.resetMotors(true);
+                autoStage++;
+//                }
+                break;
+
+            case 6:
+                if (autoTimer < System.nanoTime()) {
+                    robot.resetMotors(true);
+                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoTimer = futureTime(1.5f);
+
+                    if ((isBlue && jewelMatches) || (!isBlue && jewelMatches)) {
+
+                        robot.jewel.hitLeft();
+                    } else {
+
+                        robot.jewel.hitRight();
                     }
-                }
-                else{
-                    if(robot.rotateIMU(270, 3.5)){
-                        robot.resetMotors(true);
-                        autoStage++;
-                    }
+                    autoStage++;
                 }
                 break;
-            case 9: //drive off the balance stone
-                if(robot.driveForward(true, .5, .5)) {
+            case 7: //small turn to knock off jewel
+//                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
+//                    if(robot.rotateIMU(13, 2.5)){
+//                        autoTimer = futureTime(1.5f);
+//                        autoStage++;
+//                        robot.resetMotors(true);
+//                    }
+//                }
+//                else{
+//                    if(robot.rotateIMU(347, 2.5)){
+//                        autoTimer = futureTime(1.5f);
+//                        autoStage++;
+//                        robot.resetMotors(true);
+//                    }
+//                }
+                if (autoTimer < System.nanoTime()) { //wait for kick
+                    robot.jewel.center();
+
+                    autoStage++;
+                }
+                break;
+            case 8:
+                if(robot.jewel.retractArm()){
+                    autoStage++;
+                }
+                break;
+            case 9:
+//                if(robot.getRoll() > 0 && robot.getRoll() < 180){
+//                    robot.resetMotors(true);
+//                    robot.driveMixerMec(0,0,0);
+//                    autoSetupStage++;
+//                }
+//                if (robot.driveForward(true, .9, .5)) {
+//                    robot.resetMotors(true);
+                autoStage++;
+//                }
+                break;
+            case 10:
+                if (robot.driveStrafe(!isBlue, .5, .5)) {
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 10: //re-orient robot
-                if(isBlue){
-                    if(robot.rotateIMU(270, 1.0)){
-                        robot.resetMotors(true);
-                        autoStage++;
-                    }
-                }
-                else{
-                    if(robot.rotateIMU(90, 1.0)){
-                        robot.resetMotors(true);
-                        autoStage++;
-                    }
+
+            case 11: //drive to proper crypto box column based on vuforia target
+//
+                if (robot.driveStrafe(isBlue, .1, .35)) {
+                    robot.resetMotors(true);
+                    autoStage++;
                 }
                 break;
-            case 11: //drive to proper crypto box column based on vuforia target
+            case 12: //turn to crypto box
                 switch (savedVuMarkCodex) {
                     case 0:
-                        if(robot.driveForward(false, .5, .35)) {
+                        if(robot.driveStrafe(!isBlue, 0, .35)) {
                             robot.resetMotors(true);
                             autoStage++;
                         }
                         break;
                     case 1:
-                        if(robot.driveForward(false, .75, .35)) {
+                        if(robot.driveStrafe(!isBlue, .10, .35)) {
                             robot.resetMotors(true);
                             autoStage++;
                         }
-                        autoStage++;
+//                        autoStage++;
                         break;
                     case 2:
-                        if(robot.driveForward(false, 1.0, .35)) {
+                        if(robot.driveStrafe(!isBlue, .25, .35)) {
                             robot.resetMotors(true);
                             autoStage++;
                         }
-                        autoStage++;
+//                        autoStage++;
                         break;
                 }
                 break;
-            case 12: //turn to crypto box
+            case 13: //deposit glyph
+
                 if(isBlue){
-                    if(robot.rotateIMU(325, 1.5)){
+                    if(robot.rotateIMU(335, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
-                     }
+                    }
                 }
                 else{
-                    if(robot.rotateIMU(35, 1.5)){
+                    if(robot.rotateIMU(25, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 break;
-            case 13: //deposit glyph
-                if(robot.driveForward(false, 1.0, .50)) {
+            case 14:
+                if(robot.glyphSystem.goLiftVerticalDeposit()){
+                    autoStage++;
+                }
+                break;
+//            case 11: //turn to crypto box
+//                if(isBlue){
+//                    if(robot.rotateIMU(325, 1.5)){
+//                        robot.resetMotors(true);
+//                        autoStage++;
+//                    }
+//                }
+//                else{
+//                    if(robot.rotateIMU(35, 1.5)){
+//                        robot.resetMotors(true);
+//                        autoStage++;
+//                    }
+//                }
+//                autoStage++;
+//                break;
+            case 15: //deposit glyph
+                if(robot.driveForward(true, .75, .50)) {
                     robot.resetMotors(true);
-                    robot.glyphSystem.releaseGrip();
+//                    robot.glyphSystem.releaseGrip();
+//                    robot.glyphSystem.setMotorLeft(-1);
+//                    robot.glyphSystem.setMotorRight(-1);
+                    robot.glyphSystem.setMotorLeft(1);
+                    robot.glyphSystem.setMotorRight(1);
                     autoTimer = futureTime(1.5f);
                     autoStage++;
                 }
                 break;
-            case 14:
-                if(autoTimer < System.nanoTime()){
-                    autoStage++;
-                }
-                break;
-            case 15: //back away from crypto box
-                if(robot.driveForward(true, .15, .50)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
             case 16:
-                autoTimer = futureTime(1.5f);
-                robot.glyphSystem.closeGrip();
-                autoStage++;
+                if(autoTimer < System.nanoTime()){
+                    robot.glyphSystem.releaseGrip();
+                    autoTimer = futureTime(1.5f);
+                    autoStage++;
+                }
                 break;
             case 17:
                 if(autoTimer < System.nanoTime()){
                     autoStage++;
                 }
                 break;
-            case 18:
-                //back away from crypto box
-                if(robot.driveForward(false, .25, .50)){
+            case 18: //back away from crypto box
+                if(robot.driveForward(false, .15, .50)){
                     robot.resetMotors(true);
+                    robot.glyphSystem.setMotorLeft(0);
+                    robot.glyphSystem.setMotorRight(0);
                     autoStage++;
                 }
                 break;
             case 19:
-                //back away from crypto box
-                if(robot.driveForward(true, .05, .30)){
-                    robot.resetMotors(true);
+                autoTimer = futureTime(1.5f);
+                robot.glyphSystem.closeGrip();
+                autoStage++;
+                break;
+            case 20:
+                if(autoTimer < System.nanoTime()){
                     autoStage++;
                 }
                 break;
+            case 21:
+                //tap glyph to make sure its fully inserted
+//                if(robot.driveForward(false, .35, .50)){
+//                    robot.resetMotors(true);
+                if(robot.glyphSystem.goHome())
+                    autoStage++;
+//                }
+                break;
+            case 22:
+                //back away from crypto box but stay in parking zone
+//                if(robot.driveForward(true, .05, .30)){
+//                    robot.resetMotors(true);
+                autoStage++;
+//                }
+                break;
+//            case 14:
+//                if(autoTimer < System.nanoTime()){
+//                    autoStage++;
+//                }
+//                break;
+//            case 15: //back away from crypto box
+//                if(robot.driveForward(true, .15, .50)){
+//                    robot.resetMotors(true);
+//                    autoStage++;
+//                }
+//                break;
+//            case 16:
+//                autoTimer = futureTime(1.5f);
+//                robot.glyphSystem.closeGrip();
+//                autoStage++;
+//                break;
+//            case 17:
+//                if(autoTimer < System.nanoTime()){
+//                    autoStage++;
+//                }
+//                break;
+//            case 18:
+//                //back away from crypto box
+//                if(robot.driveForward(false, .25, .50)){
+//                    robot.resetMotors(true);
+//                    autoStage++;
+//                }
+//                break;
+//            case 19:
+//                //back away from crypto box
+//                if(robot.driveForward(true, .05, .30)){
+//                    robot.resetMotors(true);
+//                    autoStage++;
+//                }
+//                break;
             default:
                 robot.resetMotors(true);
                 autoStage = 0;
