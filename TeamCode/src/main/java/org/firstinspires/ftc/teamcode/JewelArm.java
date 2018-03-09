@@ -78,7 +78,7 @@ public class JewelArm {
                 break;
             case 1:
                 if(System.nanoTime() > thiefTimer){
-                    hitLeft();
+                    hitRight();
                     jewelStage++;
                 }
                 break;

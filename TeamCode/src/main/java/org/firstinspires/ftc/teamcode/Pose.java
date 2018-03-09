@@ -38,9 +38,9 @@ public class Pose
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public  double kpDrive = 0.010; //proportional constant multiplier
-    private double kiDrive = 0.000; //integral constant multiplier
-    private double kdDrive = 0.001; //derivative constant multiplier
+    public double kpDrive = 0.010; //proportional constant multiplier
+    public double kiDrive = 0.000; //integral constant multiplier
+    public double kdDrive = 0.001; //derivative constant multiplier
 
 
     DcMotor motorFrontLeft           = null;
@@ -630,7 +630,7 @@ public class Pose
         long targetPos;
         if(strafe) targetPos = (long) targetMeters * strafeTPM;
         else targetPos = (long)(targetMeters * forwardTPM);
-        if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){//we've not arrived yet
+        if(Math.abs(targetPos) < Math.abs(getAverageAbsTicks())){//we've not arrived yet
             driveIMU(Kp, kiDrive, kdDrive, pwr, targetAngle, strafe);
             return false;
         }
