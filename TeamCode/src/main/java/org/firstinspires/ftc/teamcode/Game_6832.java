@@ -57,6 +57,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 import java.util.Locale;
 
+import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
+
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
  * the tertiaryAuto or the teleop period of an FTC match. The names of OpModes appear on the menu
@@ -91,6 +93,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean liftDeposit = false;
     private boolean liftVerticalDeposit = false;
     private boolean liftHome = false;
+    private boolean liftCollect = false;
 
     //drive train control variables
     private double pwrDamper = 1;
@@ -204,6 +207,17 @@ public class Game_6832 extends LinearOpMode {
                 }
             }
 
+
+            if (gamepad1.dpad_up) {
+                robot.glyphSystem.tiltPhoneUp();
+                robot.glyphSystem.raiseLift2();
+            } else if (gamepad1.dpad_down) {
+                robot.glyphSystem.tiltPhoneUp();
+                robot.glyphSystem.lowerLift2();
+            } else {
+                robot.glyphSystem.stopBelt();
+            }
+
             stateSwitch();
 
             if(toggleAllowed(gamepad1.x,x)) {
@@ -211,17 +225,21 @@ public class Game_6832 extends LinearOpMode {
                     isBlue = !isBlue;
 
             }
-            if(toggleAllowed(gamepad1.dpad_down,dpad_down)){
+            if(toggleAllowed(gamepad1.a,a)){
 
                 autoDelay--;
                 if(autoDelay < 0) autoDelay = 15;
 
             }
-            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+            if(toggleAllowed(gamepad1.y, y)){
 
                 autoDelay++;
                 if(autoDelay>15) autoDelay = 0;
 
+            }
+
+            if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+                robot.glyphSystem.resetLift();
             }
 
             telemetry.addData("Status", "Initialized");
@@ -556,54 +574,79 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
-//        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50) {
-            if (gamepad1.dpad_up) {
-                robot.glyphSystem.raiseLift2();
-            } else if (gamepad1.dpad_down) {
-                robot.glyphSystem.tiltPhoneUp();
-                robot.glyphSystem.lowerLift2();
-            } else {
-                robot.glyphSystem.stopBelt();
+        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50 && robot.glyphSystem.motorLift.getCurrentPosition() > -50){
+            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+                liftVerticalDeposit = false;
+                liftDeposit = false;
+                liftHome = false;
+                liftCollect = true;
             }
+            else if (toggleAllowed(gamepad1.dpad_up, dpad_up)){
+                liftDeposit = true;
+                liftVerticalDeposit = false;
+                liftHome = false;
+                liftCollect = false;
+            }
+        }
+
+//        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50) {
+
+//            if (gamepad1.dpad_up) {
+//                robot.glyphSystem.tiltPhoneUp();
+//                robot.glyphSystem.raiseLift2();
+//            } else if (gamepad1.dpad_down) {
+//                robot.glyphSystem.tiltPhoneUp();
+//                robot.glyphSystem.lowerLift2();
+//            } else {
+//                robot.glyphSystem.stopBelt();
+//            }
 //        }
 
-//        else{
-//            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
-//                if(robot.glyphSystem.motorLift.getCurrentPosition() > robot.glyphSystem.liftDeposit - 15){
-//                     liftVerticalDeposit = true;
-//                     liftDeposit = false;
-//                     liftHome = false;
-//                }
-//                else {
-//                    liftVerticalDeposit = false;
-//                    liftDeposit = true;
-//                    liftHome = false;
-//                }
-//            }
-//            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
-//                liftVerticalDeposit = false;
-//                liftDeposit = false;
-//                liftHome = true;
-//            }
-//        }
-//
-//        if(liftHome){
-//            if(robot.glyphSystem.goHome()){
-//                liftHome = false;
-//            }
-//        }
-//
-//        if(liftDeposit){
-//            if(robot.glyphSystem.goLiftDeposit()){
-//                liftDeposit = false;
-//            }
-//        }
-//
-//        if(liftVerticalDeposit){
-//            if(robot.glyphSystem.goLiftVerticalDeposit()){
-//                liftVerticalDeposit = false;
-//            }
-//        }
+        else{
+            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+                if(robot.glyphSystem.motorLift.getCurrentPosition() > robot.glyphSystem.liftDeposit - 15){
+                     liftVerticalDeposit = true;
+                     liftDeposit = false;
+                     liftHome = false;
+                     liftCollect = false;
+                }
+                else {
+                    liftVerticalDeposit = false;
+                    liftDeposit = false;
+                    liftHome = true;
+                    liftCollect = false;
+                }
+            }
+            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+                liftVerticalDeposit = false;
+                liftDeposit = false;
+                liftHome = true;
+                liftCollect = false;
+            }
+        }
+
+        if(liftHome){
+            if(robot.glyphSystem.goHome()){
+                liftHome = false;
+            }
+        }
+
+        if(liftDeposit){
+            if(robot.glyphSystem.goLiftDeposit()){
+                liftDeposit = false;
+            }
+        }
+
+        if(liftVerticalDeposit){
+            if(robot.glyphSystem.goLiftVerticalDeposit()){
+                liftVerticalDeposit = false;
+            }
+        }
+        if(liftCollect){
+            if(robot.glyphSystem.goLiftCollect()){
+                liftCollect = false;
+            }
+        }
 //
 
 
@@ -638,6 +681,15 @@ public class Game_6832 extends LinearOpMode {
 //        if (gamepad1.dpad_up) robot.glyphSystem.goLiftMax();
 //        if (gamepad1.dpad_left) robot.glyphSystem.goLiftStack();
 
+        if(gamepad1.dpad_left){
+            robot.glyphSystem.raiseLift2();
+        }
+        else if(gamepad1.dpad_right){
+            robot.glyphSystem.lowerLift2();
+        }
+        else{
+            robot.glyphSystem.stopBelt();
+        }
 
 
         if(.4 < robot.glyphSystem.servoBeltLeft.getPosition() && robot.glyphSystem.servoBeltLeft.getPosition() < .6){
@@ -1158,14 +1210,14 @@ public class Game_6832 extends LinearOpMode {
                         }
                         break;
                     case 1:
-                        if(robot.driveStrafe(!isBlue, .10, .35)) {
+                        if(robot.driveStrafe(!isBlue, .12, .35)) {
                             robot.resetMotors(true);
                             autoStage++;
                         }
 //                        autoStage++;
                         break;
                     case 2:
-                        if(robot.driveStrafe(!isBlue, .25, .35)) {
+                        if(robot.driveStrafe(!isBlue, .3, .35)) {
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -1209,13 +1261,15 @@ public class Game_6832 extends LinearOpMode {
 //                autoStage++;
 //                break;
             case 15: //deposit glyph
-                if(robot.driveForward(true, .75, .50)) {
+                if(robot.driveForward(true, .5, .50)) {
                     robot.resetMotors(true);
 //                    robot.glyphSystem.releaseGrip();
 //                    robot.glyphSystem.setMotorLeft(-1);
 //                    robot.glyphSystem.setMotorRight(-1);
                     robot.glyphSystem.setMotorLeft(1);
                     robot.glyphSystem.setMotorRight(1);
+                    robot.glyphSystem.servoBeltLeft.setPosition(servoNormalize(robot.glyphSystem.beltOn));
+                    robot.glyphSystem.servoBeltRight.setPosition(servoNormalize(robot.glyphSystem.beltOn));
                     autoTimer = futureTime(1.5f);
                     autoStage++;
                 }
@@ -1233,13 +1287,12 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 18: //back away from crypto box
-                if(robot.driveForward(false, .15, .50)){
-                    robot.resetMotors(true);
-                    robot.glyphSystem.setMotorLeft(0);
-                    robot.glyphSystem.setMotorRight(0);
-                    autoStage++;
-                }
-                break;
+                    if(robot.driveForward(false, .1, .50)){
+                        robot.resetMotors(true);
+                        robot.glyphSystem.setMotorLeft(0);
+                        robot.glyphSystem.setMotorRight(0);
+                        autoStage++;
+                    }
             case 19:
                 autoTimer = futureTime(1.5f);
                 robot.glyphSystem.closeGrip();
