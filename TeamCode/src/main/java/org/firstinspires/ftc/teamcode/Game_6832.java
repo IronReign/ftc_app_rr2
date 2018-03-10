@@ -198,6 +198,20 @@ public class Game_6832 extends LinearOpMode {
         mDetector = new ColorBlobDetector();
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
+
+            if(robot.jewel.retractArm()){
+                if(isBlue)
+                {
+                    robot.ledSystem.bluePos();
+                    autoSetupStage++;
+                }
+                else
+                {
+                    robot.ledSystem.redPos();
+                    autoSetupStage++;
+                }
+
+            }
             synchronized (this) {
                 try {
                     this.wait();
@@ -273,7 +287,7 @@ public class Game_6832 extends LinearOpMode {
                         autonomous2();
                         break;
                     case 3:
-                        autonomous3();
+                        testLED();
                         break;
                     case 4:
                         demo((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
@@ -313,6 +327,19 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
+    public void testLED(){
+        if(gamepad1.a){
+            robot.ledSystem.pinkPos();
+        }else if(gamepad1.b) {
+            robot.ledSystem.redPos();
+        }else if(gamepad1.x){
+            robot.ledSystem.bluePos();
+        }else if(gamepad1.y){
+            robot.ledSystem.aquaPos();
+        }else if(gamepad1.right_bumper){
+            robot.ledSystem.offPos();
+        }
+    }
 
 
 
@@ -771,6 +798,8 @@ public class Game_6832 extends LinearOpMode {
                 robot.glyphSystem.closeGrip();
                 robot.glyphSystem.collect();
                 savedVuMarkCodex = getRelicCodex();
+                robot.ledSystem.offPos();
+
                 autoSetupStage++;
                 break;
             case 1:
@@ -854,7 +883,16 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 8:
                 if(robot.jewel.retractArm()){
-                    autoSetupStage++;
+                   if(isBlue) {
+                       robot.ledSystem.bluePos();
+                       autoSetupStage++;
+                   }
+                    else
+                    {
+                        robot.ledSystem.redPos();
+                        autoSetupStage++;
+                    }
+
                 }
                 break;
             case 9:
@@ -871,7 +909,7 @@ public class Game_6832 extends LinearOpMode {
             case 10:
                 if (robot.driveForward(false, .1, .35)) {
                     robot.resetMotors(true);
-                    autoSetupStage++;
+                     autoSetupStage++;
                 }
                 break;
             case 11: //lift jewel arm
@@ -1090,6 +1128,7 @@ public class Game_6832 extends LinearOpMode {
                 robot.glyphSystem.closeGrip();
                 robot.glyphSystem.collect();
                 savedVuMarkCodex = getRelicCodex();
+                robot.ledSystem.offPos();
                 autoStage++;
                 break;
             case 1:
@@ -1167,7 +1206,18 @@ public class Game_6832 extends LinearOpMode {
 //                }
                 if (autoTimer < System.nanoTime()) { //wait for kick
                     robot.jewel.center();
+                    if(robot.jewel.retractArm()){
+                        if(isBlue) {
+                            robot.ledSystem.bluePos();
+                            autoSetupStage++;
+                        }
+                        else
+                        {
+                            robot.ledSystem.redPos();
+                            autoSetupStage++;
+                        }
 
+                    }
                     autoStage++;
                 }
                 break;

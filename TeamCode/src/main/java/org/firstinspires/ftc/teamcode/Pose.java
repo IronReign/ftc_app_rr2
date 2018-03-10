@@ -62,6 +62,7 @@ public class Pose
     Servo servoLiftRight             = null;
     Servo servoPhone                 = null;
     Servo servoJewel                 = null;
+    Servo servoLED                   = null;
     ColorSensor colorJewel = null;
     //DistanceSensor glyphUpper = null;;
 
@@ -116,6 +117,8 @@ public class Pose
 //    public GlyphSystem glyphSystem;
     public JewelArm jewel;
     public GlyphSystem2 glyphSystem;
+    public LEDSystem ledSystem = null;
+
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
@@ -266,11 +269,14 @@ public class Pose
         this.motorGripLeft   = this.hwMap.dcMotor.get("motorGripLeft");
         this.motorGripRight  = this.hwMap.dcMotor.get("motorGripRight");
         this.servoJewel      = this.hwMap.servo.get("servoJewel");
+        this.servoLED        = this.hwMap.servo.get("servoLED");
 
         this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
         //this.glyphUpper      = this.hwMap.get(DistanceSensor.class, "glyphDetectUp");
 
         //motor configurations
+
+        this.ledSystem=new LEDSystem(this.servoLED);
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
