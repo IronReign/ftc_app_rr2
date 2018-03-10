@@ -28,7 +28,7 @@ public class GlyphSystem2 {
     private int liftMin = 50;
     private int liftAuto = 500;
     private int liftAuto2 = 1500;
-    private int beltOn = 2000;
+    public int beltOn = 2000;
     private int beltOff = 1500;
     private int phoneUp = 1700; //900
     private int phoneDown = 1150; //2105
@@ -199,6 +199,8 @@ public class GlyphSystem2 {
         }
         return false;
     }
+
+
 
     public boolean goLiftDeposit(){
         switch (liftStage){
@@ -408,8 +410,13 @@ public class GlyphSystem2 {
             motorLift.setPower(-1);
     }
 
+    public void resetLift(){
+        motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
     public void stopBelt() {
-        motorLift.setPower(0);
+        if(motorLift.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) motorLift.setPower(0);
     }
 
     public void goLiftMax() {
