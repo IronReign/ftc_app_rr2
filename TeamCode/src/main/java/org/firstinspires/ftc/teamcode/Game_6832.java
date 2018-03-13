@@ -199,7 +199,6 @@ public class Game_6832 extends LinearOpMode {
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
 
-            if(robot.jewel.retractArm()){
                 if(isBlue)
                 {
                     robot.ledSystem.bluePos();
@@ -211,7 +210,6 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 }
 
-            }
             synchronized (this) {
                 try {
                     this.wait();
@@ -601,20 +599,38 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
-        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50 && robot.glyphSystem.motorLift.getCurrentPosition() > -50){
-            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+        if(robot.glyphSystem.motorLift.getCurrentPosition() < -50 ) {
+            if (toggleAllowed(gamepad1.y, y)) {
+                liftVerticalDeposit = false;
+                liftDeposit = true;
+                liftHome = false;
+                liftCollect = false;
+            }
+        }else if(robot.glyphSystem.motorLift.getCurrentPosition() > 50 ){
+            if (toggleAllowed(gamepad1.y, y)) {
+                robot.glyphSystem.tiltPhoneUp();
                 liftVerticalDeposit = false;
                 liftDeposit = false;
                 liftHome = false;
                 liftCollect = true;
             }
-            else if (toggleAllowed(gamepad1.dpad_up, dpad_up)){
-                liftDeposit = true;
-                liftVerticalDeposit = false;
-                liftHome = false;
-                liftCollect = false;
-            }
         }
+
+//        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50 && robot.glyphSystem.motorLift.getCurrentPosition() > -50){
+//            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+//                liftVerticalDeposit = false;
+//                liftDeposit = false;
+//                liftHome = false;
+//                liftCollect = true;
+//            }
+//            else if (toggleAllowed(gamepad1.dpad_up, dpad_up)){
+//                liftDeposit = true;
+//                liftVerticalDeposit = false;
+//                liftHome = false;
+//                liftCollect = false;
+//            }
+//        }
+
 
 //        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50) {
 
@@ -629,28 +645,36 @@ public class Game_6832 extends LinearOpMode {
 //            }
 //        }
 
-        else{
-            if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
-                if(robot.glyphSystem.motorLift.getCurrentPosition() > robot.glyphSystem.liftDeposit - 15){
-                     liftVerticalDeposit = true;
-                     liftDeposit = false;
-                     liftHome = false;
-                     liftCollect = false;
-                }
-                else {
-                    liftVerticalDeposit = false;
-                    liftDeposit = false;
-                    liftHome = true;
-                    liftCollect = false;
-                }
-            }
-            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
-                liftVerticalDeposit = false;
+
+        if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+            if(robot.glyphSystem.motorLift.getCurrentPosition() > robot.glyphSystem.liftDeposit - 15){
+                liftVerticalDeposit = true;
                 liftDeposit = false;
-                liftHome = true;
+                liftHome = false;
+                liftCollect = false;
+            }
+            else {
+                liftVerticalDeposit = false;
+                liftDeposit = true;
+                liftHome = false;
                 liftCollect = false;
             }
         }
+
+
+        if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+            liftCollect = true;
+            liftVerticalDeposit = false;
+            liftHome = false;
+            liftDeposit = false;
+        }
+//            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
+//                liftVerticalDeposit = false;
+//                liftDeposit = false;
+//                liftHome = true;
+//                liftCollect = false;
+//            }
+
 
         if(liftHome){
             if(robot.glyphSystem.goHome()){
@@ -670,6 +694,7 @@ public class Game_6832 extends LinearOpMode {
             }
         }
         if(liftCollect){
+            robot.glyphSystem.tiltPhoneUp();
             if(robot.glyphSystem.goLiftCollect()){
                 liftCollect = false;
             }
@@ -720,8 +745,8 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(.4 < robot.glyphSystem.servoBeltLeft.getPosition() && robot.glyphSystem.servoBeltLeft.getPosition() < .6){
-            robot.glyphSystem.setMotorLeft(gamepad1.right_stick_y*beaterDamper);
-            robot.glyphSystem.setMotorRight(-gamepad1.right_stick_y*beaterDamper);
+            robot.glyphSystem.setMotorLeft(gamepad1.right_stick_y);
+            robot.glyphSystem.setMotorRight(-gamepad1.right_stick_y);
         }
         else{
             robot.glyphSystem.collect();

@@ -35,13 +35,13 @@ public class GlyphSystem2 {
     private double phonePWMPerDegree = 8.889;
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
 
-    public int liftDeposit = 900;
-    public int liftVerticalDeposit =  1280;
+    public int liftDeposit = 942;
+    public int liftVerticalDeposit =  1160;
     public int liftRecoveryPos = 560;
-    public int liftCollect = -3875;
+    public int liftCollect = -3743;
 
-    public int liftFlatUpper = 0;
-    public int liftFlatLower = -2111;
+    public int liftFlatUpper = 450;
+    public int liftFlatLower = -2426;
 
     private int liftStage = 0;
     private long liftTimer = 0;
@@ -86,8 +86,8 @@ public class GlyphSystem2 {
     }
 
     public void collect(){
-        motorLeft.setPower(.90);
-        motorRight.setPower(-.90);
+        motorLeft.setPower(1);
+        motorRight.setPower(-1);
     }
 
     public void hold(){
@@ -169,7 +169,7 @@ public class GlyphSystem2 {
                 break;
             case 1:
                 if(motorLift.getCurrentPosition() > liftDeposit - 200) {
-                    motorLift.setPower(.2);
+                    motorLift.setPower(.3);
                     motorLift.setTargetPosition(liftRecoveryPos);
                     liftTimer = futureTime(1.5f);
                 }
@@ -180,12 +180,12 @@ public class GlyphSystem2 {
                 break;
             case 2:
                 if(motorLift.getCurrentPosition() > liftFlatUpper || motorLift.getCurrentPosition() < liftFlatLower){
-                    motorLift.setPower(.2);
+                    motorLift.setPower(.6);
                 }
                 else
                     motorLift.setPower(1);
                 motorLift.setTargetPosition(liftCollect);
-                if(System.nanoTime() > liftTimer){
+                if(motorLift.getCurrentPosition() > liftCollect - 10 || motorLift.getCurrentPosition() > liftCollect - 10){
                     liftStage = 0;
                     return true;
                 }
@@ -211,7 +211,7 @@ public class GlyphSystem2 {
                 break;
             case 1:
                 if(motorLift.getCurrentPosition() > liftFlatUpper || motorLift.getCurrentPosition() < liftFlatLower){
-                    motorLift.setPower(.2);
+                    motorLift.setPower(.6);
                 }
                 else
                     motorLift.setPower(1);
@@ -243,7 +243,7 @@ public class GlyphSystem2 {
                 break;
             case 1:
                 if(motorLift.getCurrentPosition() > liftFlatUpper || motorLift.getCurrentPosition() < liftFlatLower){
-                    motorLift.setPower(.2);
+                    motorLift.setPower(.6);
                 }
                 else
                     motorLift.setPower(1);
@@ -252,6 +252,11 @@ public class GlyphSystem2 {
                 liftStage++;
                 break;
             case 2:
+                if(motorLift.getCurrentPosition() > liftFlatUpper || motorLift.getCurrentPosition() < liftFlatLower){
+                    motorLift.setPower(.6);
+                }
+                else
+                    motorLift.setPower(1);
                 if(motorLift.getCurrentPosition() > liftVerticalDeposit - 10 || motorLift.getCurrentPosition() > liftVerticalDeposit - 10){
                     liftStage = 0;
                     return true;
