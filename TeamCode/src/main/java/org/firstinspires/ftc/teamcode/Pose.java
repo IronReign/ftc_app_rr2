@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -439,6 +440,51 @@ public class Pose
             return true;
         }
     }
+
+//    void MoveArgos(double Kp, double Ki, double Kd, double currentAngle, double targetAngle, PIDController PID){
+//
+////        PID.setPID(Kp, Ki, Kd);
+////        PID.setSetpoint(targetAngle);
+////        PID.enable();
+////        //drivePID.setInput(pose.diffAngle(drivePID.getSetpoint(), pose.getHeading()));
+////        PID.setInputRange(_0, 360);
+////        PID.setContinuous();
+////        //PID.setInput(pose.getHeading());
+////        PID.setInput(currentAngle);
+//
+//        if((FtcRobotControllerActivity.maxContour >0) && (FtcRobotControllerActivity.targetContour > 0))
+//        {
+//            motorPower = Math.sqrt(FtcRobotControllerActivity.targetContour) - Math.sqrt(FtcRobotControllerActivity.maxContour);
+//
+//            motorPower /= -3.5;
+//            motorPower /= 100;
+//        }
+////        if(motorPower > .5)
+////            motorPower = .5;
+////        if(motorPower < -.5)
+////            motorPower = -.5;
+//        MoveRobot(kpDrive, 0, kdDrive, motorPower, ErrorPixToDeg(x), 0, drivePID);
+//
+//    }
+//
+//    int x = FtcRobotControllerActivity.blobx;
+//
+//    private double ErrorPixToDeg(int blobx){
+//        int ViewWidth = 800;
+//        int ScreenCenterPix;
+//        int ErrorPix;
+//        double PixPerDegree;
+//        double errorDegrees;
+//
+//        ScreenCenterPix = ViewWidth/2;
+//        ErrorPix = ScreenCenterPix - blobx;
+//        PixPerDegree = ViewWidth / 75; //FOV
+//        errorDegrees = ErrorPix/PixPerDegree;
+//        if (errorDegrees < 0) {
+//            errorDegrees += 360;
+//        }
+//        return errorDegrees;
+//    }
 
 
     /**
