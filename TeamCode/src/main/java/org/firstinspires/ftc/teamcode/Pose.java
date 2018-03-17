@@ -824,6 +824,75 @@ public class Pose
 
 
     /**
+     * drive method for a mecanum drive with field oriented drive
+     * @param forward sets how much power will be provided in the forwards direction
+     * @param strafe sets how much power will be provided in the left strafe direction
+     * @param rotate sets how much power will be provided to clockwise rotation
+     *
+     * code was implemented from the WPLIB Library for FRC programming.
+     * This is avalible on github at https://github.com/eshsrobotics/wpilib-java/blob/master/src/edu/wpi/first/wpilibj/RobotDrive.java
+     */
+    public void driveMixerMecField(double forward, double strafe , double rotate, double gyro){
+
+        //reset the power of all motors
+        powerBackRight = 0;
+        powerFrontRight = 0;
+        powerBackLeft = 0;
+        powerFrontLeft = 0;
+
+        //retrieve drive values
+        double forwardIn=forward;
+        double strafeIn = strafe;
+        double[] temp = rotateVector(forwardIn,strafeIn,gyro);//use angle to get true x-y values
+        forwardIn=temp[0];//set drive values to modified values
+        strafeIn=temp[1];
+
+        //assign all speeds to array to configure speeds
+        double allWheels[]=new double[4];//let front left=0, front right=1, back left = 3, back right =4;
+        allWheels[0]=forwardIn+strafeIn+rotate;
+        allWheels[1]=forwardIn-strafeIn-rotate;
+        allWheels[2]=forwardIn-strafeIn+rotate;
+        allWheels[3]=forwardIn+strafeIn-rotate;
+        normalize(allWheels);//makes sure no speed is over 1 and reduces all proportionally
+
+        //set actual powers
+        powerFrontLeft=allWheels[0];
+        powerFrontRight=allWheels[1];
+        powerBackLeft=allWheels[3];
+        powerBackRight=allWheels[4];
+
+        //provide power to the motors
+        motorFrontLeft.setPower(clampMotor(powerFrontLeft));
+        motorBackLeft.setPower(clampMotor(powerBackLeft));
+        motorFrontRight.setPower(clampMotor(powerFrontRight));
+        motorBackRight.setPower(clampMotor(powerBackRight));
+
+    }
+    public static double[] rotateVector(double x, double y, double angle){
+        double cosA=Math.cos(angle*Math.PI/180);
+        double sinA=Math.sin(angle*Math.PI/180);
+        double out[] = new double[2];
+        out[0]=x*cosA-y*sinA;
+        out[1]=y*cosA+x*sinA;
+        return out;
+    }
+    public static void normalize(double[] motorspeeds){
+        double max = Math.abs(motorspeeds[0]);
+        for(int i = 0; i<motorspeeds.length;i++){
+            double temp = Math.abs(motorspeeds[i]);
+            if(max<temp){
+                max=temp;
+            }
+        }
+        if(max>1){
+            for(int i = 0; i<motorspeeds.length;i++){
+                motorspeeds[i]=motorspeeds[i]/max;
+            }
+        }
+    }
+
+
+    /**
      * tank drive mixer for a mecanum drive
      * @param fLeft forwards power power to give to the left nacelle
      * @param sLeft strafe power power to give to the left nacelle

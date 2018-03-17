@@ -77,6 +77,8 @@ import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
 
 public class Game_6832 extends LinearOpMode {
 
+    //hi im testing something
+
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -319,10 +321,12 @@ public class Game_6832 extends LinearOpMode {
                 }
                 robot.updateSensors();
             }
-            else robot.stopAll();
+            else {
+                robot.stopAll();
+            }
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
-        }
+        }robot.ledSystem.offPos();
     }
 
     public void testLED(){
@@ -575,6 +579,7 @@ public class Game_6832 extends LinearOpMode {
 
         else {
             robot.driveMixerMec(pwrFwd, pwrStf, pwrRot);
+            //robot.driveMixerMecField(pwrFwd,pwrStf,pwrRot,robot.getHeading());
         }
 
 //        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
