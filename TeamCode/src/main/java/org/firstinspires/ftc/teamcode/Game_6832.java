@@ -565,7 +565,7 @@ public class Game_6832 extends LinearOpMode {
         pwrStf = pwrDamper * gamepad1.left_stick_x;
         pwrRot = -pwrDamper * .75 * gamepad1.right_stick_x;
 
-        pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
+//        pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
 
         pwrFwdL = pwrDamper * gamepad1.left_stick_y;
         pwrStfL = pwrDamper * gamepad1.left_stick_x;
@@ -574,7 +574,8 @@ public class Game_6832 extends LinearOpMode {
         pwrStfR = pwrDamper * gamepad1.right_stick_x;
 
         if(enableTank){
-            robot.driveMixerMecTank(pwrFwdL, pwrStfL, pwrFwdR, pwrStfR);
+//            robot.driveMixerMecTank(pwrFwdL, pwrStfL, pwrFwdR, pwrStfR);
+            robot.driveMixerMecField(pwrFwd, pwrStf, pwrRot, robot.getHeading());
         }
 
         else {
@@ -790,7 +791,7 @@ public class Game_6832 extends LinearOpMode {
 //            pwrDamper = 1;
 //        }
 
-        if(toggleAllowed(gamepad2.y, y)){
+        if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
             enableTank = !enableTank;
         }
 

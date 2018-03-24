@@ -95,7 +95,7 @@ public class Argos extends LinearOpMode {
     private boolean shouldLaunch = false;
     private boolean isBlue = false;
     private boolean capMode = false;
-    private double pwrDamper = .02 ;
+    private double pwrDamper = .02;
     private double pwrFwd = 0;
     private double pwrStf = 0;
     private double degreeRot = 0;
