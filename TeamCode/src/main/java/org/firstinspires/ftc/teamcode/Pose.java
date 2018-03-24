@@ -843,12 +843,13 @@ public class Pose
         //retrieve drive values
         double forwardIn=forward;
         double strafeIn = strafe;
-        double[] temp = rotateVector(forwardIn,strafeIn,gyro);//use angle to get true x-y values
+        double[] temp=new double[2];
+        temp= rotateVector(forwardIn,strafeIn,gyro);//use angle to get true x-y values
         forwardIn=temp[0];//set drive values to modified values
         strafeIn=temp[1];
 
         //assign all speeds to array to configure speeds
-        double allWheels[]=new double[4];//let front left=0, front right=1, back left = 3, back right =4;
+        double allWheels[]=new double[4];//let front left=0, front right=1, back left = 2, back right =3;
         allWheels[0]=forwardIn+strafeIn+rotate;
         allWheels[1]=forwardIn-strafeIn-rotate;
         allWheels[2]=forwardIn-strafeIn+rotate;
@@ -858,8 +859,8 @@ public class Pose
         //set actual powers
         powerFrontLeft=allWheels[0];
         powerFrontRight=allWheels[1];
-        powerBackLeft=allWheels[3];
-        powerBackRight=allWheels[4];
+        powerBackLeft=allWheels[2];
+        powerBackRight=allWheels[3];
 
         //provide power to the motors
         motorFrontLeft.setPower(clampMotor(powerFrontLeft));
@@ -1337,8 +1338,39 @@ public class Pose
         return vuDepth - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
     }//getJewelConfig
 
+    public double driveToBeacon(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
+
+        //double vuDepth = 0;
+        double pwr = 0;
+
+        if (beacon.getPose() != null) {
+            vuTrans = beacon.getRawPose().getTranslation();
+
+            //todo - add a new transform that will shift our target left or right depending on beacon analysis
+
+            if(offset){vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));}
+            else vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
+            vuDepth = vuTrans.get(2);
+
+            if (turnOnly)
+                pwr = 0; //(vuDepth - bufferDistance/1200.0);
+            else
+                // this is a very simple proportional on the distance to target - todo - convert to PID control
+                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
+            Log.i("Beacon Angle", String.valueOf(vuAngle));
+            movePID(kpDrive, kiDrive, kdDrive, pwr, -vuAngle, 0, false);
+
+        } else { //disable motors if given target not visible
+            vuDepth = 0;
+            driveMixerMec(0, 0, 0);
+        }//else
+
+        return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
+    }//driveToBeacon
+
+
     public double getBeaconOffset(boolean isBlue, int beaconConfig){
-        double offset;
+        double offset = 0;
         if((isBlue && beaconConfig == 1) || (!isBlue && beaconConfig == 2)){
             offset = -80;
         }
