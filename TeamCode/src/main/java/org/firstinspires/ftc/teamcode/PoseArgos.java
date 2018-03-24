@@ -309,7 +309,7 @@ public class PoseArgos
         this.motorFront.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBack.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorNeck.setDirection(DcMotorSimple.Direction.FORWARD);
-        this.servoSteerFront.setDirection(Servo.Direction.REVERSE);
+        this.servoSteerBack.setDirection(Servo.Direction.REVERSE);
         //this.headLamp.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
