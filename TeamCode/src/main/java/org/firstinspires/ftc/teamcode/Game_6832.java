@@ -580,6 +580,10 @@ public class Game_6832 extends LinearOpMode {
             robot.driveMixerMecField(pwrFwd, pwrStf, pwrRot, robot.getHeading());
         }
 
+        else{
+            robot.driveMixerMec(pwrFwd, pwrStf, pwrRot);
+        }
+
 
 //        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
 //            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
@@ -610,7 +614,8 @@ public class Game_6832 extends LinearOpMode {
                 liftHome = false;
                 liftCollect = false;
             }
-        }else if(robot.glyphSystem.motorLift.getCurrentPosition() > 50 ){
+        }
+        else if(robot.glyphSystem.motorLift.getCurrentPosition() > 50 ){
             if (toggleAllowed(gamepad1.y, y)) {
                 robot.glyphSystem.tiltPhoneUp();
                 liftVerticalDeposit = false;
@@ -651,6 +656,12 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
+            if (robot.glyphSystem.motorLift.getCurrentPosition() < -15) {
+                liftVerticalDeposit = false;
+                liftDeposit = false;
+                liftHome = true;
+                liftCollect = false;
+            }
             if(robot.glyphSystem.motorLift.getCurrentPosition() > robot.glyphSystem.liftDeposit - 15){
                 liftVerticalDeposit = true;
                 liftDeposit = false;

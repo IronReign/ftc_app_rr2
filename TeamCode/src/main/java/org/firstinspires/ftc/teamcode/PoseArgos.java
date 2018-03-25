@@ -1084,7 +1084,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
             servoSteerBack.setPosition(headPosition[0]);
             servoSteerFront.setPosition(headPosition[0]);
             //pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/2000.0));
-            pwr=DistancePID(KpDrive, KiDrive, KdDrive, pwr, vuDepth/1000,1); //pre-converted distances to meters to get into a similar range as the output
+            pwr=DistancePID(KpDrive, KiDrive, KdDrive, pwr, vuDepth/1000,.5 ); //pre-converted distances to meters to get into a similar range as the output
             motorFront.setPower(pwr);
             motorBack.setPower(pwr);
             return true;

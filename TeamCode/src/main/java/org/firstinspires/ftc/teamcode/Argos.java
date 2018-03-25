@@ -262,19 +262,19 @@ public class Argos extends LinearOpMode {
             if(active) {
                 switch(state){
                     case 0: //main tertiaryAuto function that scores 1 or 2 balls and toggles both beacons
-//                        if(toggleAllowed(gamepad1.b, b)){
-//                            robot.zeroHead();
-//                        }
-//                        if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-//                            robot.toggleDriftMode();
-//                        }
-//                        if(gamepad1.x){
+                        if(toggleAllowed(gamepad1.b, b)){
+                            robot.zeroHead();
+                        }
+                        if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+                            robot.toggleDriftMode();
+                        }
+                        if(gamepad1.x){
                             robot.moveArgos((VuforiaTrackableDefaultListener)redNearTarget.getListener(), pwrDamper, 1000);
-//                        }
-//                        else {
-//                            joystickDrive();
-//                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)redNearTarget.getListener());
-//                        }
+                        }
+                        else {
+                            joystickDrive();
+                            robot.vuTargetTracker((VuforiaTrackableDefaultListener)redNearTarget.getListener());
+                        }
 
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
