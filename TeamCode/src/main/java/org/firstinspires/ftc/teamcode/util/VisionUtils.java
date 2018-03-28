@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.util;
 
 /**
- * Created by tycho on 2/18/2017, but this started as Team Fixit's VortexUtils. All hail Team Fixit!!!!!
+ * Created by tycho on 2/18/2017, but borrowed some of this from Team Fixit's VortexUtils. All hail Team Fixit!!!!!
  */
 
 import android.graphics.Bitmap;
@@ -20,17 +20,25 @@ import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.teamcode.ColorBlobDetector;
 import org.firstinspires.ftc.teamcode.RC;
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.android.Utils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
+
 
 public class VisionUtils {
 
@@ -275,6 +283,59 @@ public class VisionUtils {
         return null;
     }
 
+/*    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame, ColorBlobDetector pipeline) {
+        Mat mRgba = inputFrame.rgba();
+
+        if (true) {
+            pipeline.process(mRgba);
+            List<MatOfPoint> contours = pipeline.getContours();
+            Log.e(TAG, "Contours count: " + contours.size());
+            Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 3);
+
+            //get the centroid (center of mass) and area for each contour
+
+            List<Moments> mu = new ArrayList<Moments>(contours.size());
+            maxContour=0;
+            blobWidth = 0;
+            blobHeight = 0;
+            blobBox = null;
+
+            for (int i = 0; i < contours.size(); i++) {
+                mu.add(i, Imgproc.moments(contours.get(i), false));
+                Moments p = mu.get(i);
+                int x = (int) (p.get_m10() / p.get_m00());
+                int y = (int) (p.get_m01() / p.get_m00());
+                //Core.circle(mRgba, new Point(x, y), 4, new Scalar(255,49,0,255));
+                Core.circle(mRgba, new Point(x, y), 5, CONTOUR_COLOR, -1);
+                double area = Imgproc.contourArea(contours.get(i));
+                if (area > maxContour)
+                {
+                    maxContour=area;
+                    blobx=x;
+                    bloby=y;
+                    blobBox=Imgproc.boundingRect(contours.get(i));
+                    blobWidth=blobBox.width;
+                    blobHeight = blobBox.height;
+                }
+            }
+
+            if (targetContour == -1 && maxContour > 0 )
+            {
+                targetContour = maxContour; //new target size, thus distance to object
+            }
+
+
+
+
+            Mat colorLabel = mRgba.submat(4, 68, 4, 68);
+            colorLabel.setTo(mBlobColorRgba);
+
+            Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
+            mSpectrum.copyTo(spectrumLabel);
+        }
+
+        return mRgba;
+    }*/
     //this assumes the horizontal axis is the y-axis since the phone is vertical
     //robot angle is relative to "parallel with the beacon wall"
     public static VectorF navOffWall(VectorF trans, double robotAngle, VectorF offWall){

@@ -1202,13 +1202,14 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         bm.copyPixelsFromBuffer(img.getPixels());
 
         mRgba = bitmapToMat(bm, CvType.CV_8UC3);
+        Mat overlay = bitmapToMat(bm, CvType.CV_8UC3); //overlay should really be an empty Mat of the same size as bm
 
         Scalar targetHue = RC.a().getTargetBlobColor();
 
 
         if (mIsColorSelected) {
             mDetector.setHsvColor(targetHue);
-            mDetector.process(mRgba);
+            overlay = mDetector.process(mRgba, overlay);
             List<MatOfPoint> contours = mDetector.getContours();
             Log.e("OpenCV", "Contours count: " + contours.size());
             //Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR, 3);

@@ -1,11 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
+import org.firstinspires.ftc.teamcode.util.BlobStats;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -67,7 +70,8 @@ public class ColorBlobDetector {
         mMinContourArea = area;
     }
 
-    public void process(Mat rgbaImage) {
+    public Mat process(Mat rgbaImage, Mat overlay) {
+        Scalar CONTOUR_COLOR = new Scalar(0,255,0,255);
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
 
@@ -77,6 +81,7 @@ public class ColorBlobDetector {
         Imgproc.dilate(mMask, mDilatedMask, new Mat());
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        List<BlobStats> blobs = new ArrayList<BlobStats>();
 
         Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -98,9 +103,21 @@ public class ColorBlobDetector {
             if (Imgproc.contourArea(contour) > mMinContourArea*maxArea) {
                 Core.multiply(contour, new Scalar(4,4), contour);
                 mContours.add(contour);
+                Moments p = Imgproc.moments(contour, false);
+                int x = (int) (p.get_m10() / p.get_m00());
+                int y = (int) (p.get_m01() / p.get_m00());
+                double area = Imgproc.contourArea(contour);
+                org.opencv.core.Rect blobBox = Imgproc.boundingRect(contour);
+                BlobStats blob = new BlobStats(p,x,y,blobBox.width,blobBox.height,area);
+                blobs.add(blob); //put it in the List
+                Imgproc.circle(overlay, new Point(x, y), 5, CONTOUR_COLOR, -1);
+
+
             }
+            Imgproc.drawContours(overlay, mContours, -1, CONTOUR_COLOR, 3);
         }
-    }
+        return overlay;
+        }
 
     public List<MatOfPoint> getContours() {
         return mContours;
