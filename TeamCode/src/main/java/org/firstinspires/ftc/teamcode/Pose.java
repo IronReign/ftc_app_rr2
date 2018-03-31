@@ -56,6 +56,7 @@ public class Pose
     DcMotor headLamp                 = null; //front white LED string
     Servo servoGripRight             = null; //servoGripRight for Glyphs and Relics
     Servo servoGripLeft              = null;
+    Servo servoGripBottom            = null;
     Servo servoJewelLeft             = null; //deploys the arm that knocks off the jewel
     Servo servoJewelRight            = null; //deploys the arm that knocks off the jewel
     Servo servoTester                = null;
@@ -261,6 +262,7 @@ public class Pose
         this.headLamp        = this.hwMap.dcMotor.get("headLamp");
         this.servoGripRight  = this.hwMap.servo.get("servoGripRight");
         this.servoGripLeft   = this.hwMap.servo.get("servoGripLeft");
+        this.servoGripBottom = this.hwMap.servo.get("servoGripBottom");
         this.servoJewelLeft  = this.hwMap.servo.get("servoJewelLeft");
         this.servoJewelRight = this.hwMap.servo.get("servoJewelRight");
         this.servoTester     = this.hwMap.servo.get("servoTester");
@@ -313,7 +315,7 @@ public class Pose
         imuLift = hwMap.get(BNO055IMU.class, "imuLift");
         imuLift.initialize(parametersIMULift);
 
-        this.glyphSystem = new GlyphSystem2(motorLift, servoGripRight, servoGripLeft, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone, imuLift);
+        this.glyphSystem = new GlyphSystem2(motorLift, servoGripRight, servoGripLeft,servoGripBottom, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone, imuLift);
 
         headLampOn();
     }

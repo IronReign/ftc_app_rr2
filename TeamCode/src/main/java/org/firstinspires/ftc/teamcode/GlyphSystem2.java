@@ -19,9 +19,11 @@ public class GlyphSystem2 {
     DcMotor motorRight = null;
     Servo servoGripRight = null;
     Servo servoGripLeft = null;
+    Servo servoGripBottom = null;
     Servo servoBeltLeft = null;
     Servo servoBeltRight = null;
     Servo servoPhone = null;
+
 
     private int liftMax = 4000;
     private int liftStack = 2500; //stacking height
@@ -60,20 +62,28 @@ public class GlyphSystem2 {
 
 //    private int liftDown =
 
-
-    boolean gripOpen = false;
+    //;top two
+    boolean gripOpen=false;
     int gripOpenPos = 1350; //1544
     //int gripClosedPos = 1900;
     int gripClosedPos=1200; //1735
     int gripTightPos= 1100; //1700
     int gripWideOpenPos = 1450; //1381
 
-    public GlyphSystem2(DcMotor motorLift, Servo servoGripRight, Servo servoGripLeft, DcMotor motorLeft, DcMotor motorRight, Servo servoBeltLeft, Servo servoBeltRight, Servo servoPhone, BNO055IMU imu){
+    //bottom servo
+    int gripBWideOpenPos=1800;
+    int gripBOpenPos = 1500;
+    int gripBClosedPos = 1270;
+    int gripBTightPos=1150;
+
+
+    public GlyphSystem2(DcMotor motorLift, Servo servoGripRight, Servo servoGripLeft, Servo servoGripBottom, DcMotor motorLeft, DcMotor motorRight, Servo servoBeltLeft, Servo servoBeltRight, Servo servoPhone, BNO055IMU imu){
 
         this.imu = imu;
         this.motorLift = motorLift;
         this.servoGripRight = servoGripRight;
         this.servoGripLeft = servoGripLeft;
+        this.servoGripBottom=servoGripBottom;
         this.motorLeft = motorLeft;
         this.motorRight = motorRight;
         this.servoBeltLeft = servoBeltLeft;
@@ -110,35 +120,41 @@ public class GlyphSystem2 {
 
             servoGripRight.setPosition(servoNormalize(gripClosedPos));
             servoGripLeft.setPosition(servoNormalize(gripClosedPos));
+            servoGripBottom.setPosition(servoNormalize(gripBClosedPos));
         }
         else {
             gripOpen = true;
             servoGripLeft.setPosition(servoNormalize(gripWideOpenPos));
             servoGripRight.setPosition(servoNormalize(gripWideOpenPos));
+            servoGripBottom.setPosition(servoNormalize(gripBWideOpenPos));
         }
     }
     public void closeGrip() {
         gripOpen = false;
         servoGripLeft.setPosition(servoNormalize(gripClosedPos));
         servoGripRight.setPosition(servoNormalize(gripClosedPos));
+        servoGripBottom.setPosition(servoNormalize(gripBClosedPos));
     }
 
     public void closeGripTight() {
         gripOpen = false;
         servoGripLeft.setPosition(servoNormalize(gripTightPos));
         servoGripRight.setPosition(servoNormalize(gripTightPos));
+        servoGripBottom.setPosition(servoNormalize(gripBTightPos));
     }
 
     public void releaseGrip() {
         gripOpen = true;
         servoGripLeft.setPosition(servoNormalize(gripOpenPos));
         servoGripRight.setPosition(servoNormalize(gripOpenPos));
+        servoGripBottom.setPosition(servoNormalize(gripBOpenPos));
     }
 
     public void wideOpenGrip() {
         gripOpen = true;
         servoGripLeft.setPosition(servoNormalize(gripWideOpenPos));
         servoGripRight.setPosition(servoNormalize(gripWideOpenPos));
+        servoGripBottom.setPosition(servoNormalize(gripBWideOpenPos));
     }
 
     public void tiltPhoneUp(){
