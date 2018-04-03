@@ -204,12 +204,10 @@ public class Game_6832 extends LinearOpMode {
                 if(isBlue)
                 {
                     robot.ledSystem.bluePos();
-                    autoSetupStage++;
                 }
                 else
                 {
                     robot.ledSystem.redPos();
-                    autoSetupStage++;
                 }
 
             synchronized (this) {

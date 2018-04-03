@@ -265,7 +265,7 @@ public class Pose
         this.servoGripBottom = this.hwMap.servo.get("servoGripBottom");
         this.servoJewelLeft  = this.hwMap.servo.get("servoJewelLeft");
         this.servoJewelRight = this.hwMap.servo.get("servoJewelRight");
-        this.servoTester     = this.hwMap.servo.get("servoTester");
+        //this.servoTester     = this.hwMap.servo.get("servoTester");
         this.servoPhone      = this.hwMap.servo.get("servoPhone");
         this.servoLiftLeft   = this.hwMap.servo.get("servoLiftLeft");
         this.servoLiftRight  = this.hwMap.servo.get("servoLiftRight");
@@ -753,7 +753,7 @@ public class Pose
      * @param largeDown if true, decrease PWM being sent to the servo tester by a large amount
      */
     public void servoTester(boolean largeUp, boolean smallUp, boolean smallDown, boolean largeDown){
-
+/* disabled because we had to use the servo tester port for the bottom gripper servo
         //check to see if the PWM value being sent to the servo should be altered
         if(largeUp){
             servoTesterPos += 100;
@@ -770,6 +770,7 @@ public class Pose
 
         //send the PWM value to the servo regardless of if it is altered or not
         servoTester.setPosition(servoNormalize(servoTesterPos));
+        */
     }
 
 
