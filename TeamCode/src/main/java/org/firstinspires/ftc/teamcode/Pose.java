@@ -546,15 +546,25 @@ public class Pose
     public void movePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle, boolean strafe) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
+
+        //initialization of the PID calculator's output range, target value and multipliers
         drivePID.setOutputRange(-.5,.5);
         drivePID.setPID(Kp, Ki, Kd);
         drivePID.setSetpoint(targetAngle);
         drivePID.enable();
 
+        //initialization of the PID calculator's input range and current value
         drivePID.setInputRange(0, 360);
         drivePID.setContinuous();
         drivePID.setInput(currentAngle);
+
+        //calculates the correction to supply to the motor
         double correction = drivePID.performPID();
+
+        //performs the drive with the correction applied
+        if(strafe) driveMixerMec(0, pwr, correction);
+        else driveMixerMec(pwr, 0, correction);
+
         /*ArrayList toUpdate = new ArrayList();
         toUpdate.add((PID.m_deltaTime));
         toUpdate.add(Double.valueOf(PID.m_error));
@@ -576,8 +586,6 @@ public class Pose
         motorRight.setPower(pwr - correction);
 
 */
-        if(strafe) driveMixerMec(0, pwr, correction);
-        else driveMixerMec(pwr, 0, correction);
     }
 
     /**
@@ -602,15 +610,23 @@ public class Pose
     public void movePIDMixer(double Kp, double Ki, double Kd, double pwrFwd, double pwrStf, double currentAngle, double targetAngle) {
         //if (pwr>0) PID.setOutputRange(pwr-(1-pwr),1-pwr);
         //else PID.setOutputRange(pwr - (-1 - pwr),-1-pwr);
+
+        //initialization of the PID calculator's output range, target value and multipliers
         drivePID.setOutputRange(-.5,.5);
         drivePID.setPID(Kp, Ki, Kd);
         drivePID.setSetpoint(targetAngle);
         drivePID.enable();
 
+        //initialization of the PID calculator's input range and current value
         drivePID.setInputRange(0, 360);
         drivePID.setContinuous();
         drivePID.setInput(currentAngle);
+
+        //calculates the correction to supply to the motor
         double correction = drivePID.performPID();
+
+        //performs the drive with the correction applied
+        driveMixerMec(pwrFwd, pwrStf, correction);
 
         //logging section that can be reactivated for debugging
         /*ArrayList toUpdate = new ArrayList();
@@ -634,7 +650,6 @@ public class Pose
         motorRight.setPower(pwr - correction);
 
 */
-        driveMixerMec(pwrFwd, pwrStf, correction);
     }
 
 
@@ -649,7 +664,6 @@ public class Pose
     public void driveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle, boolean strafe){
         movePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle, strafe);
     }
-
 
     /**
      * Do a combination of forwards drive and strafe while maintaining an IMU heading using PID
@@ -675,20 +689,28 @@ public class Pose
      * @param strafe tells if the robot driving forwards/backwards or left/right
      */
     public boolean driveIMUDistance(double Kp, double pwr, double targetAngle, boolean forwardOrLeft, double targetMeters, boolean strafe){
+
+        //set what direction the robot is supposed to be moving in for the purpose of the field position calculator
         if(!forwardOrLeft){
             moveMode = moveMode.backward;
             targetMeters = -targetMeters;
             pwr = -pwr;
         }
         else moveMode = moveMode.forward;
+
+        //calculates the target position of the drive motors
         long targetPos;
         if(strafe) targetPos = (long) targetMeters * strafeTPM;
         else targetPos = (long)(targetMeters * forwardTPM);
-        if(Math.abs(targetPos) < Math.abs(getAverageAbsTicks())){//we've not arrived yet
+
+        //if this statement is true, then the robot has not achieved its target position
+        if(Math.abs(targetPos) < Math.abs(getAverageAbsTicks())){
             driveIMU(Kp, kiDrive, kdDrive, pwr, targetAngle, strafe);
             return false;
         }
-        else { //destination achieved
+
+        //destination achieved
+        else {
             driveMixerMec(0, 0, 0);
             return true;
         }
@@ -701,17 +723,17 @@ public class Pose
      * @param maxTime the maximum amount of time allowed to pass before the sequence ends
      */
     public boolean rotateIMU(double targetAngle, double maxTime){
-        if(!turnTimerInit){
+        if(!turnTimerInit){ //intiate the timer that the robot will use to cut of the sequence if it takes too long; only happens on the first cycle
             turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
             turnTimerInit = true;
         }
-        driveIMU(kpDrive, kiDrive, kdDrive, 0, targetAngle, false); //if the robot turns within a threshold of the target
+        driveIMU(kpDrive, kiDrive, kdDrive, 0, targetAngle, false); //check to see if the robot turns within a threshold of the target
         if(Math.abs(poseHeading - targetAngle) < minTurnError) {
             turnTimerInit = false;
             driveMixerMec(0,0,0);
             return true;
         }
-        if(turnTimer < System.nanoTime()){ //if the robot takes too long to turn within a threshold of the target (it gets stuck)
+        if(turnTimer < System.nanoTime()){ //check to see if the robot takes too long to turn within a threshold of the target (e.g. it gets stuck)
             turnTimerInit = false;
             driveMixerMec(0,0,0);
             return true;
