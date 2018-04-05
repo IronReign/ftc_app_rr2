@@ -176,14 +176,15 @@ public class Argos extends LinearOpMode {
 //        VuforiaTrackableDefaultListener wheels = (VuforiaTrackableDefaultListener) beacons.get(0).getListener();
 //        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
 
-        beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
+        beaconTargets = locale.loadTrackablesFromAsset("RelicVuMark");
         //relicCodex.get(0).setName("Wheels");
         //relicCodex.get(1).setName("Tools");
         //relicCodex.get(2).setName("Lego");
-        beaconTargets.get(3).setName("Gears");
+        beaconTargets.get(
+                +0).setName("RelicTrackable");
 
 
-        redNearTarget = beaconTargets.get(3);
+        redNearTarget = beaconTargets.get(0);
         redNearTarget.setName("redNear");  // Gears
 
 //        blueNearTarget  = relicCodex.get(0);

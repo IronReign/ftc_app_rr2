@@ -306,6 +306,9 @@ public class PoseArgos
 
         //motor configurations
 
+        this.motorFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.motorBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         this.motorFront.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBack.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorNeck.setDirection(DcMotorSimple.Direction.FORWARD);
