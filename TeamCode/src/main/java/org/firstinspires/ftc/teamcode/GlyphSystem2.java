@@ -32,6 +32,7 @@ public class GlyphSystem2 {
     private int liftAuto2 = 1500;
     public int beltOn = 2000;
     private int beltOff = 1500;
+    private int beltReverse = 1000;
     private int phoneUp = 1700; //900
     private int phoneDown = 1150; //2105
     private double phonePWMPerDegree = 8.889;
@@ -341,8 +342,8 @@ public class GlyphSystem2 {
 
     public void liftBelt () {
         if(motorLift.getCurrentPosition() > liftDeposit - 50){
-            servoBeltLeft.setPosition(servoNormalize(-beltOn));
-            servoBeltRight.setPosition(servoNormalize(-beltOn));
+            servoBeltLeft.setPosition(servoNormalize(beltReverse));
+            servoBeltRight.setPosition(servoNormalize(beltReverse));
         }
         else {
             servoBeltLeft.setPosition(servoNormalize(beltOn));
@@ -358,8 +359,15 @@ public class GlyphSystem2 {
 
     public void toggleBelt () {
         if(servoBeltRight.getPosition() == servoNormalize(beltOff)){
-            servoBeltLeft.setPosition(servoNormalize(beltOn));
-            servoBeltRight.setPosition(servoNormalize(beltOn));
+            if(motorLift.getCurrentPosition() > 0){
+                servoBeltLeft.setPosition(servoNormalize(beltReverse));
+                servoBeltRight.setPosition(servoNormalize(beltReverse));
+            }
+            else{
+                servoBeltLeft.setPosition(servoNormalize(beltOn));
+                servoBeltRight.setPosition(servoNormalize(beltOn));
+            }
+
             collect();
 
         }

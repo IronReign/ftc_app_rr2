@@ -729,18 +729,21 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(liftHome){
+            robot.glyphSystem.tiltPhoneUp();
             if(robot.glyphSystem.goHome()){
                 liftHome = false;
             }
         }
 
         if(liftDeposit){
+            robot.glyphSystem.tiltPhoneUp();
             if(robot.glyphSystem.goLiftDeposit()){
                 liftDeposit = false;
             }
         }
 
         if(liftVerticalDeposit){
+            robot.glyphSystem.tiltPhoneUp();
             if(robot.glyphSystem.goLiftVerticalDeposit()){
                 liftVerticalDeposit = false;
             }
@@ -753,9 +756,11 @@ public class Game_6832 extends LinearOpMode {
         }
 
         if(gamepad1.dpad_left){
+            robot.glyphSystem.tiltPhoneUp();
             robot.glyphSystem.raiseLift2();
         }
         else if(gamepad1.dpad_right){
+            robot.glyphSystem.tiltPhoneUp();
             robot.glyphSystem.lowerLift2();
         }
         else{
