@@ -109,6 +109,7 @@ public class Game_6832 extends LinearOpMode {
     private double beaterDamper = .75;
     private boolean enableTank = false;
     private long damperTimer = 0;
+    private int direction = 1;  //-1 to reverse direction
 
 
     //staging and timer variables
@@ -560,18 +561,18 @@ public class Game_6832 extends LinearOpMode {
         }
 
 
-        pwrFwd = pwrDamper * gamepad1.left_stick_y;
-        pwrStf = pwrDamper * gamepad1.left_stick_x;
+        pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
+        pwrStf = direction * pwrDamper * gamepad1.left_stick_x;
         pwrRot = -pwrDamper * .75 * gamepad1.right_stick_x;
 
 
 //        pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
 
-        pwrFwdL = pwrDamper * gamepad1.left_stick_y;
-        pwrStfL = pwrDamper * gamepad1.left_stick_x;
+        pwrFwdL = direction * pwrDamper * gamepad1.left_stick_y;
+        pwrStfL = direction * pwrDamper * gamepad1.left_stick_x;
 
-        pwrFwdR = pwrDamper * gamepad1.right_stick_y;
-        pwrStfR = pwrDamper * gamepad1.right_stick_x;
+        pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
+        pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
         if(enableTank) {
 //            robot.driveMixerMecTank(pwrFwdL, pwrStfL, pwrFwdR, pwrStfR);
@@ -596,6 +597,30 @@ public class Game_6832 extends LinearOpMode {
                 pwrDamper = 1.0;
         }
 
+        if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
+            if(direction == 1){
+                pwrDamper = .5;
+                direction = -1;
+                robot.ledSystem.pinkPos();
+                liftVerticalDeposit = false;
+                liftDeposit = true;
+                liftHome = false;
+                liftCollect = false;
+            }
+            else {
+                direction = 1;
+                pwrDamper = 1.0;
+                if(isBlue){
+                    robot.ledSystem.bluePos();
+                }
+                else
+                    robot.ledSystem.redPos();
+                liftVerticalDeposit = false;
+                liftDeposit = false;
+                liftHome = false;
+                liftCollect = true;
+            }
+        }
         if(toggleAllowed(gamepad1.a, a)){
             robot.glyphSystem.toggleBelt();
         }
@@ -605,23 +630,23 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
-        if(robot.glyphSystem.motorLift.getCurrentPosition() < -50 ) {
-            if (toggleAllowed(gamepad1.y, y)) {
-                liftVerticalDeposit = false;
-                liftDeposit = true;
-                liftHome = false;
-                liftCollect = false;
-            }
-        }
-        else if(robot.glyphSystem.motorLift.getCurrentPosition() > 50 ){
-            if (toggleAllowed(gamepad1.y, y)) {
-                robot.glyphSystem.tiltPhoneUp();
-                liftVerticalDeposit = false;
-                liftDeposit = false;
-                liftHome = false;
-                liftCollect = true;
-            }
-        }
+//        if(robot.glyphSystem.motorLift.getCurrentPosition() < -50 ) {
+//            if (toggleAllowed(gamepad1.y, y)) {
+//                liftVerticalDeposit = false;
+//                liftDeposit = true;
+//                liftHome = false;
+//                liftCollect = false;
+//            }
+//        }
+//        else if(robot.glyphSystem.motorLift.getCurrentPosition() > 50 ){
+//            if (toggleAllowed(gamepad1.y, y)) {
+//                robot.glyphSystem.tiltPhoneUp();
+//                liftVerticalDeposit = false;
+//                liftDeposit = false;
+//                liftHome = false;
+//                liftCollect = true;
+//            }
+//        }
 
 //        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50 && robot.glyphSystem.motorLift.getCurrentPosition() > -50){
 //            if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
@@ -640,7 +665,6 @@ public class Game_6832 extends LinearOpMode {
 
 
 //        if(robot.glyphSystem.motorLift.getCurrentPosition() < 50) {
-
 //            if (gamepad1.dpad_up) {
 //                robot.glyphSystem.tiltPhoneUp();
 //                robot.glyphSystem.raiseLift2();
@@ -727,39 +751,6 @@ public class Game_6832 extends LinearOpMode {
                 liftCollect = false;
             }
         }
-//
-
-
-
-//        if(gamepad1.a){
-//            robot.glyphSystem.lowerLift2();
-//        }
-//
-//        else if(gamepad1.y){
-//            robot.glyphSystem.raiseLift2();
-//        }
-//
-//        else{
-//            robot.glyphSystem.stopBelt();
-//        }
-//
-//       if(toggleAllowed(gamepad1.b, b)){
-//          robot.glyphSystem.toggleGrip();
-//        }
-//
-//        if(gamepad1.x){ //get phone up out of the way
-//
-//            robot.glyphSystem.wideOpenGrip();
-//            runtime.reset();
-//            while (opModeIsActive() && (runtime.seconds() < 1.0)) {
-//                telemetry.update();
-//            }
-//            robot.glyphSystem.tiltPhoneUp();
-//        }
-//
-//        if (gamepad1.dpad_down) robot.glyphSystem.goLiftMin();
-//        if (gamepad1.dpad_up) robot.glyphSystem.goLiftMax();
-//        if (gamepad1.dpad_left) robot.glyphSystem.goLiftStack();
 
         if(gamepad1.dpad_left){
             robot.glyphSystem.raiseLift2();
@@ -779,48 +770,10 @@ public class Game_6832 extends LinearOpMode {
         else{
             robot.glyphSystem.collect();
         }
-//        if(gamepad1.right_trigger > 0.5)
-//            pwrDamper = 1;
-//        else
-//            pwrDamper = .33;
-
-
-
-
-//        if(robot.glyphSystem.getMotorLiftPosition() < 510) {
-//            if (gamepad2.dpad_up) {
-//                robot.jewel.liftArm();
-//            }
-//            if (gamepad2.dpad_down) {
-//                robot.jewel.lowerArm();
-//            }
-//        }
-//        else{
-//            robot.jewel.liftArm();
-//        }
-
-
-
-
-
-
-//        if(toggleAllowed(gamepad1.dpad_right, dpad_right)) {
-//            damperTimer = futureTime(2f);
-//            pwrDamper = .33;
-//        }
-
-//        if(damperTimer < System.nanoTime()){
-//            pwrDamper = 1;
-//        }
-
-        if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
-            enableTank = !enableTank;
-        }
 
 
 
 //        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
-
 //        if(toggleAllowed(gamepad1.y, y)){
 ////            robot.setKdDrive(robot.getKdDrive() + 10);
 //        }
@@ -1010,164 +963,186 @@ public class Game_6832 extends LinearOpMode {
 
     private void autonomous3() {
 
-        switch(autoStage){
+        switch(autoStage) {
             case 0:
-                if(autoSetup()) autoStage = 8;
+                robot.setZeroHeading();
+                robot.resetMotors(true);
+                robot.glyphSystem.tiltPhoneDown();
+                robot.glyphSystem.closeGrip();
+                robot.glyphSystem.collect();
+                savedVuMarkCodex = getRelicCodex();
+                robot.ledSystem.offPos();
+                autoStage++;
                 break;
-            case 8: //turn parallel to the wall
-                if(isBlue){
-                    if(robot.rotateIMU(270, 3.5)){
-                        robot.resetMotors(true);
-                        autoStage++;
-                    }
-                }
-                else{
-                    if(robot.rotateIMU(90, 3.5)){
-                        robot.resetMotors(true);
-                        autoStage++;
-                    }
+            case 1:
+                if (robot.jewel.extendArm()) {
+                    robot.glyphSystem.hold();
+                    autoStage++;
                 }
                 break;
-            case 9: //drive off the balance stone
-                if(robot.driveForward(false, .6, .5)) {
+            case 2:
+                autoStage++;
+//                }
+                break;
+            case 3:
+                autoStage++;
+//                }
+                break;
+            case 4:
+                robot.resetMotors(true);
+                autoStage++;
+//                }
+                break;
+
+            case 5:
+                autoStage++;
+//                }
+                break;
+
+            case 6:
+                if (autoTimer < System.nanoTime()) {
+                    robot.resetMotors(true);
+                    jewelMatches = robot.doesJewelMatch(isBlue);
+                    autoTimer = futureTime(1.5f);
+
+                    if ((isBlue && jewelMatches) || (!isBlue && jewelMatches)) {
+
+                        robot.jewel.hitLeft();
+                    } else {
+
+                        robot.jewel.hitRight();
+                    }
+                    autoStage++;
+                }
+                break;
+            case 7:
+                if (autoTimer < System.nanoTime()) { //wait for kick
+                    robot.jewel.center();
+                    if (robot.jewel.retractArm()) {
+                        if (isBlue) {
+                            robot.ledSystem.bluePos();
+                            autoSetupStage++;
+                        } else {
+                            robot.ledSystem.redPos();
+                            autoSetupStage++;
+                        }
+
+                    }
+                    autoStage++;
+                }
+                break;
+            case 8:
+                if (robot.jewel.retractArm()) {
+                    autoStage++;
+                }
+                break;
+            case 9:
+                autoStage++;
+//                }
+                break;
+            case 10:
+                if (robot.driveStrafe(!isBlue, .5, .5)||robot.glyphSystem.goLiftCollect()) {
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
-            case 10: //re-orient robot
-                if(isBlue){
-                    if(robot.rotateIMU(270, 1.5)){
-                        robot.resetMotors(true);
-                        autoStage++;
-                    }
-                }
-                else{
-                    if(robot.rotateIMU(90, 1.5)){
-                        robot.resetMotors(true);
-                        autoStage++;
-                    }
-                }
-                break;
-            case 11: //turn to proper crypto box column based on vuforia target
-                if(isBlue) {
-                    switch (savedVuMarkCodex) {
-                        case 0:
-                            if (robot.driveStrafe(false, .185, .5)) {
-                                robot.resetMotors(true);
-//                                robot.glyphSystem.goLiftAuto();
-                                autoStage++;
-                                 //robot.doTheAutonomous("900 points, both cryptoboxes"); robot.plsDoIt();
-                            }
-                            break;
-                        case 1:
-                            if (robot.driveStrafe(false, .385, .5)) {
-                                robot.resetMotors(true);
-//                                robot.glyphSystem.goLiftAuto();
-                                autoStage++;
-                            }
-                            break;
-                        case 2:
-                            if (robot.driveStrafe(false, .585, .5)) {
-                                robot.resetMotors(true);
-//                                robot.glyphSystem.goLiftAuto();
-                                autoStage++;
-                            }
-                            break;
-                    }
-                }
-                else{
-                    switch (savedVuMarkCodex) {
-                        case 0:
-                            if (robot.rotateIMU(30, 1.5)) {
-                                robot.resetMotors(true);
-//                                robot.glyphSystem.goLiftAuto();
-                                autoStage++;
-                            }
-                            break;
-                        case 1:
-                            if (robot.rotateIMU(40, 1.5)) {
-                                robot.resetMotors(true);
-//                                robot.glyphSystem.goLiftAuto();
-                                autoStage++;
-                            }
-                            break;
-                        case 2:
-                            if (robot.rotateIMU(60, 1.5)) {
-                                robot.resetMotors(true);
-//                                robot.glyphSystem.goLiftAuto();
-                                autoStage++;
-                            }
-                            break;
-                    }
-                }
-                break;
-//            case 11: //turn to crypto box
-//                if(isBlue){
-//                    if(robot.rotateIMU(325, 1.5)){
-//                        robot.resetMotors(true);
-//                        autoStage++;
-//                    }
-//                }
-//                else{
-//                    if(robot.rotateIMU(35, 1.5)){
-//                        robot.resetMotors(true);
-//                        autoStage++;
-//                    }
-//                }
-//                autoStage++;
-//                break;
-            case 12: //deposit glyph
-                if(robot.driveForward(false, 1.0, .50)) {
+
+            case 11: //drive to proper crypto box column based on vuforia target
+//
+                if (robot.driveStrafe(isBlue, .1, .35)) {
                     robot.resetMotors(true);
-                    robot.glyphSystem.releaseGrip();
-                    robot.glyphSystem.setMotorLeft(-1);
-                    robot.glyphSystem.setMotorRight(-1);
-                    autoTimer = futureTime(1.5f);
+                    autoStage++;
+                }
+                robot.glyphSystem.goLiftCollect();
+                break;
+            case 12:
+                if(robot.driveStrafe(!isBlue, .12, .35)&robot.glyphSystem.goLiftCollect()) {
+                    robot.resetMotors(true);
+                    robot.glyphSystem.collect();
                     autoStage++;
                 }
                 break;
             case 13:
-                if(autoTimer < System.nanoTime()){
+                if(robot.driveForward(true, 1.3,.5 )){
+                    robot.resetMotors(true);
                     autoStage++;
+                    autoTimer =futureTime(1.5f);
                 }
                 break;
-            case 14: //back away from crypto box
-                if(robot.driveForward(true, .05, .50)){
-                    robot.resetMotors(true);
-                    robot.glyphSystem.setMotorLeft(0);
-                    robot.glyphSystem.setMotorRight(0);
+            case 14:
+                if(autoTimer<System.nanoTime()){
                     autoStage++;
                 }
                 break;
             case 15:
-                autoTimer = futureTime(1.5f);
-                robot.glyphSystem.closeGrip();
-                autoStage++;
+                /**
+                 if(robot.driveForward(false, 1.3,.5 )&robot.rotateIMU(180, 1)){
+                 robot.resetMotors(true);
+                 robot.glyphSystem.hold();
+                 autoStage++;
+                 }**/
+                //this won't work because driveForward relies on imu position. use field oriented code instead
                 break;
             case 16:
-                if(autoTimer < System.nanoTime()){
-                    autoStage++;
+                if(isBlue) {//change all angles because im not sure what they are rn
+                    switch (savedVuMarkCodex) {
+                        case 0:
+                            if (robot.rotateIMU(-10, 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                        case 1:
+                            if (robot.rotateIMU(0, 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                        case 2:
+                            if (robot.rotateIMU(10, 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                    }
+                }
+                else{
+                    switch (savedVuMarkCodex) {
+                        case 0:
+                            if (robot.rotateIMU(-10 , 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                        case 1:
+                            if (robot.rotateIMU(0, 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                        case 2:
+                            if (robot.rotateIMU(10, 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                    }
                 }
                 break;
             case 17:
-                //tap glyph to make sure its fully inserted
-//                if(robot.driveForward(false, .35, .50)){
-//                    robot.resetMotors(true);
-                autoStage++;
-//                }
+                //drive forward
                 break;
             case 18:
-                //back away from crypto box but stay in parking zone
-//                if(robot.driveForward(true, .05, .30)){
-//                    robot.resetMotors(true);
-                autoStage++;
-//                }
+                //deposit
                 break;
-            default:
-                robot.resetMotors(true);
-                autoStage = 0;
-                active = false;
-                state = 0;
+            case 19:
+                //backup
                 break;
         }
     }

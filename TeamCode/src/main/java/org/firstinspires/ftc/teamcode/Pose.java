@@ -583,9 +583,7 @@ public class Pose
                 + Double.toString(PID.pwrD) + ","
                 + Double.toString(correction));
         motorLeft.setPower(pwr + correction);
-        motorRight.setPower(pwr - correction);
-
-*/
+        motorRight.setPower(pwr - correction);*/
     }
 
     /**
@@ -648,8 +646,7 @@ public class Pose
                 + Double.toString(correction));
         motorLeft.setPower(pwr + correction);
         motorRight.setPower(pwr - correction);
-
-*/
+        */
     }
 
 
