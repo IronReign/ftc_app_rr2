@@ -631,6 +631,13 @@ public class Game_6832 extends LinearOpMode {
             robot.glyphSystem.toggleGrip();
         }
 
+//        if(gamepad1.y){
+//            robot.glyphSystem.tiltPhoneUp();
+//            liftVerticalDeposit = false;
+//            liftDeposit = false;
+//            liftHome = true;
+//            liftCollect = false;
+//        }
 
 //        if(robot.glyphSystem.motorLift.getCurrentPosition() < -50 ) {
 //            if (toggleAllowed(gamepad1.y, y)) {
