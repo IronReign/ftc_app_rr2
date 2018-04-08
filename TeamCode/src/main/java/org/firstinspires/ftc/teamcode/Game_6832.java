@@ -598,6 +598,7 @@ public class Game_6832 extends LinearOpMode {
         }
 
         if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
+            robot.glyphSystem.tiltPhoneUp();
             if(direction == 1){
                 pwrDamper = .5;
                 direction = -1;
@@ -629,6 +630,7 @@ public class Game_6832 extends LinearOpMode {
         if(toggleAllowed(gamepad1.x, x)){
             robot.glyphSystem.toggleGrip();
         }
+
 
 //        if(robot.glyphSystem.motorLift.getCurrentPosition() < -50 ) {
 //            if (toggleAllowed(gamepad1.y, y)) {
