@@ -38,7 +38,7 @@ public class GlyphSystem2 {
     private double phonePWMPerDegree = 8.889;
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
 
-    public int liftDeposit = 942;
+    public int liftDeposit = 1065;
     public int liftVerticalDeposit =  1160;
     public int liftRecoveryPos = 560;
     public int liftCollect = -3743;
@@ -65,6 +65,7 @@ public class GlyphSystem2 {
 
     //;top two
     boolean gripOpen=false;
+    boolean bottomGripOpen = false;
     int gripOpenPos = 1350; //1544
     //int gripClosedPos = 1900;
     int gripClosedPos=1200; //1735
@@ -118,6 +119,7 @@ public class GlyphSystem2 {
     public void toggleGrip(){
         if (gripOpen) {
             gripOpen = false;
+            bottomGripOpen = false;
 
             servoGripRight.setPosition(servoNormalize(gripClosedPos));
             servoGripLeft.setPosition(servoNormalize(gripClosedPos));
@@ -125,11 +127,26 @@ public class GlyphSystem2 {
         }
         else {
             gripOpen = true;
+            bottomGripOpen = true;
+
             servoGripLeft.setPosition(servoNormalize(gripWideOpenPos));
             servoGripRight.setPosition(servoNormalize(gripWideOpenPos));
             servoGripBottom.setPosition(servoNormalize(gripBWideOpenPos));
         }
     }
+
+    public void toggleBottomGrip(){
+        if(bottomGripOpen){
+            bottomGripOpen = false;
+
+            servoGripBottom.setPosition(servoNormalize(gripBClosedPos));
+        }
+        else{
+            bottomGripOpen = true;
+            servoGripBottom.setPosition(servoNormalize(gripBOpenPos));
+        }
+    }
+
     public void closeGrip() {
         gripOpen = false;
         servoGripLeft.setPosition(servoNormalize(gripClosedPos));

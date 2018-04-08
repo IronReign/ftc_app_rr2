@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -50,21 +49,24 @@ public class Pose
     DcMotor motorBackRight           = null;
     DcMotor motorGripLeft = null;
     DcMotor motorGripRight = null;
-//    DcMotor motorConveyor            = null; //particle conveyor
-//    DcMotor motorLauncher            = null; //flywheel motor
     DcMotor motorLift                = null; //cap ball lift motor
     DcMotor headLamp                 = null; //front white LED string
+
     Servo servoGripRight             = null; //servoGripRight for Glyphs and Relics
     Servo servoGripLeft              = null;
     Servo servoGripBottom            = null;
-    Servo servoJewelLeft             = null; //deploys the arm that knocks off the jewel
+    Servo servoJewelExtender = null; //deploys the arm that knocks off the jewel
     Servo servoJewelRight            = null; //deploys the arm that knocks off the jewel
     Servo servoTester                = null;
     Servo servoLiftLeft              = null;
     Servo servoLiftRight             = null;
     Servo servoPhone                 = null;
-    Servo servoJewel                 = null;
+    Servo servoJewelFlipper = null;
     Servo servoLED                   = null;
+    Servo relicShoulder              = null;
+    Servo relicElbow                 = null;
+    Servo relicGrip                  = null;
+
     ColorSensor colorJewel = null;
     //DistanceSensor glyphUpper = null;;
 
@@ -120,6 +122,7 @@ public class Pose
     public JewelArm jewel;
     public GlyphSystem2 glyphSystem;
     public LEDSystem ledSystem = null;
+    public RelicArm relicArm = null;
 
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
@@ -254,28 +257,31 @@ public class Pose
 
 
                
-        this.motorFrontLeft  = this.hwMap.dcMotor.get("motorFrontLeft");
-        this.motorFrontRight = this.hwMap.dcMotor.get("motorFrontRight");
-        this.motorBackLeft   = this.hwMap.dcMotor.get("motorBackLeft");
-        this.motorBackRight  = this.hwMap.dcMotor.get("motorBackRight");
-        this.motorLift       = this.hwMap.dcMotor.get("motorLift");
-        this.headLamp        = this.hwMap.dcMotor.get("headLamp");
-        this.servoGripRight  = this.hwMap.servo.get("servoGripRight");
-        this.servoGripLeft   = this.hwMap.servo.get("servoGripLeft");
-        this.servoGripBottom = this.hwMap.servo.get("servoGripBottom");
-        this.servoJewelLeft  = this.hwMap.servo.get("servoJewelLeft");
-        this.servoJewelRight = this.hwMap.servo.get("servoJewelRight");
-        //this.servoTester     = this.hwMap.servo.get("servoTester");
-        this.servoPhone      = this.hwMap.servo.get("servoPhone");
-        this.servoLiftLeft   = this.hwMap.servo.get("servoLiftLeft");
-        this.servoLiftRight  = this.hwMap.servo.get("servoLiftRight");
-        this.motorGripLeft   = this.hwMap.dcMotor.get("motorGripLeft");
-        this.motorGripRight  = this.hwMap.dcMotor.get("motorGripRight");
-        this.servoJewel      = this.hwMap.servo.get("servoJewel");
-        this.servoLED        = this.hwMap.servo.get("servoLED");
+        this.motorFrontLeft     = this.hwMap.dcMotor.get("motorFrontLeft");
+        this.motorFrontRight    = this.hwMap.dcMotor.get("motorFrontRight");
+        this.motorBackLeft      = this.hwMap.dcMotor.get("motorBackLeft");
+        this.motorBackRight     = this.hwMap.dcMotor.get("motorBackRight");
+        this.motorLift          = this.hwMap.dcMotor.get("motorLift");
+        this.headLamp           = this.hwMap.dcMotor.get("headLamp");
+        this.servoGripRight     = this.hwMap.servo.get("servoGripRight");
+        this.servoGripLeft      = this.hwMap.servo.get("servoGripLeft");
+        this.servoGripBottom    = this.hwMap.servo.get("servoGripBottom");
+        this.servoJewelExtender = this.hwMap.servo.get("servoJewelExtender");
+//        this.servoJewelRight    = this.hwMap.servo.get("servoJewelRight");
+        //this.servoTester      = this.hwMap.servo.get("servoTester");
+        this.servoPhone         = this.hwMap.servo.get("servoPhone");
+        this.servoLiftLeft      = this.hwMap.servo.get("servoLiftLeft");
+        this.servoLiftRight     = this.hwMap.servo.get("servoLiftRight");
+        this.motorGripLeft      = this.hwMap.dcMotor.get("motorGripLeft");
+        this.motorGripRight     = this.hwMap.dcMotor.get("motorGripRight");
+        this.servoJewelFlipper  = this.hwMap.servo.get("servoJewelFlipper");
+        this.servoLED           = this.hwMap.servo.get("servoLED");
+        this.relicShoulder      = this.hwMap.servo.get("relicShoulder");
+        this.relicElbow         = this.hwMap.servo.get("relicElbow");
+        this.relicGrip          = this.hwMap.servo.get("relicGrip");
 
-        this.colorJewel      = this.hwMap.get(ColorSensor.class, "colorJewel");
-        //this.glyphUpper      = this.hwMap.get(DistanceSensor.class, "glyphDetectUp");
+        this.colorJewel         = this.hwMap.get(ColorSensor.class, "colorJewel");
+        //this.glyphUpper       = this.hwMap.get(DistanceSensor.class, "glyphDetectUp");
 
         //motor configurations
 
@@ -286,7 +292,7 @@ public class Pose
         this.motorLift.setDirection(DcMotorSimple.Direction.FORWARD);
         this.motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        this.servoJewelLeft.setDirection(Servo.Direction.REVERSE);
+        this.servoJewelExtender.setDirection(Servo.Direction.REVERSE);
 //        this.motorGripRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.servoLiftLeft.setDirection(Servo.Direction.REVERSE);
         this.servoGripLeft.setDirection(Servo.Direction.REVERSE);
@@ -294,7 +300,9 @@ public class Pose
         moveMode = MoveMode.still;
 
 //        this.glyphSystem = new GlyphSystem(motorLift, servoGripRight, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
-        this.jewel = new JewelArm(servoJewelLeft,servoJewelRight, colorJewel, servoJewel);
+        this.jewel = new JewelArm(servoJewelExtender,servoJewelRight, colorJewel, servoJewelFlipper);
+
+        this.relicArm = new RelicArm(relicShoulder, relicElbow, relicGrip);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
@@ -772,7 +780,6 @@ public class Pose
      * @param largeDown if true, decrease PWM being sent to the servo tester by a large amount
      */
     public void servoTester(boolean largeUp, boolean smallUp, boolean smallDown, boolean largeDown){
-/* disabled because we had to use the servo tester port for the bottom gripper servo
         //check to see if the PWM value being sent to the servo should be altered
         if(largeUp){
             servoTesterPos += 100;
@@ -788,8 +795,7 @@ public class Pose
         }
 
         //send the PWM value to the servo regardless of if it is altered or not
-        servoTester.setPosition(servoNormalize(servoTesterPos));
-        */
+        relicArm.setElbow(servoTesterPos);
     }
 
 

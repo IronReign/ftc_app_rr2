@@ -27,7 +27,7 @@ public class LEDSystem {
     }
 
 
-    //servoJewelLeft.setPosition(servoNormalize(jewelStartPos));
+    //servoJewelExtender.setPosition(servoNormalize(jewelStartPos));
 
     public void offPos(){
         movement.setPosition(servoNormalize(off));

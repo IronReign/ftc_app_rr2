@@ -11,35 +11,55 @@ public class RelicArm {
 
     private Servo shoulder;
     private Servo elbow;
-    private Servo wrist;
     private Servo grip;
-    int jewelStartPos = 950;
 
     int shoulderTucked = 1500;
     int shoulderMid = 1500;
     int shoulderDeployed = 1500;
     int elbowTucked = 1500;
     int elbowMid = 1500;
-    int wristDeplyed = 1500;
-    int wristTucked = 1500;
-    int wristMid = 1500;
     int gripOpen = 1500;
     int gripClosed = 1500;
 
-    public RelicArm(Servo shoulder, Servo elbow, Servo wrist, Servo grip){
+    public RelicArm(Servo shoulder, Servo elbow, Servo grip){
         this.shoulder = shoulder;
         this.elbow = elbow;
-        this.wrist = wrist;
         this.grip = grip;
     }
 
-    public void deploy(){
+    public void extend(){
 
     }
 
-    public void tuck(){
+    public void retract(){
 
     }
+
+    public void deployElbow(){
+
+    }
+
+    public void tuckElbow(){
+
+    }
+
+    public void openGrip(){
+
+    }
+
+    public void closeGrip(){
+
+    }
+
+    public void setElbow(int pwm){
+        elbow.setPosition(servoNormalize(pwm));
+    }
+
+    public void setGrip(int pwm){
+        grip.setPosition(servoNormalize(pwm));
+    }
+
+
 
     public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
