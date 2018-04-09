@@ -555,6 +555,9 @@ public class Game_6832 extends LinearOpMode {
 
         if(robot.glyphSystem.roll < 345 && robot.glyphSystem.roll > 180)
             robot.glyphSystem.maintainPhoneTilt();
+        else{
+            robot.glyphSystem.tiltPhoneUp();
+        }
 //        else{
 //            if(toggleAllowed(gamepad1.b, b)){
 //                robot.glyphSystem.togglePhoneTilt();
@@ -769,22 +772,26 @@ public class Game_6832 extends LinearOpMode {
 
 
 
-            if (direction > 0) {
-                if (gamepad1.dpad_up) {
-                    robot.glyphSystem.tiltPhoneUp();
-                    robot.glyphSystem.raiseLift2();
+            if(gamepad1.dpad_up) {
+                if (direction > 0) {
+//                    if (gamepad1.dpad_up) {
+                        robot.glyphSystem.tiltPhoneUp();
+                        robot.glyphSystem.raiseLift2();
+//                    }
                 }
-            } else {
-                robot.glyphSystem.tiltPhoneUp();
-                liftVerticalDeposit = true;
-                liftDeposit = false;
-                liftHome = false;
-                liftCollect = false;
+                else {
+                    robot.glyphSystem.tiltPhoneUp();
+                    liftVerticalDeposit = true;
+                    liftDeposit = false;
+                    liftHome = false;
+                    liftCollect = false;
+                }
             }
-            if (gamepad1.dpad_down) {
+            else if (gamepad1.dpad_down) {
                 robot.glyphSystem.tiltPhoneUp();
                 robot.glyphSystem.lowerLift2();
-            } else {
+            }
+            else {
                 robot.glyphSystem.stopBelt();
             }
 

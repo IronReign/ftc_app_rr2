@@ -309,7 +309,7 @@ public class GlyphSystem2 {
             case 0:
                 tiltPhoneUp();
                 motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                motorLeft.setPower(.6);
+                motorLift.setPower(.6);
                 liftStage++;
                 break;
             case 1:
