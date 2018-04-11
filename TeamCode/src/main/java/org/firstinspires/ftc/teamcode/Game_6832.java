@@ -1095,6 +1095,7 @@ public class Game_6832 extends LinearOpMode {
                     robot.glyphSystem.releaseGrip();
                     robot.glyphSystem.motorLeft.setPower(-1);
                     robot.glyphSystem.motorLeft.setPower(-1);
+                    autoStage++;
                 }break;
             case 18:
                 if(autoTimer<System.nanoTime()){
