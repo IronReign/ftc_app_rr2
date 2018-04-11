@@ -116,6 +116,7 @@ public class Pose
     private double minTurnError = 1.0;
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
+    int balanceState = 1;
 
     //scoring objects and related variables
 //    public GlyphSystem glyphSystem;
@@ -798,7 +799,30 @@ public class Pose
         relicArm.setElbow(servoTesterPos);
     }
 
+    public boolean autoBalance (){
 
+        switch(balanceState){
+            case 1:
+                 //posePitch;
+                driveMixerMec(.2, 0, 0);
+                if(posePitch<=0){
+                   balanceState++;
+                }
+                break;
+            case 2:
+                if(posePitch<-4){
+                    driveMixerMec(-.1,0,0);
+                }else{
+                    balanceState++;
+                }
+                break;
+            case 3:
+                driveMixerMec(0,0,0);
+                balanceState=1;
+                return true;
+        }
+        return false;
+    }
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////

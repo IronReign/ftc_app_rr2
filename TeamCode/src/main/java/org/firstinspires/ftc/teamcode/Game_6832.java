@@ -288,7 +288,7 @@ public class Game_6832 extends LinearOpMode {
                         autonomous2();
                         break;
                     case 3:
-                        testLED();
+                        autonomous3();
                         break;
                     case 4:
                         demo((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
@@ -1031,7 +1031,7 @@ public class Game_6832 extends LinearOpMode {
 //                }
                 break;
             case 10:
-                if (robot.driveStrafe(!isBlue, .5, .5)||robot.glyphSystem.goLiftCollect()) {
+                if (robot.driveStrafe(!isBlue, .5, .5)) {
                     robot.resetMotors(true);
                     autoStage++;
                 }
@@ -1046,14 +1046,14 @@ public class Game_6832 extends LinearOpMode {
                 robot.glyphSystem.goLiftCollect();
                 break;
             case 12:
-                if(robot.driveStrafe(!isBlue, .12, .35)&robot.glyphSystem.goLiftCollect()) {
+                if(robot.driveStrafe(!isBlue, .14, .35)&robot.glyphSystem.goLiftCollect()) {
                     robot.resetMotors(true);
                     robot.glyphSystem.collect();
                     autoStage++;
                 }
                 break;
             case 13:
-                if(robot.driveForward(true, 1.3,.5 )){
+                if(robot.driveForward(false, .9,.65 )){
                     robot.resetMotors(true);
                     autoStage++;
                     autoTimer =futureTime(1.5f);
@@ -1065,6 +1065,14 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 15:
+                if(robot.driveForward(true, .7,.65 )){
+                    robot.resetMotors(true);
+                    autoStage++;
+                    autoTimer =futureTime(1.5f);
+                }
+                break;
+
+
                 /**
                  if(robot.driveForward(false, 1.3,.5 )&robot.rotateIMU(180, 1)){
                  robot.resetMotors(true);
@@ -1072,8 +1080,39 @@ public class Game_6832 extends LinearOpMode {
                  autoStage++;
                  }**/
                 //this won't work because driveForward relies on imu position. use field oriented code instead
-                break;
+
             case 16:
+                if(robot.rotateIMU(180, 10)){
+                    robot.resetMotors(true);
+                    robot.glyphSystem.hold();
+                    autoStage++;
+                }
+                break;
+            case 17:
+                if(robot.driveForward(false, .5, .65)){
+                    robot.resetMotors(true);
+                    autoTimer = futureTime(1.5f);
+                    robot.glyphSystem.releaseGrip();
+                    robot.glyphSystem.motorLeft.setPower(-1);
+                    robot.glyphSystem.motorLeft.setPower(-1);
+                }break;
+            case 18:
+                if(autoTimer<System.nanoTime()){
+                    autoStage++;
+                }
+                break;
+            case 19:
+                if(robot.driveForward(true, .2, .5)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }break;
+            default:
+                robot.resetMotors(true);
+                autoStage = 0;
+                active = false;
+                state = 0;
+                break;
+            /*case 17:
                 if(isBlue) {//change all angles because im not sure what they are rn
                     switch (savedVuMarkCodex) {
                         case 0:
@@ -1125,15 +1164,15 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }
                 break;
-            case 17:
+            case 18:
                 //drive forward
                 break;
-            case 18:
+            case 19:
                 //deposit
                 break;
-            case 19:
+            case 20:
                 //backup
-                break;
+                break;*/
         }
     }
 
