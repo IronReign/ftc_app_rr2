@@ -611,7 +611,7 @@ public class Game_6832 extends LinearOpMode {
                 liftHome = true;
                 liftCollect = false;
                 pwrDamper = .5;
-                direction = 1;
+                direction = -1;
                 relicMode = true;
                 robot.glyphSystem.stopBelt();
                 robot.glyphSystem.setMotorLeft(0);
@@ -1035,6 +1035,7 @@ public class Game_6832 extends LinearOpMode {
                     robot.resetMotors(true);
                     autoStage++;
                 }
+                robot.glyphSystem.goLiftCollect();
                 break;
 
             case 11: //drive to proper crypto box column based on vuforia target
@@ -1082,10 +1083,61 @@ public class Game_6832 extends LinearOpMode {
                 //this won't work because driveForward relies on imu position. use field oriented code instead
 
             case 16:
-                if(robot.rotateIMU(180, 10)){
-                    robot.resetMotors(true);
-                    robot.glyphSystem.hold();
-                    autoStage++;
+                if(isBlue) {//change all angles because im not sure what they are rn
+                    switch (savedVuMarkCodex) {
+                        case 0:
+                            if (robot.rotateIMU(160, 1)) {
+                                robot.resetMotors(true);
+                                robot.glyphSystem.hold();
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                        case 1:
+                            if (robot.rotateIMU(180, 1)) {
+                                robot.resetMotors(true);
+                                robot.glyphSystem.hold();
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                        case 2:
+                            if (robot.rotateIMU(200, 1)) {
+                                robot.resetMotors(true);
+                                robot.glyphSystem.hold();
+//                                robot.glyphSystem.goLiftAuto();
+                                autoStage++;
+                            }
+                            break;
+                    }
+                }
+                else{
+                    switch (savedVuMarkCodex) {
+                        case 0:
+                            if (robot.rotateIMU(160 , 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                robot.glyphSystem.hold();
+                                autoStage++;
+                            }
+                            break;
+                        case 1:
+                            if (robot.rotateIMU(180, 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                robot.glyphSystem.hold();
+                                autoStage++;
+                            }
+                            break;
+                        case 2:
+                            if (robot.rotateIMU(200, 1)) {
+                                robot.resetMotors(true);
+//                                robot.glyphSystem.goLiftAuto();
+                                robot.glyphSystem.hold();
+                                autoStage++;
+                            }
+                            break;
+                    }
                 }
                 break;
             case 17:
