@@ -990,10 +990,9 @@ public class Game_6832 extends LinearOpMode {
                 break;
 
             case 6:
-                if (autoTimer < System.nanoTime()) {
                     robot.resetMotors(true);
                     jewelMatches = robot.doesJewelMatch(isBlue);
-                    autoTimer = futureTime(1.5f);
+                    autoTimer = futureTime(.8f);
 
                     if ((isBlue && jewelMatches) || (!isBlue && jewelMatches)) {
 
@@ -1003,7 +1002,6 @@ public class Game_6832 extends LinearOpMode {
                         robot.jewel.hitRight();
                     }
                     autoStage++;
-                }
                 break;
             case 7:
                 if (autoTimer < System.nanoTime()) { //wait for kick
@@ -1011,20 +1009,16 @@ public class Game_6832 extends LinearOpMode {
                     if (robot.jewel.retractArm()) {
                         if (isBlue) {
                             robot.ledSystem.bluePos();
-                            autoSetupStage++;
                         } else {
                             robot.ledSystem.redPos();
-                            autoSetupStage++;
                         }
-
+                        autoStage++;
                     }
-                    autoStage++;
+
                 }
                 break;
             case 8:
-                if (robot.jewel.retractArm()) {
-                    autoStage++;
-                }
+                autoStage++;
                 break;
             case 9:
                 autoStage++;
@@ -1047,7 +1041,7 @@ public class Game_6832 extends LinearOpMode {
                 robot.glyphSystem.goLiftCollect();
                 break;
             case 12:
-                if(robot.driveStrafe(!isBlue, .14, .35)&robot.glyphSystem.goLiftCollect()) {
+                if(robot.driveStrafe(!isBlue, .14, .35) & robot.glyphSystem.goLiftCollect()) {
                     robot.resetMotors(true);
                     robot.glyphSystem.collect();
                     autoStage++;
@@ -1072,21 +1066,11 @@ public class Game_6832 extends LinearOpMode {
                     autoTimer =futureTime(1.5f);
                 }
                 break;
-
-
-                /**
-                 if(robot.driveForward(false, 1.3,.5 )&robot.rotateIMU(180, 1)){
-                 robot.resetMotors(true);
-                 robot.glyphSystem.hold();
-                 autoStage++;
-                 }**/
-                //this won't work because driveForward relies on imu position. use field oriented code instead
-
             case 16:
                 if(isBlue) {//change all angles because im not sure what they are rn
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(160, 1)) {
+                            if (robot.rotateIMU(180, 1)&robot.driveStrafe(!isBlue, .2, .3)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.hold();
 //                                robot.glyphSystem.goLiftAuto();
@@ -1102,7 +1086,7 @@ public class Game_6832 extends LinearOpMode {
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(200, 1)) {
+                            if (robot.rotateIMU(180, 1)&robot.driveStrafe(isBlue, .2, .3)) {
                                 robot.resetMotors(true);
                                 robot.glyphSystem.hold();
 //                                robot.glyphSystem.goLiftAuto();
@@ -1114,7 +1098,7 @@ public class Game_6832 extends LinearOpMode {
                 else{
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(160 , 1)) {
+                            if (robot.rotateIMU(180 , 1)&robot.driveStrafe(isBlue, .2, .3)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 robot.glyphSystem.hold();
@@ -1130,7 +1114,7 @@ public class Game_6832 extends LinearOpMode {
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(200, 1)) {
+                            if (robot.rotateIMU(180, 1)&robot.driveStrafe(!isBlue, .2, .3)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 robot.glyphSystem.hold();
@@ -1316,18 +1300,15 @@ public class Game_6832 extends LinearOpMode {
 //                }
                 if (autoTimer < System.nanoTime()) { //wait for kick
                     robot.jewel.center();
-                    if(robot.jewel.retractArm()){
                         if(isBlue) {
                             robot.ledSystem.bluePos();
-                            autoSetupStage++;
                         }
                         else
                         {
                             robot.ledSystem.redPos();
-                            autoSetupStage++;
                         }
 
-                    }
+
                     autoStage++;
                 }
                 break;
