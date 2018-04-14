@@ -288,7 +288,7 @@ public class Game_6832 extends LinearOpMode {
                         autonomous2();
                         break;
                     case 3:
-                        autonomous3();
+                        auto4();
                         break;
                     case 4:
                         demo((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
@@ -903,7 +903,7 @@ public class Game_6832 extends LinearOpMode {
 //                }
                 break;
             case 10:
-                if (robot.driveForward(false, .1, .35)) {
+                if (robot.driveForward(false, .1, .35) && robot.glyphSystem.goLiftCollect()) {
                     robot.resetMotors(true);
                      autoSetupStage++;
                 }
@@ -1529,57 +1529,57 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 8: //turn parallel to the wall
                 if(isBlue){
-                    if(robot.rotateIMU(270, 3.5)){
+                    if(robot.rotateIMU(90, 3.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 else{
-                    if(robot.rotateIMU(90, 3.5)){
+                    if(robot.rotateIMU(270, 3.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 break;
             case 9: //drive off the balance stone
-                if(robot.driveForward(true, .4, .5)) {
+                if(robot.driveForward(false, .4, .5)) {
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
             case 10: //re-orient robot
                 if(isBlue){
-                    if(robot.rotateIMU(270, 1.5)){
+                    if(robot.rotateIMU(90, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 else{
-                    if(robot.rotateIMU(90, 1.5)){
+                    if(robot.rotateIMU(270, 1.5)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }
                 break;
             case 11: //turn to proper crypto box column based on vuforia target
-                if(isBlue) {
+                if(!isBlue) {
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(320, 1.5)) {
+                            if (robot.rotateIMU(115, 1.5)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if (robot.rotateIMU(310, 1.5)) {
+                            if (robot.rotateIMU(125, 1.5)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(305, 1.5)) {
+                            if (robot.rotateIMU(140, 1.5)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 autoStage++;
@@ -1590,21 +1590,21 @@ public class Game_6832 extends LinearOpMode {
                 else{
                     switch (savedVuMarkCodex) {
                         case 0:
-                            if (robot.rotateIMU(70 , 1.5)) {
+                            if (robot.rotateIMU(345, 1.5)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if (robot.rotateIMU(50, 1.5)) {
+                            if (robot.rotateIMU(335, 1.5)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 autoStage++;
                             }
                             break;
                         case 2:
-                            if (robot.rotateIMU(40, 1.5)) {
+                            if (robot.rotateIMU(320, 1.5)) {
                                 robot.resetMotors(true);
 //                                robot.glyphSystem.goLiftAuto();
                                 autoStage++;
@@ -1614,7 +1614,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 12:
-                if(robot.glyphSystem.goLiftVerticalDeposit()){
+                if(robot.glyphSystem.goLiftCollect()){
                     autoStage++;
                 }
                 break;
@@ -1634,7 +1634,7 @@ public class Game_6832 extends LinearOpMode {
 //                autoStage++;
 //                break;
             case 13: //deposit glyph
-                if(robot.driveForward(true, .75, .50)) {
+                if(robot.driveForward(false, .75, .50)) {
                     robot.resetMotors(true);
 //                    robot.glyphSystem.releaseGrip();
 //                    robot.glyphSystem.setMotorLeft(-1);
@@ -1658,7 +1658,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 16: //back away from crypto box
-                if(robot.driveForward(false, .1, .50)){
+                if(robot.driveForward(true, .1, .50)){
                     robot.resetMotors(true);
                     robot.glyphSystem.setMotorLeft(0);
                     robot.glyphSystem.setMotorRight(0);
@@ -1700,6 +1700,18 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
+    public void auto4(){
+        switch(autoStage) {
+            case 0:
+                if (autoSetup()) autoStage++;
+                break;
+//            case 1:
+//                if(){
+//
+//                }
+//                break;
+        }
+    }
 
     public void resetAuto(){
         autoStage = 0;
