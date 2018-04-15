@@ -235,6 +235,13 @@ public class GlyphSystem2 {
     }
 
 
+    public void gripBOpen(){
+        servoGripBottom.setPosition(servoNormalize(gripBOpenPos));
+    }
+
+    public void gripBClose(){
+        servoGripBottom.setPosition(servoNormalize(gripBClosedPos));
+    }
 
     public boolean goLiftDeposit(){
         switch (liftStage){
