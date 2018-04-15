@@ -51,10 +51,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
 
 import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -134,6 +138,7 @@ public class Game_6832 extends LinearOpMode {
     private int beaconConfig = 0;
     private double vuPwr = 0;
     public boolean vuFlashDemo = false;
+    boolean visionConfigured = false;
 
 
     //sensors/sensing-related variables
@@ -314,6 +319,18 @@ public class Game_6832 extends LinearOpMode {
                         robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
                         break;
                     case 9:
+                        autonomous3();
+                        break;
+                    case 10: //vision testing
+                        if(visionConfigured)
+                        {
+                            getColumnPos((getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565)),1, mDetector);
+                        }
+                        else //setup colorblobtracker
+                        {
+                            mDetector.setHsvColor(VisionUtils.OTHER_RED_HIGH);
+                            visionConfigured=true;
+                        }
                         autonomous3();
                         break;
                     default:
@@ -1783,7 +1800,7 @@ public class Game_6832 extends LinearOpMode {
             if(toggleAllowed(gamepad1.b, b)){
 
                 state++;
-                if (state > 9) {
+                if (state > 10) {
                     state = 0;
                 }
                 robot.resetMotors(true);

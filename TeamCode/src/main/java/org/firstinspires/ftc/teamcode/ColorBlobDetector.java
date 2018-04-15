@@ -24,6 +24,7 @@ public class ColorBlobDetector {
     private Scalar mColorRadius = new Scalar(25,50,50,0);
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
+    private List<BlobStats> mBlobStats;
 
     // Cache
     Mat mPyrDownMat = new Mat();
@@ -116,11 +117,17 @@ public class ColorBlobDetector {
             }
             Imgproc.drawContours(overlay, mContours, -1, CONTOUR_COLOR, 3);
         }
+        mBlobStats = blobs;
         return overlay;
         }
 
     public List<MatOfPoint> getContours() {
         return mContours;
+    }
+
+    public List<BlobStats> getBlobStats(){
+        //this is only valid after calling the process function but the list could be empty
+        return mBlobStats;
     }
 
 

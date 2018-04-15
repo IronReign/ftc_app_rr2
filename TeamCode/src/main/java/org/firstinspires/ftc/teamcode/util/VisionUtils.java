@@ -150,6 +150,26 @@ public class VisionUtils {
     }//getJewelConfig
 
 
+    public static double getColumnPos(Image img, int columnId, ColorBlobDetector detector) {
+
+        Mat overlay;
+        overlay = new Mat();
+        List <BlobStats> blobStats;
+
+        //getting camera image...
+        Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
+        bm.copyPixelsFromBuffer(img.getPixels());
+        Mat eye = bitmapToMat(bm, CvType.CV_8UC3);
+        detector.process(eye, overlay);
+        blobStats = detector.getBlobStats();
+
+        //need some magic here to group the blobs into columns and find the error to the desired column
+
+
+        return ErrorPixToDeg(400);
+
+    }
+
     public static int getJewelConfig(Image img, VuforiaTrackableDefaultListener codex, CameraCalibration camCal) {
 
         OpenGLMatrix pose = codex.getRawPose();
@@ -356,7 +376,7 @@ public class VisionUtils {
         );
     }
 
-    private double ErrorPixToDeg(int blobx){
+    private static double ErrorPixToDeg(int blobx){
         int ViewWidth = 800;
         int ScreenCenterPix;
         int ErrorPix;
