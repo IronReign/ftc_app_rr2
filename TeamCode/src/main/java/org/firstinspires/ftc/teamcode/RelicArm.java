@@ -16,6 +16,9 @@ public class RelicArm {
     private long extendTimer = 0;
     private float extendDuration = 5.5f;
     public boolean autoExtend = false;
+    public boolean autoRetract = false;
+    public int placeStage = 0;
+    public long placeTimer = 0;
 
     int shoulderExtend = 2200;
     int shoulderStop = 1500;
@@ -25,6 +28,7 @@ public class RelicArm {
     int elbowGrab = 2175;
     int gripOpen = 2125;
     int gripClosed = 825;
+    public int elbowMid = (elbowTucked + elbowGrab)/2;
 
     public int elbowTarget = elbowTucked;
 
@@ -36,17 +40,82 @@ public class RelicArm {
 
 
 
-    public void autonomousExtend(){
+    public boolean autoExtend(){
         if(!autoExtend){
             shoulder.setPosition(servoNormalize(shoulderExtend));
             autoExtend = true;
             extendTimer = futureTime(extendDuration);
         }
-        if(extendTimer > System.nanoTime())
+        if(extendTimer < System.nanoTime())
         {
             stopShoulder();
             autoExtend = false;
+            return true;
         }
+        return false;
+    }
+
+    public boolean autoRetract(){
+        if(!autoExtend){
+            shoulder.setPosition(servoNormalize(shoulderRetract));
+            autoExtend = true;
+            extendTimer = futureTime(extendDuration);
+        }
+        if(extendTimer < System.nanoTime())
+        {
+            stopShoulder();
+            autoExtend = false;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean autoPlace(){
+        switch (placeStage){
+            case 0:
+                elbowTarget = elbowGrab;
+                placeTimer = futureTime(1.0f);
+                placeStage++;
+                break;
+            case 1:
+                if(placeTimer < System.nanoTime()){
+                    openGrip();
+                    placeTimer = futureTime(.5f);
+                    placeStage++;
+                }
+            case 2:
+                if(placeTimer < System.nanoTime()){
+                    retract();
+                    placeTimer = futureTime(.1f);
+                    placeStage++;
+                }
+                break;
+            case 3:
+                if(placeTimer < System.nanoTime()){
+                    stopShoulder();
+                    placeTimer = futureTime(.2f);
+                    placeStage++;
+                }
+                break;
+            case 4:
+                if(placeTimer < System.nanoTime()){
+                    elbowTarget = elbowTucked;
+                    placeTimer = futureTime(1.0f);
+                    placeStage++;
+                }
+                break;
+            case 5:
+                if(placeTimer < System.nanoTime()){
+                    placeStage++;
+                }
+                break;
+            case 6:
+                if(autoRetract()){
+                    placeStage = 0;
+                    return true;
+                }
+        }
+        return false;
     }
 
     public void extend(){

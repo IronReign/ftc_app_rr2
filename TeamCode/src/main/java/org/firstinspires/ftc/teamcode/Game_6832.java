@@ -32,8 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import android.view.View;
-
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -47,7 +45,6 @@ import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -97,6 +94,10 @@ public class Game_6832 extends LinearOpMode {
     private boolean liftVerticalDeposit = false;
     private boolean liftHome = false;
     private boolean liftCollect = false;
+
+    private boolean retractRelic = false;
+    private boolean extendRelic = false;
+    private boolean placeRelic = false;
 
     //drive train control variables
     private double pwrDamper = 1;
@@ -313,8 +314,7 @@ public class Game_6832 extends LinearOpMode {
                         robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
                         break;
                     case 9:
-                        if(robot.jewel.extendArm())
-                            active = false;
+                        autonomous3();
                         break;
                     default:
                         robot.stopAll();
@@ -701,11 +701,11 @@ public class Game_6832 extends LinearOpMode {
 
         else{
             if(elbowTimer < System.nanoTime()){
-                if(gamepad1.dpad_left){
+                if(gamepad1.left_trigger > .5){
                     elbowTimer = futureTime(.1f);
                     robot.relicArm.elbowTarget -= 50;
                 }
-                else if(gamepad1.dpad_right){
+                else if(gamepad1.right_trigger > .5){
                     elbowTimer = futureTime(.1f);
                     robot.relicArm.elbowTarget += 50;
                 }
@@ -716,9 +716,13 @@ public class Game_6832 extends LinearOpMode {
             }
             if(gamepad1.dpad_up){
                 robot.relicArm.extend();
+                extendRelic = false;
+                retractRelic = false;
             }
             else if(gamepad1.dpad_down){
                 robot.relicArm.retract();
+                extendRelic = false;
+                retractRelic = false;
             }
             else{
                 robot.relicArm.stopShoulder();
@@ -729,8 +733,41 @@ public class Game_6832 extends LinearOpMode {
             if(gamepad1.a){
                 robot.relicArm.tuckElbow();
             }
+            if(toggleAllowed(gamepad1.dpad_right, dpad_right)){
+                extendRelic = true;
+                retractRelic = false;
+            }
+            if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+                extendRelic = false;
+                retractRelic = true;
+            }
+            if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
+                extendRelic = false;
+                retractRelic = false;
+                placeRelic = !placeRelic;
+                robot.relicArm.placeStage = 0;
+            }
+            if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
+                robot.relicArm.elbowTarget = robot.relicArm.elbowMid;
+            }
         }
 
+        if(placeRelic){
+            if(robot.relicArm.autoPlace()){
+                placeRelic = false;
+            }
+        }
+
+        if(extendRelic){
+            if(robot.relicArm.autoExtend()){
+                extendRelic = false;
+            }
+        }
+        if(retractRelic){
+            if(robot.relicArm.autoRetract()){
+                retractRelic = false;
+            }
+        }
 
         if (liftHome) {
             robot.glyphSystem.tiltPhoneUp();
@@ -1007,22 +1044,22 @@ public class Game_6832 extends LinearOpMode {
                 if (autoTimer < System.nanoTime()) { //wait for kick
                     robot.jewel.center();
                     if (robot.jewel.retractArm()) {
-                        if (isBlue) {
-                            robot.ledSystem.bluePos();
-                        } else {
-                            robot.ledSystem.redPos();
-                        }
                         autoStage++;
                     }
 
                 }
                 break;
             case 8:
+                if (isBlue) {
+                    robot.ledSystem.bluePos();
+
+                } else {
+                    robot.ledSystem.redPos();
+                }
                 autoStage++;
                 break;
             case 9:
                 autoStage++;
-//                }
                 break;
             case 10:
                 if (robot.driveStrafe(!isBlue, .5, .5)) {
