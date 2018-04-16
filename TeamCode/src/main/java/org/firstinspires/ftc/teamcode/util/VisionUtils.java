@@ -36,6 +36,7 @@ import org.opencv.android.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -61,6 +62,8 @@ public class VisionUtils {
     public final static Scalar OTHER_BLUE_HIGH = new Scalar(185, 255, 255);
     public final static Scalar OTHER_RED_LOW = new Scalar(222, 101, 192);
     public final static Scalar OTHER_RED_HIGH = new Scalar(47, 251, 255);
+
+    public final static Scalar RED_CRYPTO = new Scalar(47, 251, 255);
 
     public static Mat bitmapToMat (Bitmap bit, int cvType) {
         Mat newMat = new Mat(bit.getHeight(), bit.getWidth(), cvType);
@@ -162,11 +165,24 @@ public class VisionUtils {
         Mat eye = bitmapToMat(bm, CvType.CV_8UC3);
         detector.process(eye, overlay);
         blobStats = detector.getBlobStats();
+        double largest =0;
+        int x = 0;
 
         //need some magic here to group the blobs into columns and find the error to the desired column
 
+        //this is a very basic example where we find the x coordinate of the largest blob's centroid
+        Iterator<BlobStats> each = blobStats.iterator();
+        while (each.hasNext()) {
+            BlobStats stat = each.next();
+            if (stat.area > largest)
+            {
+                largest = stat.area;
+                x = stat.x;
+            }
 
-        return ErrorPixToDeg(400);
+        }
+
+        return ErrorPixToDeg(x);
 
     }
 
