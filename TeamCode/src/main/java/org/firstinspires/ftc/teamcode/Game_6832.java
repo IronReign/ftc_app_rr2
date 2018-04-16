@@ -927,7 +927,7 @@ public class Game_6832 extends LinearOpMode {
 //                }
                 if (autoTimer < System.nanoTime()) { //wait for kick
                     robot.jewel.center();
-
+                    autoTimer=futureTime(1.5f);
                     autoSetupStage++;
                 }
                 break;
@@ -943,6 +943,9 @@ public class Game_6832 extends LinearOpMode {
                         autoSetupStage++;
                     }
 
+                }
+                if(autoTimer<System.nanoTime()){
+                    robot.glyphSystem.goLiftCollect();
                 }
                 break;
             case 9:
@@ -994,12 +997,12 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 16:
-                if(robot.rotateIMU(0, 1)){
+                //if(robot.rotateIMU(0, 1)){
                     robot.resetMotors(true);
                     autoSetupStage = 0;
                     return true;
-                }
-                break;
+                //}
+                //break;
             case 17:
 //                if(robot.driveForward(true, .3, .5)){
 //                    robot.resetMotors(true);
@@ -1794,10 +1797,84 @@ public class Game_6832 extends LinearOpMode {
                     }
                 }break;
             case 6:
-                if(robot.driveForward(false, .5, .65)){
+                if(robot.driveForward(false, .8, .45)){
                     robot.resetMotors(true);
                     autoStage++;
+                }break;
+            case 7:
+                if(robot.driveForward(true, .4, .45)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }break;
+            case 8:
+                if(!isBlue){
+                    switch(savedVuMarkCodex){
+                        case 0:
+                            if(robot.rotateIMU(360-90-15, 5)){
+                                robot.resetMotors(true);
+                                autoStage++;
+                            }
+                            break;
+                        case 1:
+                            if(robot.rotateIMU(360-90-30, 5)){
+                                robot.resetMotors(true);
+                                autoStage++;
+                            }break;
+                        case 2:
+                            if(robot.rotateIMU(360-90-45, 5)){
+                                robot.resetMotors(true);
+                                autoStage++;
+                            }break;
+                    }
+                }else{
+
+                    //probably wrong check the angles
+                    switch(savedVuMarkCodex){
+                        case 0:
+                            if(robot.rotateIMU(360-90-30, 5)){
+                                robot.resetMotors(true);
+                                autoStage++;
+                            }
+                            break;
+                        case 1:
+                            if(robot.rotateIMU(360-90-45, 5)){
+                                robot.resetMotors(true);
+                                autoStage++;
+                            }break;
+                        case 2:
+                            if(robot.rotateIMU(360-90-60, 5)){
+                                robot.resetMotors(true);
+                                autoStage++;
+                            }break;
+                    }
                 }
+                break;
+            case 9:
+                if(robot.driveForward(false, .6, .65)){
+                    robot.resetMotors(true);
+                    autoTimer=futureTime(1.5f);
+                    robot.glyphSystem.motorLeft.setPower(-1);
+                    robot.glyphSystem.motorRight.setPower(1);
+                    robot.glyphSystem.releaseGrip();
+                    autoStage++;
+                }break;
+            case 10:
+                if(autoTimer<System.nanoTime()){
+                    autoStage++;
+                }break;
+            case 11:
+                if(robot.driveForward(true, .1, .4)){
+                    robot.glyphSystem.hold();
+                    robot.glyphSystem.hold();
+                    robot.resetMotors(true);
+                    autoStage++;
+                }break;
+            default:
+                robot.resetMotors(true);
+                autoStage = 0;
+                active = false;
+                state = 0;
+                break;
         }
     }
 
@@ -1825,32 +1902,20 @@ public class Game_6832 extends LinearOpMode {
         10 = start button
         */
 
-        if (toggleAllowed(gamepad1.left_bumper, left_bumper) && !active) {
+        if(!active) {
+            if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
 
-            state--;
-            if (state < 0) {
-                state = 10;
+                state--;
+                if (state < 0) {
+                    state = 10;
+                }
+                robot.resetMotors(true);
+                active = false;
+                resetAuto();
+                codexFlashStage = 0;
             }
-            robot.resetMotors(true);
-            active = false;
-            resetAuto();
-            codexFlashStage = 0;
-        }
 
-        if (toggleAllowed(gamepad1.right_bumper, right_bumper) && !active) {
-
-            state++;
-            if (state > 10) {
-                state = 0;
-            }
-            robot.resetMotors(true);
-            active = false;
-            resetAuto();
-            codexFlashStage = 0;
-        }
-
-        if (!active) {
-            if(toggleAllowed(gamepad1.b, b)){
+            if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
 
                 state++;
                 if (state > 10) {
@@ -1859,9 +1924,23 @@ public class Game_6832 extends LinearOpMode {
                 robot.resetMotors(true);
                 active = false;
                 resetAuto();
+                codexFlashStage = 0;
+            }
+
+//            if (!active) {
+                if (toggleAllowed(gamepad1.b, b)) {
+
+                    state++;
+                    if (state > 10) {
+                        state = 0;
+                    }
+                    robot.resetMotors(true);
+                    active = false;
+                    resetAuto();
                     codexFlashStage = 0;
 
-            }
+                }
+//            }
         }
 
         if (toggleAllowed(gamepad1.start, startBtn)) {
