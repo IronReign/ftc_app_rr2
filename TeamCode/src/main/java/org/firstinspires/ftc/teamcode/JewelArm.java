@@ -20,11 +20,10 @@ public class JewelArm {
     private int jewelLeft = 900;
     private int jewelMid = 1500;
     private int jewelRight = 2100;
-
     public float jewelDeployTime = 2.75f;
-    public float thiefDeployTime = 1.5f;
+    public float thiefDeployTime = 2.25f;
     public long jewelTimer = 0;
-    public long thiefTimer = -0;
+    public long thiefTimer = 0;
     public int jewelStage = 0;
 
     public int jewelPos;
@@ -68,6 +67,10 @@ public class JewelArm {
         return false;
     }
 
+    public void stopArm(){
+        servoJewelLeft.setPosition(.5);
+    }
+
     public boolean retractArm(){
         switch(jewelStage){
             case 0:
@@ -80,6 +83,8 @@ public class JewelArm {
                 if(System.nanoTime() > thiefTimer){
                     hitRight();
                     jewelStage++;
+
+                    return  true;
                 }
                 break;
             case 2:

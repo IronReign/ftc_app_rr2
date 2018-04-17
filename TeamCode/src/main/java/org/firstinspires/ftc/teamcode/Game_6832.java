@@ -89,6 +89,9 @@ public class Game_6832 extends LinearOpMode {
 
     private boolean active = true;
     boolean joystickDriveStarted = false;
+    public boolean suppressJoysticks = false;
+    boolean balancing = false;
+
     private int state = 0;
     private boolean isBlue = false;
     private boolean relicMode = false;
@@ -114,6 +117,7 @@ public class Game_6832 extends LinearOpMode {
     private double pwrStfR = 0;
     private double beaterDamper = .75;
     private boolean enableTank = false;
+    private boolean bypassJoysticks = false;
     private long damperTimer = 0;
     private int direction = 1;  //-1 to reverse direction
 
@@ -302,14 +306,11 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 5: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
-                        if(robot.driveForward(false, 1, .5)) active = false;
+                        if(robot.driveForward(true, .4, .35)) active = false;
                         break;
                     case 6: //provides data for left/right calibration
                         joystickDriveStarted = false;
-                        if(robot.getAverageAbsTicks() < 2000){
-                            robot.driveMixerMec(0,0,0);
-                        }
-                        else robot.driveMixerMec(0,0,0);
+                        if(robot.driveIMUDistance(robot.kpDrive, .5, 0, false, .5, false)) active = false;
                         break;
                     case 7: //IMU demo mode
                         if(robot.jewel.retractArm())
@@ -582,6 +583,20 @@ public class Game_6832 extends LinearOpMode {
 //            }
 //        }
 
+        if (balancing) { //balance with a simple drive forward from edge of stone
+
+            if(robot.driveForward(true, .4, .45)){
+                suppressJoysticks=false;
+                robot.resetMotors(true);
+                balancing = false;
+                }
+        }
+            else {
+                suppressJoysticks = false;
+
+            }
+
+
 
 
         pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
@@ -597,13 +612,13 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
-        if(enableTank) {
+        if (!suppressJoysticks) {
+            if (enableTank) {
 //            robot.driveMixerMecTank(pwrFwdL, pwrStfL, pwrFwdR, pwrStfR);
-            robot.driveMixerMecField(pwrFwd, pwrStf, pwrRot, robot.getHeading());
-        }
-
-        else{
-            robot.driveMixerMec(pwrFwd, pwrStf, pwrRot);
+                robot.driveMixerMecField(pwrFwd, pwrStf, pwrRot, robot.getHeading());
+            } else {
+                robot.driveMixerMec(pwrFwd, pwrStf, pwrRot);
+            }
         }
 
 
@@ -716,7 +731,7 @@ public class Game_6832 extends LinearOpMode {
             }
         }
 
-        else{
+        else{ //relic mode end game
             if(elbowTimer < System.nanoTime()){
                 if(gamepad1.left_trigger > .5){
                     elbowTimer = futureTime(.1f);
@@ -757,6 +772,7 @@ public class Game_6832 extends LinearOpMode {
             if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
                 extendRelic = false;
                 retractRelic = true;
+
             }
             if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
                 extendRelic = false;
@@ -765,7 +781,11 @@ public class Game_6832 extends LinearOpMode {
                 robot.relicArm.placeStage = 0;
             }
             if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
-                robot.relicArm.elbowTarget = robot.relicArm.elbowMid;
+                //robot.relicArm.elbowTarget = robot.relicArm.elbowMid;
+                //
+                suppressJoysticks = true;
+                robot.resetMotors(true);
+                balancing=true;
             }
         }
 
@@ -898,7 +918,7 @@ public class Game_6832 extends LinearOpMode {
                 if (autoTimer < System.nanoTime()) {
                     robot.resetMotors(true);
                     jewelMatches = robot.doesJewelMatch(isBlue);
-                    autoTimer = futureTime(1.5f);
+                    autoTimer = futureTime(.75f);
 
                     if ((isBlue && jewelMatches) || (!isBlue && jewelMatches)) {
 
@@ -926,8 +946,8 @@ public class Game_6832 extends LinearOpMode {
 //                    }
 //                }
                 if (autoTimer < System.nanoTime()) { //wait for kick
-                    robot.jewel.center();
-                    autoTimer=futureTime(1.5f);
+//                    robot.jewel.center();
+//                    autoTimer=futureTime(1.5f);
                     autoSetupStage++;
                 }
                 break;
@@ -944,9 +964,9 @@ public class Game_6832 extends LinearOpMode {
                     }
 
                 }
-                if(autoTimer<System.nanoTime()){
-                    robot.glyphSystem.goLiftCollect();
-                }
+//                if(autoTimer<System.nanoTime()){
+//                    robot.glyphSystem.goLiftCollect();
+//                }
                 break;
             case 9:
                 robot.glyphSystem.goLiftCollect();
@@ -957,7 +977,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 10:
                 robot.glyphSystem.goLiftCollect();
-                if(robot.getRoll()<1 && robot.getRoll()>-1){
+                if(robot.getPitch()<3 || robot.getPitch()>359){
                     autoSetupStage++;
                 }break;
             case 11:
@@ -966,16 +986,21 @@ public class Game_6832 extends LinearOpMode {
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
+                break;
             case 12:
-                if (robot.driveForward(false, .1, .35) & robot.glyphSystem.goLiftCollect()) {
+                if (robot.driveForward(false, .1, .35)) {
+//                    robot.jewel.stopArm();
                     robot.resetMotors(true);
                      autoSetupStage++;
                 }
                 break;
             case 13: //lift jewel arm
+                if(robot.glyphSystem.goLiftCollect()) {
 //                robot.jewel.liftArm();
 ////                if (autoTimer < System.nanoTime()) {
+                    robot.jewel.stopArm();
                     autoSetupStage++;
+                }
 //                    autoTimer = futureTime(1.5f);
 ////                }
 
@@ -985,13 +1010,15 @@ public class Game_6832 extends LinearOpMode {
 //                    robot.glyphSystem.collect();
 //                    robot.glyphSystem.tiltPhoneUp();
 //                    autoTimer = futureTime(1.5f);
-                    autoSetupStage++;
+                robot.jewel.stopArm();
+                autoSetupStage++;
 //                }
                 break;
             case 15:
                 if(autoTimer < System.nanoTime()){
 //                    robot.glyphSystem.closeGripTight();
 //
+                    robot.jewel.stopArm();
                     autoSetupStage++;
                     robot.resetMotors(true);
                 }
@@ -1003,7 +1030,7 @@ public class Game_6832 extends LinearOpMode {
                     return true;
                 //}
                 //break;
-            case 17:
+             case 17:
 //                if(robot.driveForward(true, .3, .5)){
 //                    robot.resetMotors(true);
 //                    robot.glyphSystem.goLiftAuto2();
@@ -1791,18 +1818,31 @@ public class Game_6832 extends LinearOpMode {
                         autoStage++;
                     }
                 }else{
-                    if(robot.rotateIMU(360-90, 3)){
+                    if(robot.rotateIMU(90, 3)){
                         robot.resetMotors(true);
                         autoStage++;
                     }
                 }break;
             case 6:
-                if(robot.driveForward(false, .8, .45)){
-                    robot.resetMotors(true);
+                if(robot.driveForward(false, .4, .45)){
                     autoStage++;
-                }break;
+                    robot.resetMotors(true);
+                }
+//                if(isBlue) {
+//                    if (robot.driveIMUDistance(robot.kpDrive, .45, 90, false, .4, false)) {
+//                        robot.resetMotors(true);
+//                        autoStage++;
+//                    }
+//                }
+//                else{
+//                    if (robot.driveIMUDistance(robot.kpDrive, .45, 360- 90, false, .4, false)) {
+//                        robot.resetMotors(true);
+//                        autoStage++;
+//                    }
+//                }
+                break;
             case 7:
-                if(robot.driveForward(true, .4, .45)){
+                if(robot.driveForward(true, 0, .45)){
                     robot.resetMotors(true);
                     autoStage++;
                 }break;
@@ -1810,18 +1850,18 @@ public class Game_6832 extends LinearOpMode {
                 if(!isBlue){
                     switch(savedVuMarkCodex){
                         case 0:
-                            if(robot.rotateIMU(360-90-15, 5)){
+                            if(robot.rotateIMU(360-90-15, 3)){
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if(robot.rotateIMU(360-90-30, 5)){
+                            if(robot.rotateIMU(360-90-30, 3)){
                                 robot.resetMotors(true);
                                 autoStage++;
                             }break;
                         case 2:
-                            if(robot.rotateIMU(360-90-45, 5)){
+                            if(robot.rotateIMU(360-90-45, 3)){
                                 robot.resetMotors(true);
                                 autoStage++;
                             }break;
@@ -1831,18 +1871,18 @@ public class Game_6832 extends LinearOpMode {
                     //probably wrong check the angles
                     switch(savedVuMarkCodex){
                         case 0:
-                            if(robot.rotateIMU(360-90-30, 5)){
+                            if(robot.rotateIMU(360-90-30, 3)){
                                 robot.resetMotors(true);
                                 autoStage++;
                             }
                             break;
                         case 1:
-                            if(robot.rotateIMU(360-90-45, 5)){
+                            if(robot.rotateIMU(360-90-45, 3)){
                                 robot.resetMotors(true);
                                 autoStage++;
                             }break;
                         case 2:
-                            if(robot.rotateIMU(360-90-60, 5)){
+                            if(robot.rotateIMU(360-90-60, 3)){
                                 robot.resetMotors(true);
                                 autoStage++;
                             }break;

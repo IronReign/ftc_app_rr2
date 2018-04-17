@@ -219,7 +219,7 @@ public class GlyphSystem2 {
                 else
                     motorLift.setPower(1);
                 motorLift.setTargetPosition(liftCollect);
-                if(motorLift.getCurrentPosition() > liftCollect - 10 || motorLift.getCurrentPosition() > liftCollect - 10){
+                if(motorLift.getCurrentPosition() > liftCollect - 50 && motorLift.getCurrentPosition() < liftCollect + 50){
                     liftStage = 0;
                     return true;
                 }
