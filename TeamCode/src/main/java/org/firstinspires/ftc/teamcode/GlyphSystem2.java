@@ -35,6 +35,7 @@ public class GlyphSystem2 {
     private int beltReverse = 1000;
     private int phoneUp = 1700; //900
     private int phoneDown = 1150; //2105
+    private int phoneMax = 2100;
     private double phonePWMPerDegree = 8.889;
     private int liftPlanck = 450; //smallest distance to increment lift by when using runToPosition
 
@@ -100,6 +101,10 @@ public class GlyphSystem2 {
     public void collect(){
         motorLeft.setPower(1);
         motorRight.setPower(-1);
+    }
+
+    public void tiltPhoneMax(){
+        servoPhone.setPosition(servoNormalize(phoneMax));
     }
 
     public void hold(){
@@ -381,9 +386,9 @@ public class GlyphSystem2 {
         servoBeltRight.setPosition(servoNormalize(beltOff));
     }
 
-    public void toggleBelt () {
+    public void toggleBelt (boolean reverse) {
         if(servoBeltRight.getPosition() == servoNormalize(beltOff)){
-            if(motorLift.getCurrentPosition() > 0){
+            if(reverse){
                 servoBeltLeft.setPosition(servoNormalize(beltReverse));
                 servoBeltRight.setPosition(servoNormalize(beltReverse));
             }

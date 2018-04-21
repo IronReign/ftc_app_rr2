@@ -21,7 +21,7 @@ public class JewelArm {
     private int jewelMid = 1500;
     private int jewelRight = 2100;
     public float jewelDeployTime = 2.75f;
-    public float thiefDeployTime = 2.25f;
+    public float thiefDeployTime = 1f;
     public long jewelTimer = 0;
     public long thiefTimer = 0;
     public int jewelStage = 0;
@@ -81,7 +81,7 @@ public class JewelArm {
                 break;
             case 1:
                 if(System.nanoTime() > thiefTimer){
-                    hitRight();
+                    hitLeft();
                     jewelStage++;
 
                     return  true;
