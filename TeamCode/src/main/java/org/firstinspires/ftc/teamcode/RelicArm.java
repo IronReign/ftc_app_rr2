@@ -14,7 +14,7 @@ public class RelicArm {
     private Servo grip;
 
     private long extendTimer = 0;
-    private float extendDuration = 5.5f;
+    private float extendDuration = 4.5f;
     public boolean autoExtend = false;
     public boolean autoRetract = false;
     public int placeStage = 0;

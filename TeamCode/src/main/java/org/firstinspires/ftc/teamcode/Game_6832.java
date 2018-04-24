@@ -972,14 +972,14 @@ public class Game_6832 extends LinearOpMode {
 //                        robot.resetMotors(true);
 //                    }/
 //                }
+                autoSetupStage++;
+                break;
+            case 8:
                 if (autoTimer < System.nanoTime()) { //wait for kick
 //                    robot.jewel.center();
 //                    autoTimer=futureTime(1.5f);
                     robot.jewel.hitLeft();
-                    autoSetupStage++;
                 }
-                break;
-            case 8:
                 if(robot.jewel.retractArm()){
                    if(isBlue) {
                        robot.ledSystem.bluePos();
