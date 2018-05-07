@@ -53,7 +53,7 @@ import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Linear OpMode", group="Linear Opmode")
+@TeleOp(name="RoBoPoGlo", group="Linear Opmode")
 //@Disabled
 public class robopoglo extends LinearOpMode {
 
