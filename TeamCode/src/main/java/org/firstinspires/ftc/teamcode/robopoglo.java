@@ -58,7 +58,7 @@ import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
 public class robopoglo extends LinearOpMode {
 
     // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
+//    private ElapsedTime runtime = new ElapsedTime();
     private Servo handServo;
     private DistanceSensor sensorDistance;
 
@@ -68,7 +68,22 @@ public class robopoglo extends LinearOpMode {
     private boolean closeNextPass = true;
     private double distMM = 0;
 
-//    @Override
+    //values associated with the buttons in the toggleAllowed method
+    private boolean[] buttonSavedStates = new boolean[11];
+    private int a = 0; //lower glyph lift
+    private int b = 1; //toggle grip/release on glyph
+    private int x = 2; //no function
+    private int y = 3; //raise glyph lift
+    private int dpad_down = 4; //glyph lift bottom position
+    private int dpad_up = 5; //glyph lift top position
+    private int dpad_left = 6; //no function
+    private int dpad_right = 7; //glyph lift mid position
+    private int left_bumper = 8; //increment state down (always)
+    private int right_bumper = 9; //increment state up (always)
+    private int startBtn = 10; //toggle active (always)
+
+
+    //    @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -82,8 +97,14 @@ public class robopoglo extends LinearOpMode {
         isClosed = false;
         handServo.setPosition(handOpen);
 
-        waitForStart();
-        runtime.reset();
+        while(!isStarted()){
+            if(isClosed) handServo.setPosition(handClosed);
+            else handServo.setPosition(handOpen);
+            if(toggleAllowed(gamepad1.b, b)) isClosed = !isClosed;
+
+        }
+//        waitForStart();
+//        runtime.reset();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -107,6 +128,41 @@ public class robopoglo extends LinearOpMode {
             telemetry.update();
         }
     }
+
+    boolean toggleAllowed(boolean button, int buttonIndex)
+    {
+
+        /*button indexes:
+        0  = a
+        1  = b
+        2  = x
+        3  = y
+        4  = dpad_down
+        5  = dpad_up
+        6  = dpad_left
+        7  = dpad_right
+        8  = left bumper
+        9  = right bumper
+        10 = start button
+        */
+
+        if (button) {
+            if (!buttonSavedStates[buttonIndex])  { //we just pushed the button, and when we last looked at it, it was not pressed
+                buttonSavedStates[buttonIndex] = true;
+                return true;
+            }
+            //       else if(buttonCurrentState[buttonIndex] == buttonSavedStates[buttonIndex] && buttonCurrentState[buttonIndex]){
+            else { //the button is pressed, but it was last time too - so ignore
+
+                return false;
+            }
+        }
+
+        buttonSavedStates[buttonIndex] = false; //not pressed, so remember that it is not
+        return false; //not pressed
+
+    }
+
 
     String getPosition(){
         if(isClosed){
