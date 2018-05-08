@@ -63,8 +63,8 @@ public class robopoglo extends LinearOpMode {
     private DistanceSensor sensorDistance;
 
     private boolean isClosed = false;
-    private double handOpen = servoNormalize(1500);
-    private double handClosed = servoNormalize(1500);
+    private double handOpen = servoNormalize(2105);
+    private double handClosed = servoNormalize(900);
     private boolean closeNextPass = true;
     private double distMM = 0;
 
@@ -92,7 +92,7 @@ public class robopoglo extends LinearOpMode {
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
         handServo  = hardwareMap.get(Servo.class, "handServo");
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorDistance");
 
         isClosed = false;
         handServo.setPosition(handOpen);
@@ -111,16 +111,8 @@ public class robopoglo extends LinearOpMode {
             if(isClosed) handServo.setPosition(handClosed);
             else handServo.setPosition(handOpen);
             distMM = sensorDistance.getDistance(DistanceUnit.MM);
-            if(distMM > 25 && distMM < 50){
-                if(closeNextPass){
-                   isClosed = true;
-                   closeNextPass = false;
-                }
-                else{
-                    isClosed = false;
-                    closeNextPass = true;
-                }
-            }
+            if(distMM < 55) isClosed = true;
+            else isClosed = false;
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Position: ", getPosition());
