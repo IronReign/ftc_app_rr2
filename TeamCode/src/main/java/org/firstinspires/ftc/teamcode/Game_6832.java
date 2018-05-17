@@ -334,11 +334,12 @@ public class Game_6832 extends LinearOpMode {
                     case 7: //IMU demo mode
 //                        if(robot.jewel.retractArm())
 //                            active = false;
-                        robot.relicArm.openGrip();
+//                        robot.relicArm.openGrip();
+                        if(robot.jewel.extendArm()) active = false;
                         break;
                     case 8: //servo testing mode
 //                        robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
-                        robot.relicArm.closeGrip();
+//                        robot.relicArm.closeGrip();
                         break;
                     case 9:
                         autonomous3();

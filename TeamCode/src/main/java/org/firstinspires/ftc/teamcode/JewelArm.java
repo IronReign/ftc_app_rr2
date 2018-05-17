@@ -20,8 +20,8 @@ public class JewelArm {
     private int jewelLeft = 900;
     private int jewelMid = 1500;
     private int jewelRight = 2100;
-    public float jewelDeployTime = 2.75f;
-    public float thiefDeployTime = 1f;
+    public float jewelDeployTime = 1.6f;
+    public float thiefDeployTime = .5f;
     public long jewelTimer = 0;
     public long thiefTimer = 0;
     public int jewelStage = 0;
