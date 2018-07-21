@@ -89,8 +89,8 @@ public class cartbot extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Setup a variable for each drive wheel to save power level for telemetry
-            double leftPower;
-            double rightPower;
+            int leftPower;
+            int rightPower;
 
             // Choose to drive using either Tank Mode, or POV Mode
             // Comment out the method that's not used.  The default below is POV.
@@ -98,17 +98,17 @@ public class cartbot extends LinearOpMode {
             // POV Mode uses left stick to go forward, and right stick to turn.
             // - This uses basic math to combine motions and is easier to drive straight.
             drive = 1500;
-            if(drivingForward && gamepad1.left_stick_y < .05){
+            if((drivingForward && gamepad1.left_stick_y < .05) || (drivingForward && gamepad1.left_stick_y > -.05)){
                 drivingForward = false;
                 damperTimer = futureTime(spindownTime);
             }
             if(damperTimer > System.nanoTime() && !drivingForward) {turnDamper = .5;}
-            if(gamepad1.left_stick_y > .05) {
+            if(gamepad1.left_stick_y > .05 || gamepad1.left_stick_y < -.05) {
                 drive -= gamepad1.left_stick_y * 200;
                 drivingForward = true;
-                turnDamper = .1;
+                turnDamper = .5;
             }
-            double turn  =  100*turnDamper*gamepad1.right_stick_x;
+            int turn  =  (int)(100*turnDamper*gamepad1.right_stick_x);
             leftPower    = Range.clip(drive + turn, 1350, 1650) ;
             rightPower   = Range.clip(drive - turn, 1350, 1650) ;
 
@@ -118,12 +118,12 @@ public class cartbot extends LinearOpMode {
             // rightPower = -gamepad1.right_stick_y ;
 
             // Send calculated power to wheels
-            leftDrive.setPosition(leftPower);
-            rightDrive.setPosition(rightPower);
+            leftDrive.setPosition(servoNormalize(leftPower));
+            rightDrive.setPosition(servoNormalize(rightPower));
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+//            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
             telemetry.update();
         }
     }
