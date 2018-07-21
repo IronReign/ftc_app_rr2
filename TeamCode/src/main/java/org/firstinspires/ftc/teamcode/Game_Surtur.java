@@ -103,7 +103,7 @@ public class Game_Surtur extends LinearOpMode {
     private double pwrFwdR = 0;
     private double pwrStfR = 0;
     private boolean enableTank = false;
-    private int direction = 1;  //-1 to reverse direction
+    private int direction = -1;  //-1 to reverse direction
 
 
     //staging and timer variables
@@ -369,7 +369,7 @@ public class Game_Surtur extends LinearOpMode {
 
         pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
         pwrStf = direction * pwrDamper * gamepad1.left_stick_x;
-        pwrRot = -pwrDamper * .75 * gamepad1.right_stick_x;
+        pwrRot = pwrDamper * .75 * gamepad1.right_stick_x;
 
 
 //        pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
