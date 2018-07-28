@@ -29,13 +29,11 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.eventloop.opmode.*;
+import com.qualcomm.robotcore.hardware.*;
+import com.qualcomm.robotcore.util.*;
+
+import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
 
 /**
@@ -51,21 +49,15 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="CartBot", group="Linear Opmode")
-//@Disabled
-public class cartbot extends LinearOpMode {
+@TeleOp(name="Big Wheel", group="Linear Opmode")
+public class Bigwheel extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private Servo leftDrive = null;
-    private Servo rightDrive = null;
-    private Servo cannon = null;
-    private int drive = 1500;
-    private long damperTimer = 0;
-    private float spindownTime = 3f;
-    private double turnDamper = .6;
-    private int pwrFactor = 150;
-    private boolean drivingForward = false;
+    private DcMotor leftDrive1 = null;
+    private DcMotor leftDrive2 = null;
+    private DcMotor rightDrive1 = null;
+    private DcMotor rightDrive2 = null;
 
     @Override
     public void runOpMode() {
@@ -75,13 +67,17 @@ public class cartbot extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftDrive  = hardwareMap.get(Servo.class, "left_drive");
-        rightDrive = hardwareMap.get(Servo.class, "right_drive");
-        cannon = hardwareMap.get(Servo.class, "cannon");
+        leftDrive1  = hardwareMap.get(DcMotor.class, "left_drive_1");
+        leftDrive2  = hardwareMap.get(DcMotor.class, "left_drive_2");
+        rightDrive1 = hardwareMap.get(DcMotor.class, "right_drive_1");
+        rightDrive2 = hardwareMap.get(DcMotor.class, "right_drive_2");
+
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        leftDrive.setDirection(Servo.Direction.FORWARD);
-        rightDrive.setDirection(Servo.Direction.REVERSE);
+        leftDrive1.setDirection(REVERSE);
+        leftDrive2.setDirection(REVERSE);
+        rightDrive1.setDirection(FORWARD);
+        rightDrive2.setDirection(FORWARD);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -91,40 +87,18 @@ public class cartbot extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Setup a variable for each drive wheel to save power level for telemetry
-            int leftPower;
-            int rightPower;
+            double leftPower;
+            double rightPower;
 
             // Choose to drive using either Tank Mode, or POV Mode
             // Comment out the method that's not used.  The default below is POV.
 
             // POV Mode uses left stick to go forward, and right stick to turn.
             // - This uses basic math to combine motions and is easier to drive straight.
-
-            if(gamepad1.right_trigger > .5){
-                cannon.setPosition(1);
-            }
-            else if(gamepad1.left_trigger > .5){
-                cannon.setPosition(0);
-            }
-            else cannon.setPosition(.5);
-
-            if(gamepad1.right_bumper) pwrFactor = 800;
-            else pwrFactor = 150;
-
-            drive = 1500;
-            if((drivingForward && gamepad1.left_stick_y < .05) || (drivingForward && gamepad1.left_stick_y > -.05)){
-                drivingForward = false;
-                damperTimer = futureTime(spindownTime);
-            }
-            if(damperTimer < System.nanoTime() && !drivingForward) {turnDamper = .6;}
-            if(gamepad1.left_stick_y > .05 || gamepad1.left_stick_y < -.05) {
-                drive += gamepad1.left_stick_y * pwrFactor;
-                drivingForward = true;
-                turnDamper = .35;
-            }
-            int turn  =  (int)(pwrFactor*turnDamper*gamepad1.left_stick_x);
-            leftPower    = Range.clip(drive + turn, 700, 2100) ;
-            rightPower   = Range.clip(drive - turn, 700, 2100) ;
+            double drive = -gamepad1.left_stick_y;
+            double turn  =  gamepad1.right_stick_x;
+            leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+            rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
 
             // Tank Mode uses one stick to control each wheel.
             // - This requires no math, but it is hard to drive forward slowly and keep straight.
@@ -132,22 +106,15 @@ public class cartbot extends LinearOpMode {
             // rightPower = -gamepad1.right_stick_y ;
 
             // Send calculated power to wheels
-            leftDrive.setPosition(servoNormalize(leftPower));
-            rightDrive.setPosition(servoNormalize(rightPower));
+            leftDrive1.setPower(leftPower);
+            leftDrive2.setPower(leftPower);
+            rightDrive1.setPower(rightPower);
+            rightDrive2.setPower(rightPower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-//            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
             telemetry.update();
         }
-    }
-
-    public static double servoNormalize(int pulse){
-        double normalized = (double)pulse;
-        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
-    }
-
-    long futureTime(float seconds){
-        return System.nanoTime() + (long) (seconds * 1e9);
     }
 }
