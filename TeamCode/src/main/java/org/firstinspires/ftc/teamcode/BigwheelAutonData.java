@@ -1,0 +1,97 @@
+package org.firstinspires.ftc.teamcode;
+
+import org.firstinspires.ftc.teamcode.BigwheelAutonRecorder.GamepadPair;
+
+public final class BigwheelAutonData {
+
+    private BigwheelAutonData() {throw new RuntimeException();}
+
+    public static java.util.List<GamepadPair> log = new java.util.ArrayList(86) {{
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,-0.26574885845184326));
+        add(new GamepadPair(0.0,-0.3158114552497864));
+        add(new GamepadPair(0.0,-0.5327492952346802));
+        add(new GamepadPair(0.0,-0.08218607306480408));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,-0.8998748660087585));
+        add(new GamepadPair(0.02377972938120365,-0.9332498908042908));
+        add(new GamepadPair(0.07384229451417923,-0.9499374032020569));
+        add(new GamepadPair(0.0,-0.6161869168281555));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,-0.06549853831529617));
+        add(new GamepadPair(0.0,-0.7914059162139893));
+        add(new GamepadPair(0.0,-0.8998748660087585));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.9249061346054077));
+        add(new GamepadPair(0.0,1.0));
+        add(new GamepadPair(0.0,1.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.24906134605407715));
+        add(new GamepadPair(0.0,1.0));
+        add(new GamepadPair(0.0,0.15727993845939636));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.4409678876399994));
+        add(new GamepadPair(0.0,0.34084272384643555));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.07384229451417923,0.0));
+        add(new GamepadPair(1.0,0.0));
+        add(new GamepadPair(1.0,0.0));
+        add(new GamepadPair(1.0,0.0));
+        add(new GamepadPair(1.0,0.0));
+        add(new GamepadPair(0.3658740222454071,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,-0.4075928330421448));
+        add(new GamepadPair(0.0,-1.0));
+        add(new GamepadPair(0.0,-0.749687135219574));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.17396746575832367));
+        add(new GamepadPair(0.0,1.0));
+        add(new GamepadPair(0.0,0.09052983671426773));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.05715477839112282,-1.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.9833124876022339));
+        add(new GamepadPair(0.0,1.0));
+        add(new GamepadPair(0.0,0.46599915623664856));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(-1.0,-0.06549853831529617));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.8331247568130493,0.0));
+        add(new GamepadPair(1.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+        add(new GamepadPair(0.0,0.0));
+    }};
+}
