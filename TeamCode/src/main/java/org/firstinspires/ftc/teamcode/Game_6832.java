@@ -387,6 +387,7 @@ public class Game_6832 extends LinearOpMode {
 
 
     public void demo(VuforiaTrackableDefaultListener beaconTarget, double distance){
+        robot.glyphSystem.tiltPhoneDown();
         if(gamepad1.x){
             robot.maintainHeading(gamepad1.x);
         }
