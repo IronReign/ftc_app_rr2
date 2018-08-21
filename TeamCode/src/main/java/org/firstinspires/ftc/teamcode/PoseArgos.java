@@ -1,6 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.Log;
 
 import com.qualcomm.ftccommon.SoundPlayer;
@@ -127,14 +134,14 @@ public class PoseArgos
     private double powerConveyor   = 0;
     static  int ticksPerRot        = 1680;
 
+    private Location poseLocation;
+    private double poseBearing; //Bearing is global (gps) while heading is local (imu/odom)
+    private double poseLong;
+    private double poseLat;
+    private double poseGPSspeed;
 
-
-    private long flingTimer = 0;
-    private int flingSpeed  = 5000; //ticks per second
-    private int TPM_Forward = 2439; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
-    private int TPM_Strafe  = 3145 ; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
-
-    private double poseX;
+    //local and usually relative location data
+    private double poseX; //these were meant for relative local tracking, not as global position
     private double poseY;
     private double poseHeading; //current heading in degrees. Might be rotated by 90 degrees from imu's heading when strafing
     private double poseHeadingRad; //current heading converted to radians
@@ -246,7 +253,6 @@ public class PoseArgos
      */
     public PoseArgos()
     {
-
         poseX     = 0;
         poseY     = 0;
         poseHeading = 0;
@@ -258,10 +264,6 @@ public class PoseArgos
 
     }
 
-    public void ResetTPM(){
-        TPM_Forward = 2493;
-        TPM_Strafe = 3145;
-    }
 
     /**
      * Initializes motors, servos, lights and sensors from a given hardware map
@@ -288,21 +290,6 @@ public class PoseArgos
         this.servoSteerFront = this.hwMap.servo.get("servoSteerFront");
         this.servoSteerBack = this.hwMap.servo.get("servoSteerBack");
 
-/*
-        // get a reference to our distance sensors
-        beaconPresentRear = hwMap.opticalDistanceSensor.get("beaconPresentRear");
-        beaconPresent = hwMap.opticalDistanceSensor.get("beaconPresentFore");
-
-        // color sensors init
-        beaconColorSensor = hwMap.i2cDevice.get("beaconColorSensor");
-        ballColorSensor = hwMap.i2cDevice.get("ballColorSensor");
-
-        beaconColorReader = new I2cDeviceSynchImpl(beaconColorSensor, I2cAddr.create8bit(0x60), false);
-        //ballColorReader = new I2cDeviceSynchImpl(ballColorSensor, I2cAddr.create8bit(0x64), false);
-
-        beaconColorReader.engage();
-        //ballColorReader.engage();
-*/
 
         //motor configurations
 
@@ -322,7 +309,6 @@ public class PoseArgos
         moveMode = MoveMode.still;
 
 
-
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
         parametersIMU.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -335,11 +321,39 @@ public class PoseArgos
         imu.initialize(parametersIMU);
 
         logger = new CsvLogKeeper("test",10,"NanoTime, DeltaTime, Angle, Err, TotalErr, DeltaErr, P, I, D, Pwr, count");
+
+
+        // Acquire a reference to the system Location Manager
+        LocationManager locationManager = (LocationManager) RC.a().getSystemService(Context.LOCATION_SERVICE);
+
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                NewGPSLocation(location);
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
+
+        HandlerThread handler = new HandlerThread("gpsHandler");
+        handler.start();
+        Looper looper = handler.getLooper();
+
+        // Register the listener with the Location Manager to receive location updates
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener,looper);
+
+        // get last known so we have a valid location until we get a fresh fix
+        String locationProvider = LocationManager.GPS_PROVIDER;
+        poseLocation = locationManager.getLastKnownLocation(locationProvider);
+
         HeadLampOn();
-//        redLampOn();
-        //Set the MR color sensors to passive mode - NEVER DO THIS IN A LOOP - LIMITED NUMBER OF MODE WRITES TO DEVICE
-//        beaconColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
-//        ballColorReader.write8(3, 1);    //Set the mode of the color sensor using LEDState
+
+
 
     }
 
@@ -355,6 +369,20 @@ public class PoseArgos
     public void redLampOff(){
         redLamps.setPower(0);
     }*/
+
+//should only be called from the new location callback
+public void NewGPSLocation(Location location){
+    if (isBetterLocation(location, poseLocation)) {
+        poseLocation = location;
+        if (poseLocation.hasBearing())poseBearing = poseLocation.getBearing();
+        if (poseLocation.hasSpeed())poseGPSspeed = poseLocation.getSpeed();
+        poseLong = poseLocation.getLongitude();
+        poseLat=poseLocation.getLatitude();
+
+    }
+
+}
+
 
     public int getNumTimesBalanced() {
         return numTimesBalanced;
@@ -560,45 +588,6 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
     }
 
 
-    public boolean DriveIMUDistance(double Kp, double pwr, double targetAngle,boolean forwardOrLeft, double targetMeters, boolean strafe){
-        if(!forwardOrLeft){
-            moveMode = moveMode.backward;
-            targetMeters = -targetMeters;
-            pwr = -pwr;
-        }
-        else moveMode = moveMode.forward;
-        long targetPos;
-        if(strafe) targetPos = (long) targetMeters * TPM_Strafe;
-        else targetPos = (long)(targetMeters * TPM_Forward);
-        if(Math.abs(targetPos) > Math.abs(getAverageAbsTicks())){//we've not arrived yet
-            DriveIMU(KdDrive, KiDrive, KdDrive, pwr, targetAngle);
-            return false;
-        }
-        else { //destination achieved
-            driveMixer(0, 0);
-            return true;
-        }
-    }
-
-    public boolean RotateIMU(double targetAngle, double maxTime){ //uses default pose PID constants and has end conditions
-        if(!turnTimerInit){
-            turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
-            turnTimerInit = true;
-        }
-        DriveIMU(KpDrive, KiDrive, KdDrive, 0, targetAngle); //if the robot turns within a threshold of the target
-        if(Math.abs(poseHeading - targetAngle) < minTurnError) {
-            turnTimerInit = false;
-            driveMixer(0,0);
-            return true;
-        }
-        if(turnTimer < System.nanoTime()){ //if the robot takes too long to turn within a threshold of the target (it gets stuck)
-            turnTimerInit = false;
-            driveMixer(0,0);
-            return true;
-        }
-        return false;
-    }
-
     public void MaintainHeading(boolean buttonState){
         if(buttonState) {
             if (!maintainHeadingInit) {
@@ -691,49 +680,6 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
 
 
 
-    //    public void moveTicks(double forward, double strafe, double rotate, long ticks){
-//        ticks += motorFront.getCurrentPosition();
-//        while(motorFront.getCurrentPosition() < ticks && opModeIsActive()){
-//            telemetry.addData("Status", "Front Left Ticks: " + Long.toString(motorFront.getCurrentPosition()));
-//            telemetry.update();
-//            driveMixer(forward, strafe, rotate);
-//        }
-//    }
-    public boolean driveForward(boolean forward, double targetMeters, double power){
-        if(!forward){
-            moveMode = moveMode.backward;
-            targetMeters = -targetMeters;
-            power = -power;
-        }
-        else moveMode = moveMode.forward;
-
-        long targetPos = (long)(targetMeters * TPM_Forward);
-        if(Math.abs(targetPos) > Math.abs(getAverageTicks())){//we've not arrived yet
-            driveMixer(power, 0);
-            return false;
-        }
-        else { //destination achieved
-            driveMixer(0, 0);
-            return true;
-        }
-    }
-//    boolean rotateRelative(boolean clockwise, double targetAngle, double power){
-//        moveMode = moveMode.rotate;
-//        if(!clockwise){
-//            targetAngle = -targetAngle;
-//            power = -power;
-//        }
-//        if(!targetAngleInitialized) { targetAngle = targetAngle + angles.firstAngle; targetAngleInitialized = true; }
-//        if(Math.abs(targetAngle) > Math.abs(angles.firstAngle)){
-//            driveMixer(0, 0, power);
-//            return false;
-//        }
-//        else {
-//            driveMixer(0, 0, 0);
-//            return true;
-//        }
-//    }
-
 
 
     /**
@@ -825,24 +771,12 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         return poseRoll;
     }
 
-    public long getTPM_Forward() {
-        return TPM_Forward;
-    }
 
-    public void setTPM_Forward(long TPM_Forward) { this.TPM_Forward = (int)TPM_Forward; }
 
 
 
     public void updateSensors(){
-        // read color sensors
-        //beaconColorCache = beaconColorReader.read(0x04, 1);
-        //ballColorCache = ballColorReader.read(0x04, 1);
-        //ballColor = (ballColorCache[0] & 0xFF);
-        //beaconColor = (beaconColorCache[0] & 0xFF);
 
-        //odsReadingLinear = Math.pow(odsReadingRaw, 0.5);
-        //beaconDistAft  = Math.pow(beaconPresentRear.getLightDetected(), 0.5); //calculate linear value
-        //beaconDistFore = Math.pow(beaconPresent.getLightDetected(), 0.5); //calculate linear value
         Update(imu, 0, 0);
         BalanceArgos(KpBalance,KiBalance,KdBalance,0,getRoll(),staticBalance);
     }
@@ -890,34 +824,8 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
 
-        //double displacement = (((double)(ticksRight - ticksRightPrev)/ticksPerMeterRight) + ((double)(ticksLeft - ticksLeftPrev)/ticksPerMeterLeft))/2.0;
-
-        // we haven't worked out the trig of calculating displacement from any driveMixer combination, so
-        // for now we are just restricting ourselves to cardinal relative directions of pure forward, backward, left and right
-        // so no diagonals or rotations - if we do those then our absolute positioning fails
-
-        switch (moveMode) {
-            case forward:
-            case backward:
-                displacement = (getAverageTicks() - displacementPrev) * TPM_Forward;
-                odometer += Math.abs(displacement);
-                poseHeadingRad = Math.toRadians(poseHeading);
-                break;
-            case left:
-                displacement = (getAverageAbsTicks() - displacementPrev) * TPM_Strafe; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
-                poseHeadingRad = Math.toRadians(poseHeading)- Math.PI/2; //actual heading is rotated 90 degrees counterclockwise
-
-                break;
-            case right:
-                displacement = (getAverageAbsTicks() - displacementPrev) * TPM_Strafe; //todo: there might be a problem when switching between driving forward and strafing - displacementPrev may need to be updated the first time in to use the correct avgTicks calculation
-                poseHeadingRad = Math.toRadians(poseHeading) + Math.PI/2; //actual heading is rotated 90 degrees clockwise
-
-                break;
-            default:
-                displacement=0; //when rotating or in an undefined moveMode, ignore/reset displacement
-                displacementPrev = 0;
-                break;
-        }
+        //removed and entire section here that calculated displacement based on a mecanum setup - does not apply to argos
+        // TODO: must have a displacement calculation for the rest of this to make sense and to track relative position for Argos
 
         odometer += Math.abs(displacement);
         poseSpeed = displacement / (double)(currentTime - this.timeStamp)*1000000; //meters per second when ticks per meter is calibrated
@@ -1122,6 +1030,10 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         }
     }
 
+    public Location getLocation() {return poseLocation;}
+
+    public double getBearing() {return poseBearing;}
+
     public void zeroHead() {
         setHeadPos(0.5, 0.5);
     }
@@ -1303,6 +1215,61 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();
     }
 
+    private static final int TWO_MINUTES = 1000 * 60 * 2;
+
+    /** Determines whether one Location reading is better than the current Location fix
+     * @param location  The new Location that you want to evaluate
+     * @param currentBestLocation  The current Location fix, to which you want to compare the new one
+     */
+    protected boolean isBetterLocation(Location location, Location currentBestLocation) {
+        if (currentBestLocation == null) {
+            // A new location is always better than no location
+            return true;
+        }
+
+        // Check whether the new location fix is newer or older
+        long timeDelta = location.getTime() - currentBestLocation.getTime();
+        boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
+        boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+        boolean isNewer = timeDelta > 0;
+
+        // If it's been more than two minutes since the current location, use the new location
+        // because the user has likely moved
+        if (isSignificantlyNewer) {
+            return true;
+            // If the new location is more than two minutes older, it must be worse
+        } else if (isSignificantlyOlder) {
+            return false;
+        }
+
+        // Check whether the new location fix is more or less accurate
+        int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
+        boolean isLessAccurate = accuracyDelta > 0;
+        boolean isMoreAccurate = accuracyDelta < 0;
+        boolean isSignificantlyLessAccurate = accuracyDelta > 200;
+
+        // Check if the old and new location are from the same provider
+        boolean isFromSameProvider = isSameProvider(location.getProvider(),
+                currentBestLocation.getProvider());
+
+        // Determine location quality using a combination of timeliness and accuracy
+        if (isMoreAccurate) {
+            return true;
+        } else if (isNewer && !isLessAccurate) {
+            return true;
+        } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+            return true;
+        }
+        return false;
+    }
+
+    /** Checks whether two providers are the same */
+    private boolean isSameProvider(String provider1, String provider2) {
+        if (provider1 == null) {
+            return provider2 == null;
+        }
+        return provider1.equals(provider2);
+    }
 
 }
 

@@ -32,6 +32,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
 import android.util.Log;
 
 import com.qualcomm.ftccommon.SoundPlayer;
@@ -105,6 +108,7 @@ public class Argos extends LinearOpMode {
     private ColorBlobDetector mDetector;
 
     Orientation angles;
+    Location location;
 
     private int state = 0;
     private  int vuTestMode = 0;
@@ -172,41 +176,20 @@ public class Argos extends LinearOpMode {
 
         Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 
-//        VuforiaTrackables beacons = locale.loadTrackablesFromAsset("FTC_2016-17");
-//        VuforiaTrackableDefaultListener wheels = (VuforiaTrackableDefaultListener) beacons.get(0).getListener();
-//        VuforiaTrackableDefaultListener legos = (VuforiaTrackableDefaultListener) beacons.get(2).getListener();
-
-//        beaconTargets = locale.loadTrackablesFromAsset("RelicVuMark");
         beaconTargets = locale.loadTrackablesFromAsset("FTC_2016-17");
-
-        //relicCodex.get(0).setName("Wheels");
-        //relicCodex.get(1).setName("Tools");
-        //relicCodex.get(2).setName("Lego");
         beaconTargets.get(0).setName("Gears");
-//        beaconTargets.get(0).setName("RelicTrackable");
-
-
-//        redNearTarget = beaconTargets.get(0);
-//        redNearTarget.setName("redNear");  // relic codex
-
-
         redNearTarget = beaconTargets.get(3);
         redNearTarget.setName("redNear");  // Gears
 
-//        blueNearTarget  = relicCodex.get(0);
-//        blueNearTarget.setName("blueNear");  // Wheels
-//
-//        redFarTarget = relicCodex.get(1);
-//        redFarTarget.setName("redFar");  // Tools
-//
-//        blueFarTarget  = relicCodex.get(2);
-//        blueFarTarget.setName("blueFar");  // Legos
-
-//        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
         beaconTargets.activate();
 
         mDetector = new ColorBlobDetector();
+
+        // Acquire a reference to the system Location Manager
+        LocationManager locationManager = (LocationManager) RC.a().getSystemService(Context.LOCATION_SERVICE);
+
+//        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
@@ -308,7 +291,7 @@ public class Argos extends LinearOpMode {
                         break;
                     case 5: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
-                        if(robot.driveForward(false, 1, .5)) active = false;
+                        //if(robot.driveForward(false, 1, .5)) active = false;
                         break;
                     case 6: //provides data for left/right calibration
                         joystickDriveStarted = false;
@@ -407,7 +390,6 @@ public class Argos extends LinearOpMode {
     public void resetAuto(){
         autoState = 0;
         autoTimer = 0;
-        robot.ResetTPM();
     }
 
 
@@ -560,6 +542,7 @@ public class Argos extends LinearOpMode {
                 // to do that in each of the three items that need that info, as that's
                 // three times the necessary expense.
                 angles = robot.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                location = robot.getLocation();
             }
         });
 
@@ -586,6 +569,33 @@ public class Argos extends LinearOpMode {
 //                        return Float.toString(robot.particle.flywheelSpeed);
 //                    }
 //                });
+        telemetry.addLine()
+                .addData("Lat", new Func<String>() {
+                    @Override public String value() {
+                        return "" + location.getLatitude();
+                    }
+                })
+                .addData("Long", new Func<String>() {
+                    @Override public String value() {
+                        return "" + location.getLongitude();
+                    }
+                })
+                .addData("Accuracy", new Func<String>() {
+                    @Override public String value() {
+                        return "" + location.getAccuracy();
+                    }
+                })
+                .addData("Speed", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.getSpeed();
+                    }
+                })
+                .addData("Bearing", new Func<String>() {
+                    @Override public String value() {
+                        return "" + robot.getBearing();
+                    }
+                });
+
         telemetry.addLine()
                 .addData("Kp", new Func<String>() {
                     @Override public String value() {
