@@ -109,6 +109,7 @@ public class Argos extends LinearOpMode {
 
     Orientation angles;
     Location location;
+    Location home;
 
     private int state = 0;
     private  int vuTestMode = 0;
@@ -188,6 +189,12 @@ public class Argos extends LinearOpMode {
 
         // Acquire a reference to the system Location Manager
         LocationManager locationManager = (LocationManager) RC.a().getSystemService(Context.LOCATION_SERVICE);
+
+        //currently set to beach tent outside of hotel on South Padre
+        home = new Location("GPS_PROVIDER");
+        home.setLatitude(26.13813517);
+        home.setLongitude(-97.16818156);
+
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 

@@ -310,6 +310,7 @@ public class PoseArgos
 
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+        parametersIMU.mode = BNO055IMU.SensorMode.NDOF; //default mode is IMU, NDOF is not safe to use indoors and should be supported calibration data because it includes magnetometers
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
         parametersIMU.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parametersIMU.loggingEnabled       = true;
