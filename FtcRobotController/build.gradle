@@ -12,13 +12,13 @@ android {
 
     compileSdkVersion 23
 
-
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
-    buildToolsVersion '26.0.2'
+
+    buildToolsVersion '27.0.3'
+
 }
 
 repositories {
@@ -30,5 +30,5 @@ repositories {
 apply from: 'build.release.gradle'
 
 dependencies {
-    compile project(path: ':openCVLibrary320')
+    api project(path: ':openCVLibrary320')
 }
