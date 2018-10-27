@@ -648,8 +648,6 @@ public class FtcRobotControllerActivity extends Activity
     }
     else if (id == R.id.action_about) {
       Intent intent = new Intent(AppUtil.getDefContext(), FtcAboutActivity.class);
-
-      intent.putExtra(LaunchActivityConstantsList.ABOUT_ACTIVITY_CONNECTION_TYPE, networkType);
       startActivity(intent);
       return true;
     } else if (id == R.id.action_exit_app) {
