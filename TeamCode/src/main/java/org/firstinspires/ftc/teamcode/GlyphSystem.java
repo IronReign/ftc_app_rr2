@@ -171,6 +171,7 @@ public class GlyphSystem {
             motorLift.setPower(.8);
         }
     }
+
     public void goLiftMax() {
 
             motorLift.setTargetPosition(liftMax);

@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.*;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.*;
 
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
 
@@ -52,12 +53,42 @@ import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 @TeleOp(name="Big Wheel", group="Linear Opmode")
 public class Bigwheel extends LinearOpMode {
 
+    private static final double LIFT_POWER = 0.5;
+    private static final double LIFT_DELAY_MS = 400;
+    private static final double LIFT_ENCODER_CHANGE = 1;
+    private static final double LIFT_MIN = 0;
+    private static final double LIFT_MAX = 1000;
+
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftDrive1 = null;
-    private DcMotor leftDrive2 = null;
-    private DcMotor rightDrive1 = null;
-    private DcMotor rightDrive2 = null;
+    private DcMotor leftDrive = null;
+    private DcMotor rightDrive = null;
+    private DcMotor liftMotor = null;
+    private DcMotor intakeMotor = null;
+
+    private boolean isBlue = false;
+
+    //boolean[] toggleState = new boolean[3];
+
+    double[] liftPositions = {0, 400};
+    double setEncoderLift = liftPositions[0];
+    long lastLiftTimestamp = System.currentTimeMillis();
+
+    //values associated with the buttons in the toggleAllowed method
+    private boolean[] buttonSavedStates = new boolean[11];
+    private int a = 0; //lower glyph lift
+    private int b = 1; //toggle grip/release on glyph
+    private int x = 2; //no function
+    private int y = 3; //raise glyph lift
+    private int dpad_down = 4; //glyph lift bottom position
+    private int dpad_up = 5; //glyph lift top position
+    private int dpad_left = 6; //no function
+    private int dpad_right = 7; //glyph lift mid position
+    private int left_bumper = 8; //increment state down (always)
+    private int right_bumper = 9; //increment state up (always)
+    private int startBtn = 10; //toggle active (always)
+
+    int state = 0;
 
     @Override
     public void runOpMode() {
@@ -67,54 +98,153 @@ public class Bigwheel extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftDrive1  = hardwareMap.get(DcMotor.class, "left_drive_1");
-        leftDrive2  = hardwareMap.get(DcMotor.class, "left_drive_2");
-        rightDrive1 = hardwareMap.get(DcMotor.class, "right_drive_1");
-        rightDrive2 = hardwareMap.get(DcMotor.class, "right_drive_2");
+        leftDrive = hardwareMap.get(DcMotor.class, "left_drive");
+        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
+        liftMotor = hardwareMap.get(DcMotor.class, "lift");
+        intakeMotor = hardwareMap.get(DcMotor.class, "intake");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        leftDrive1.setDirection(REVERSE);
-        leftDrive2.setDirection(REVERSE);
-        rightDrive1.setDirection(FORWARD);
-        rightDrive2.setDirection(FORWARD);
+        leftDrive.setDirection(REVERSE);
+        liftMotor.setMode(RUN_TO_POSITION);
+        rightDrive.setDirection(FORWARD);
+        intakeMotor.setDirection(FORWARD);
 
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart();
+        while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
+            synchronized (this) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            stateSwitch();
+            if(toggleAllowed(gamepad1.x,x)) {
+                isBlue = !isBlue;
+            }
+            if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+                setEncoderLift = 0;
+            }
+            telemetry.addData("Status", "Initialized");
+            telemetry.addData("Status", "Side: " + (isBlue ? "Blue" : "Red"));
+            telemetry.update();
+            idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
+        }
+
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-
-            // Setup a variable for each drive wheel to save power level for telemetry
-            double leftPower;
-            double rightPower;
-
-            // Choose to drive using either Tank Mode, or POV Mode
-            // Comment out the method that's not used.  The default below is POV.
-
-            // POV Mode uses left stick to go forward, and right stick to turn.
-            // - This uses basic math to combine motions and is easier to drive straight.
-            double drive = -gamepad1.left_stick_y;
-            double turn  =  gamepad1.right_stick_x;
-            leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
-            rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
-
-            // Tank Mode uses one stick to control each wheel.
-            // - This requires no math, but it is hard to drive forward slowly and keep straight.
-            // leftPower  = -gamepad1.left_stick_y ;
-            // rightPower = -gamepad1.right_stick_y ;
-
-            // Send calculated power to wheels
-            leftDrive1.setPower(leftPower);
-            leftDrive2.setPower(leftPower);
-            rightDrive1.setPower(rightPower);
-            rightDrive2.setPower(rightPower);
-
-            // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
             telemetry.update();
+            stateSwitch();
+            if(opModeIsActive()) {
+                switch(state){
+                    case 0: //code for tele-op control
+                        joystickDrive();
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    case 5:
+                        break;
+                    case 6:
+                        break;
+                    case 7:
+                        break;
+                    case 8:
+                        break;
+                    case 9:
+                        break;
+                    case 10:
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else {
+                liftMotor.setPower(0);
+                leftDrive.setPower(0);
+                rightDrive.setPower(0);
+                intakeMotor.setPower(0);
+            }
+            idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
     }
+
+    public void stateSwitch() {
+        if(!opModeIsActive()) {
+            if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
+                state--;
+                if (state < 0) {
+                    state = 10;
+                }
+                leftDrive.setPower(0);
+                rightDrive.setPower(0);
+                liftMotor.setPower(0);
+                intakeMotor.setPower(0);
+            }
+            if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
+                state++;
+                if (state > 10) {
+                    state = 0;
+                }
+                leftDrive.setPower(0);
+                rightDrive.setPower(0);
+                liftMotor.setPower(0);
+                intakeMotor.setPower(0);
+            }
+        }
+        if (toggleAllowed(gamepad1.start, startBtn)) {
+            leftDrive.setPower(0);
+            rightDrive.setPower(0);
+            liftMotor.setPower(0);
+            intakeMotor.setPower(0);
+        }
+    }
+
+    boolean toggleAllowed(boolean button, int buttonIndex) {
+        if (button) {
+            if (!buttonSavedStates[buttonIndex])  { //we just pushed the button, and when we last looked at it, it was not pressed
+                buttonSavedStates[buttonIndex] = true;
+                return true;
+            }
+            else { //the button is pressed, but it was last time too - so ignore
+                return false;
+            }
+        }
+        buttonSavedStates[buttonIndex] = false; //not pressed, so remember that it is not
+        return false; //not pressed
+    }
+
+    void joystickDrive() {
+        double leftPower;
+        double rightPower;
+
+        double drive = -gamepad1.left_stick_y;
+        double turn = gamepad1.right_stick_x;
+        leftPower = Range.clip(drive + turn, -1.0, 1.0);
+        rightPower = Range.clip(drive - turn, -1.0, 1.0);
+        leftDrive.setPower(leftPower);
+        rightDrive.setPower(rightPower);
+
+        liftMotor.setTargetPosition((int) setEncoderLift);
+
+        if ((gamepad1.dpad_up || gamepad1.dpad_down) && System.currentTimeMillis() > lastLiftTimestamp + LIFT_DELAY_MS) {
+            lastLiftTimestamp = System.currentTimeMillis();
+            if (gamepad1.dpad_up)
+                setEncoderLift = Range.clip(setEncoderLift + LIFT_ENCODER_CHANGE, LIFT_MIN, LIFT_MAX);
+            else
+                setEncoderLift = Range.clip(setEncoderLift - LIFT_ENCODER_CHANGE, LIFT_MIN, LIFT_MAX);
+        }
+        telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+        telemetry.update();
+    }
+
 }

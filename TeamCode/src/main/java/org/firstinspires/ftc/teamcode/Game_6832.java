@@ -96,7 +96,6 @@ public class Game_6832 extends LinearOpMode {
     private boolean isBlue = false;
     private boolean relicMode = false;
 
-
     private boolean liftDeposit = false;
     private boolean liftVerticalDeposit = false;
     private boolean liftHome = false;
@@ -121,7 +120,6 @@ public class Game_6832 extends LinearOpMode {
     private long damperTimer = 0;
     private int direction = 1;  //-1 to reverse direction
 
-
     //staging and timer variables
     private int autoStage = 0;
     private int autoSetupStage = 0;
@@ -131,7 +129,6 @@ public class Game_6832 extends LinearOpMode {
     private long autoDelay = 0;
     public int codexFlashStage = 0;
     public long codexFlashTimer = 0;
-
 
     //vision objects/vision-based variables
     public VuforiaTrackables relicCodex;
@@ -144,19 +141,16 @@ public class Game_6832 extends LinearOpMode {
     public boolean vuFlashDemo = false;
     boolean visionConfigured = false;
 
-
     //sensors/sensing-related variables
     Orientation angles;
     boolean jewelMatches = false;
     boolean vuActive = false;
-
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
     double testableDouble = robot.kpDrive;
     double testableHeading = 0;
     boolean testableDirection = true;
-
 
     //values associated with the buttons in the toggleAllowed method
     private boolean[] buttonSavedStates = new boolean[11];
@@ -171,9 +165,6 @@ public class Game_6832 extends LinearOpMode {
     private int left_bumper = 8; //increment state down (always)
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
-
-
-
 
     @Override
     public void runOpMode() throws InterruptedException {
