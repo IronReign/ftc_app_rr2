@@ -65,6 +65,7 @@ public class Bigwheel extends LinearOpMode {
     private DcMotor rightDrive = null;
     private DcMotor liftMotor = null;
     private DcMotor intakeMotor = null;
+    //private DcMotor superman = null;
 
     private boolean isBlue = false;
 
@@ -102,6 +103,7 @@ public class Bigwheel extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         liftMotor = hardwareMap.get(DcMotor.class, "lift");
         intakeMotor = hardwareMap.get(DcMotor.class, "intake");
+        //superman = hardwareMap.get(DcMotor.class, "superman");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -109,6 +111,7 @@ public class Bigwheel extends LinearOpMode {
         liftMotor.setMode(RUN_TO_POSITION);
         rightDrive.setDirection(FORWARD);
         intakeMotor.setDirection(FORWARD);
+        //superman.setMode(RUN_TO_POSITION);
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
@@ -177,6 +180,65 @@ public class Bigwheel extends LinearOpMode {
         }
     }
 
+    void joystickDrive() {
+        double leftPower;
+        double rightPower;
+
+        double drive = gamepad1.left_stick_y;
+        double turn = gamepad1.right_stick_x;
+        leftPower = Range.clip(drive + turn, -1.0, 1.0);
+        rightPower = Range.clip(drive - turn, -1.0, 1.0);
+        leftDrive.setPower(leftPower);
+        rightDrive.setPower(rightPower);
+
+        if(toggleAllowed(gamepad1.y, y)){
+
+        }
+        if(gamepad1.y){
+            liftMotor.setPower(.75);
+        }
+        if(gamepad1.a){
+            liftMotor.setPower(.75);
+        }
+        if(!gamepad1.y && !gamepad1.a){
+            liftMotor.setPower(0);
+        }
+        if(gamepad1.x){
+            intakeMotor.setPower(.65);
+        }
+        if(gamepad1.b){
+            intakeMotor.setPower(-.65);
+        }
+        if(!gamepad1.x && !gamepad1.b){
+            intakeMotor.setPower(0);
+        }
+        /*if(){
+            intakeMotor.setPower(0);
+        }*/
+        /*if (gamepad1.dpad_up){
+            superman.setPower(.75);
+        }else if(gamepad1.dpad_down){
+            superman.setPower(-.75);
+        }else{
+            superman.setPower(0);
+        }*/
+
+
+        //
+        // liftMotor.setTargetPosition((int) setEncoderLift);
+
+        /*if ((gamepad1.dpad_up || gamepad1.dpad_down) && System.currentTimeMillis() > lastLiftTimestamp + LIFT_DELAY_MS) {
+            lastLiftTimestamp = System.currentTimeMillis();
+            if (gamepad1.dpad_up)
+                setEncoderLift = Range.clip(setEncoderLift + LIFT_ENCODER_CHANGE, LIFT_MIN, LIFT_MAX);
+            else
+                setEncoderLift = Range.clip(setEncoderLift - LIFT_ENCODER_CHANGE, LIFT_MIN, LIFT_MAX);
+        }*/
+        telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+       // telemetry.addData("Motors", "lift (%.2f), superman (%.2f)", liftMotor, superman);
+        telemetry.update();
+    }
     public void stateSwitch() {
         if(!opModeIsActive()) {
             if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
@@ -221,30 +283,4 @@ public class Bigwheel extends LinearOpMode {
         buttonSavedStates[buttonIndex] = false; //not pressed, so remember that it is not
         return false; //not pressed
     }
-
-    void joystickDrive() {
-        double leftPower;
-        double rightPower;
-
-        double drive = -gamepad1.left_stick_y;
-        double turn = gamepad1.right_stick_x;
-        leftPower = Range.clip(drive + turn, -1.0, 1.0);
-        rightPower = Range.clip(drive - turn, -1.0, 1.0);
-        leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);
-
-        liftMotor.setTargetPosition((int) setEncoderLift);
-
-        if ((gamepad1.dpad_up || gamepad1.dpad_down) && System.currentTimeMillis() > lastLiftTimestamp + LIFT_DELAY_MS) {
-            lastLiftTimestamp = System.currentTimeMillis();
-            if (gamepad1.dpad_up)
-                setEncoderLift = Range.clip(setEncoderLift + LIFT_ENCODER_CHANGE, LIFT_MIN, LIFT_MAX);
-            else
-                setEncoderLift = Range.clip(setEncoderLift - LIFT_ENCODER_CHANGE, LIFT_MIN, LIFT_MAX);
-        }
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
-        telemetry.update();
-    }
-
 }
