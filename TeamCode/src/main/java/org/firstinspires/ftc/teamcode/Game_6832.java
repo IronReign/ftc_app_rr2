@@ -35,6 +35,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.HINT;
 import com.vuforia.PIXEL_FORMAT;
@@ -83,7 +84,7 @@ public class Game_6832 extends LinearOpMode {
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private Pose robot = new Pose();
+    private PoseBigWheel robot = new PoseBigWheel();
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance();
 
@@ -190,10 +191,6 @@ public class Game_6832 extends LinearOpMode {
         relicCodex = locale.loadTrackablesFromAsset("RelicVuMark");
         relicCodex.get(0).setName("RelicTemplate");
 
-        robot.glyphSystem.closeGrip();
-        robot.jewel.hitLeft();
-
-
         relicTemplate = relicCodex.get(0);
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
@@ -205,16 +202,6 @@ public class Game_6832 extends LinearOpMode {
         mDetector = new ColorBlobDetector();
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
-
-                if(isBlue)
-                {
-                    robot.ledSystem.bluePos();
-                }
-                else
-                {
-                    robot.ledSystem.redPos();
-                }
-
             synchronized (this) {
                 try {
                     this.wait();
@@ -222,17 +209,6 @@ public class Game_6832 extends LinearOpMode {
                     Thread.currentThread().interrupt();
                     return;
                 }
-            }
-
-
-            if (gamepad1.dpad_up) {
-                robot.glyphSystem.tiltPhoneUp();
-                robot.glyphSystem.raiseLift2();
-            } else if (gamepad1.dpad_down) {
-                robot.glyphSystem.tiltPhoneUp();
-                robot.glyphSystem.lowerLift2();
-            } else {
-                robot.glyphSystem.stopBelt();
             }
 
             stateSwitch();
@@ -262,10 +238,6 @@ public class Game_6832 extends LinearOpMode {
                 autoDelay++;
                 if(autoDelay>15) autoDelay = 0;
 
-            }
-
-            if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                robot.glyphSystem.resetLift();
             }
 
             if(vuActive){
@@ -300,13 +272,13 @@ public class Game_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
-                        autonomous();
+                        //autonomous();
                         break;
                     case 2:
-                        autonomous2();
+                        //autonomous2();
                         break;
                     case 3:
-                        auto4();
+                        //auto4();
                         break;
                     case 4:
                         demo((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
@@ -319,21 +291,19 @@ public class Game_6832 extends LinearOpMode {
                         }
                         break;
                     case 6: //provides data for left/right calibration
-                        joystickDriveStarted = false;
-                        if(robot.driveIMUDistance(robot.kpDrive, .5, 0, false, .5, false)) active = false;
+
                         break;
                     case 7: //IMU demo mode
 //                        if(robot.jewel.retractArm())
 //                            active = false;
 //                        robot.relicArm.openGrip();
-                        if(robot.jewel.extendArm()) active = false;
                         break;
                     case 8: //servo testing mode
 //                        robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
 //                        robot.relicArm.closeGrip();
                         break;
                     case 9:
-                        autonomous3();
+                        //autonomous3();
                         break;
                     case 10: //vision testing
                         if(visionConfigured)
@@ -358,27 +328,14 @@ public class Game_6832 extends LinearOpMode {
             }
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
-        }robot.ledSystem.offPos();
-    }
-
-    public void testLED(){
-        if(gamepad1.a){
-            robot.ledSystem.pinkPos();
-        }else if(gamepad1.b) {
-            robot.ledSystem.redPos();
-        }else if(gamepad1.x){
-            robot.ledSystem.bluePos();
-        }else if(gamepad1.y){
-            robot.ledSystem.aquaPos();
-        }else if(gamepad1.right_bumper){
-            robot.ledSystem.offPos();
         }
     }
 
 
 
+
     public void demo(VuforiaTrackableDefaultListener beaconTarget, double distance){
-        robot.glyphSystem.tiltPhoneDown();
+        //robot.glyphSystem.tiltPhoneDown();
         if(gamepad1.x){
             robot.maintainHeading(gamepad1.x);
         }
@@ -387,12 +344,12 @@ public class Game_6832 extends LinearOpMode {
 
         }
         if(gamepad1.y) {
-            robot.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, true, false);
+            //robot.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, true, false);
         }
 
 
         if(gamepad1.a) {
-            robot.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, false, false);
+           // robot.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, false, false);
         }
 
     }
@@ -420,7 +377,7 @@ public class Game_6832 extends LinearOpMode {
         return 1;
     }
 
-    public boolean flashRelicCodex(){
+    /**public boolean flashRelicCodex(){
         switch (savedVuMarkCodex){
             case 0:
                 switch (codexFlashStage){
@@ -561,7 +518,7 @@ public class Game_6832 extends LinearOpMode {
         }
         return false;
     }
-
+**/
 
 
 
@@ -586,17 +543,6 @@ public class Game_6832 extends LinearOpMode {
             joystickDriveStarted = true;
         }
 
-        if(relicMode) robot.glyphSystem.tiltPhoneMax();
-        else{
-            if(robot.glyphSystem.roll < 345 && robot.glyphSystem.roll > 180)
-                robot.glyphSystem.maintainPhoneTilt();
-            else robot.glyphSystem.tiltPhoneUp();
-        }
-//        else{
-//            if(toggleAllowed(gamepad1.b, b)){
-//                robot.glyphSystem.togglePhoneTilt();
-//            }
-//        }
 
         if (balancing) { //balance with a simple drive forward from edge of stone
 
@@ -610,12 +556,6 @@ public class Game_6832 extends LinearOpMode {
                 suppressJoysticks = false;
 
             }
-
-//        if(relicMode){
-//            robot.glyphSystem.tiltPhoneMax();
-//        }
-
-
 
 
         pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
@@ -632,12 +572,7 @@ public class Game_6832 extends LinearOpMode {
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
         if (!suppressJoysticks) {
-            if (enableTank) {
-//            robot.driveMixerMecTank(pwrFwdL, pwrStfL, pwrFwdR, pwrStfR);
-                robot.driveMixerMecField(pwrFwd, pwrStf, pwrRot, robot.getHeading());
-            } else {
-                robot.driveMixerMec(pwrFwd, pwrStf, pwrRot);
-            }
+            robot.driveMixerTank(pwrFwd, pwrRot);
         }
 
 
@@ -645,36 +580,39 @@ public class Game_6832 extends LinearOpMode {
 //            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
 //            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
 //        }
-        if(toggleAllowed(gamepad1.y, y)){
-//            robot.glyphSystem.tiltPhoneMax();
-            if(relicMode){
-                if(isBlue) robot.ledSystem.bluePos();
-                else robot.ledSystem.redPos();
-                pwrDamper = 1;
-                direction = 1;
-                relicMode = false;
-//                robot.glyphSystem.tiltPhoneMax();
-            }
 
-            else{
-                robot.ledSystem.aquaPos();
-                liftVerticalDeposit = false;
-                liftDeposit = false;
-                liftHome = true;
-                liftCollect = false;
-                pwrDamper = .5;
-                direction = -1;
-                relicMode = true;
-                robot.glyphSystem.stopBelt();
-                robot.glyphSystem.setMotorLeft(0);
-                robot.glyphSystem.setMotorRight(0);
+        int standposition = 0;
+        int restposition = 0;
+
+        /*if(toggleAllowed(gamepad1.y, y)){
+            if (robot.superman.getCurrentPosition() < standposition && robot.superman.getTargetPosition() < standposition) {
+                robot.superman.setTargetPosition((int) Math.min(robot.superman.getCurrentPosition(), standposition));
+                robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.superman.setPower(.80);
             }
+        }else{
+            if (robot.superman.getCurrentPosition() > restposition && robot.superman.getTargetPosition() > restposition) {
+                robot.superman.setTargetPosition((int) Math.min(robot.superman.getCurrentPosition(), restposition));
+                robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.superman.setPower(-.80);
+            }
+        }*/
+        if(gamepad1.dpad_up) {
+            robot.superman.setPower(.75);
+        }else if (gamepad1.dpad_down){
+            robot.superman.setPower(-.75);
+        }else{
+            robot.superman.setPower(0);
+            //robot.superman.setTargetPosition(robot.superman.getCurrentPosition());
+            //robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
 
-        if(!relicMode) {
+
+
+        if(false){//!relicMode) {
 
             if(toggleAllowed(gamepad1.b, b)){
-                robot.glyphSystem.toggleBottomGrip();
+                //robot.glyphSystem.toggleBottomGrip();
             }
 
             if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
@@ -690,7 +628,7 @@ public class Game_6832 extends LinearOpMode {
                     relicMode = false;
                     pwrDamper = .5;
                     direction = -1;
-                    robot.ledSystem.pinkPos();
+                   // robot.ledSystem.pinkPos();
                     liftVerticalDeposit = false;
                     liftDeposit = true;
                     liftHome = false;
@@ -701,9 +639,9 @@ public class Game_6832 extends LinearOpMode {
                     direction = 1;
                     pwrDamper = 1.0;
                     if (isBlue) {
-                        robot.ledSystem.bluePos();
+                        //robot.ledSystem.bluePos();
                     } else
-                        robot.ledSystem.redPos();
+                       // robot.ledSystem.redPos();
                     liftVerticalDeposit = false;
                     liftDeposit = false;
                     liftHome = false;
@@ -711,19 +649,19 @@ public class Game_6832 extends LinearOpMode {
                 }
             }
             if (toggleAllowed(gamepad1.a, a)) {
-                robot.glyphSystem.toggleBelt(direction < 0);
+                //robot.glyphSystem.toggleBelt(direction < 0);
             }
 
 
             if (toggleAllowed(gamepad1.x, x)) {
-                robot.glyphSystem.toggleGrip();
+                //robot.glyphSystem.toggleGrip();
             }
 
             if(gamepad1.dpad_up) {
                 if (direction > 0) {
 //                    if (gamepad1.dpad_up) {
 //                        robot.glyphSystem.tiltPhoneUp();
-                        robot.glyphSystem.raiseLift2();
+                        //robot.glyphSystem.raiseLift2();
 //                    }
                 }
                 else {
@@ -736,150 +674,16 @@ public class Game_6832 extends LinearOpMode {
             }
             else if (gamepad1.dpad_down) {
 //                robot.glyphSystem.tiltPhoneUp();
-                robot.glyphSystem.lowerLift2();
+                //robot.glyphSystem.lowerLift2();
             }
             else {
-                robot.glyphSystem.stopBelt();
-            }
-
-
-            if (.4 < robot.glyphSystem.servoBeltLeft.getPosition() && robot.glyphSystem.servoBeltLeft.getPosition() < .6) {
-                robot.glyphSystem.setMotorLeft(gamepad1.right_trigger - gamepad1.left_trigger);
-                robot.glyphSystem.setMotorRight(-(gamepad1.right_trigger - gamepad1.left_trigger));
-            } else {
-                robot.glyphSystem.collect();
+                //robot.glyphSystem.stopBelt();
             }
         }
-
-        else{ //relic mode end game
-            if(elbowTimer < System.nanoTime()){
-                if(gamepad1.left_trigger > .5){
-                    elbowTimer = futureTime(.1f);
-                    robot.relicArm.elbowTarget -= 50;
-                }
-                else if(gamepad1.right_trigger > .5){
-                    elbowTimer = futureTime(.1f);
-                    robot.relicArm.elbowTarget += 50;
-                }
-
-            }
-            if(toggleAllowed(gamepad1.x, x)){
-                robot.relicArm.toggleGrip();
-            }
-            if(gamepad1.dpad_up){
-                robot.relicArm.extend();
-                extendRelic = false;
-                retractRelic = false;
-            }
-            else if(gamepad1.dpad_down){
-                robot.relicArm.retract();
-                extendRelic = false;
-                retractRelic = false;
-            }
-            else{
-                robot.relicArm.stopShoulder();
-            }
-            if(toggleAllowed(gamepad1.b, b)){
-                robot.relicArm.deployElbow();
-            }
-            if(gamepad1.a){
-                robot.relicArm.tuckElbow();
-            }
-            if(toggleAllowed(gamepad1.dpad_right, dpad_right)){
-                extendRelic = true;
-                retractRelic = false;
-            }
-            if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                extendRelic = false;
-                retractRelic = true;
-
-            }
-            if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
-                extendRelic = false;
-                retractRelic = false;
-                placeRelic = !placeRelic;
-                robot.relicArm.placeStage = 0;
-            }
-            if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
-                //robot.refcaselicArm.elbowTarget = robot.relicArm.elbowMid;
-                //
-                robot.resetMotors(true);
-                state = 5;
-                active = false;
-            }
-        }
-
-        if(placeRelic){
-            if(robot.relicArm.autoPlace()){
-                placeRelic = false;
-            }
-        }
-
-        if(extendRelic){
-            if(robot.relicArm.autoExtend()){
-                extendRelic = false;
-            }
-        }
-        if(retractRelic){
-            if(robot.relicArm.autoRetract()){
-                retractRelic = false;
-            }
-        }
-
-        if (liftHome) {
-//            robot.glyphSystem.tiltPhoneMax();
-            if (robot.glyphSystem.goHome()) {
-                liftHome = false;
-            }
-        }
-
-        if (liftDeposit) {
-//            robot.glyphSystem.tiltPhoneUp();
-            if (robot.glyphSystem.goLiftDeposit()) {
-                liftDeposit = false;
-            }
-        }
-
-        if (liftVerticalDeposit) {
-//            robot.glyphSystem.tiltPhoneUp();
-            if (robot.glyphSystem.goLiftVerticalDeposit()) {
-                liftVerticalDeposit = false;
-            }
-        }
-        if (liftCollect) {
-//            robot.glyphSystem.tiltPhoneUp();
-            if (robot.glyphSystem.goLiftCollect()) {
-                liftCollect = false;
-            }
-        }
-
-        robot.relicArm.update();
-
-
-
-//        degreeRot = -gamepad1.right_stick_x * 45; //hard right maps to 45 degree steering
-//        if(toggleAllowed(gamepad1.y, y)){
-////            robot.setKdDrive(robot.getKdDrive() + 10);
-//        }
-//
-//        if(toggleAllowed(gamepad1.a, a)){
-////            robot.setKdDrive(robot.getKdDrive() - 10);
-//        }
-//
-//        if(toggleAllowed(gamepad1.dpad_up, dpad_up)){
-//            robot.setKpDrive(robot.getKpDrive() + 0.005);
-//        }
-//
-//        if(toggleAllowed(gamepad1.dpad_down, dpad_down)){
-//            robot.setKpDrive(robot.getKpDrive() - 0.005);
-//        }
-//
-//        if (!runDemo && !robot.isBalanceMode())
-//            robot.driveMixer(pwrFwd, degreeRot);
 
     }
 
-    public boolean autoSetup(){
+    /**public boolean autoSetup(){
         switch(autoSetupStage) {
             case 0:
                 robot.setZeroHeading();
@@ -1328,7 +1132,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 20:
                 //backup
-                break;*/
+                break;
         }
     }
 
@@ -1952,7 +1756,7 @@ public class Game_6832 extends LinearOpMode {
         autoTimer = 0;
         robot.resetTPM();
     }
-
+**/
 
     //the method that controls the main state of the robot; must be called in the main loop outside of the main switch
     public void stateSwitch() {
@@ -1980,7 +1784,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 robot.resetMotors(true);
                 active = false;
-                resetAuto();
+                //resetAuto();
                 codexFlashStage = 0;
             }
 
@@ -1992,24 +1796,10 @@ public class Game_6832 extends LinearOpMode {
                 }
                 robot.resetMotors(true);
                 active = false;
-                resetAuto();
+                //resetAuto();
                 codexFlashStage = 0;
             }
 
-//            if (!active) {
-//                if (toggleAllowed(gamepad1.b, b)) {
-//
-//                    state++;
-//                    if (state > 10) {
-//                        state = 0;
-//                    }
-//                    robot.resetMotors(true);
-//                    active = false;
-//                    resetAuto();
-//                    codexFlashStage = 0;
-//
-//                }
-//            }
         }
 
         if (toggleAllowed(gamepad1.start, startBtn)) {
@@ -2092,18 +1882,14 @@ public class Game_6832 extends LinearOpMode {
                     @Override public String value() {
                         return Integer.toString(state);
                     }
-                })
+                });
 //                .addData("Servo Tester", new Func<String>() {
 //                    @Override public String value() {
 //                        return Integer.toString(robot.servoTesterPos);
 //                    }
 //                })
 
-                .addData("lift pos", new Func<String>() {
-                    @Override public String value() {
-                        return Integer.toString(robot.glyphSystem.getMotorLiftPosition());
-                    }
-                });
+
 //                .addData("servoJewelExtender", new Func<String>() {
 //                    @Override public String value() {
 //                        return Integer.toString(robot.jewel.jewelPos);
@@ -2132,6 +1918,13 @@ public class Game_6832 extends LinearOpMode {
                         return robot.imu.getSystemStatus().toShortString();
                     }
                 })
+
+                .addData("supermanposition", new Func<String>(){
+                    @Override public String value(){
+                        return ""+robot.superman.getCurrentPosition();
+                    }
+                })
+
                 .addData("calib", new Func<String>() {
                     @Override public String value() {
                         return robot.imu.getCalibrationStatus().toString();

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.util;
+package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
@@ -228,7 +228,7 @@ public class PoseBigWheel
         isIntakeOn = false;
 
 
-        //this.motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
@@ -318,6 +318,8 @@ public class PoseBigWheel
         poseX += displacement * Math.cos(poseHeadingRad);
         poseY += displacement * Math.sin(poseHeadingRad);
 
+
+        superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void updateSensors(){
