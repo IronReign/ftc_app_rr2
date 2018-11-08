@@ -575,298 +575,102 @@ public class Game_6832 extends LinearOpMode {
             robot.driveMixerTank(pwrFwd, pwrRot);
         }
 
-
-//        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
-//            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
-//            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
-//        }
-
-        int standposition = 0;
-        int restposition = 0;
-
-        /*if(toggleAllowed(gamepad1.y, y)){
-            if (robot.superman.getCurrentPosition() < standposition && robot.superman.getTargetPosition() < standposition) {
-                robot.superman.setTargetPosition((int) Math.min(robot.superman.getCurrentPosition(), standposition));
-                robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.superman.setPower(.80);
-            }
-        }else{
-            if (robot.superman.getCurrentPosition() > restposition && robot.superman.getTargetPosition() > restposition) {
-                robot.superman.setTargetPosition((int) Math.min(robot.superman.getCurrentPosition(), restposition));
-                robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.superman.setPower(-.80);
-            }
-        }*/
         if(gamepad1.dpad_up) {
-            robot.superman.setPower(.75);
+            robot.supermanSystem.raiseLift();
         }else if (gamepad1.dpad_down){
-            robot.superman.setPower(-.75);
+            robot.supermanSystem.lowerLift();
         }else{
-            robot.superman.setPower(0);
-            //robot.superman.setTargetPosition(robot.superman.getCurrentPosition());
-            //robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.supermanSystem.stopLift();
+        }
+
+        if(gamepad1.y) {
+            robot.elbowSystem.extendElbow();
+        }else if (gamepad1.a){
+            robot.elbowSystem.retractElbow();
+        }else{
+            robot.elbowSystem.stopElbow();
+        }
+
+        if(false){
+            if(toggleAllowed(gamepad1.x, x)){
+                robot.elbowSystem.extendElbow2();
+            }else{
+                robot.elbowSystem.retractElbow2();
+            }
+
         }
 
 
 
-        if(false){//!relicMode) {
-
-            if(toggleAllowed(gamepad1.b, b)){
-                //robot.glyphSystem.toggleBottomGrip();
-            }
-
-            if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
-                if (pwrDamper != .33) {
-                    pwrDamper = .33;
-                } else
-                    pwrDamper = 1.0;
-            }
-
-            if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
-//                robot.glyphSystem.tiltPhoneUp();
-                if (direction == 1) {
-                    relicMode = false;
-                    pwrDamper = .5;
-                    direction = -1;
-                   // robot.ledSystem.pinkPos();
-                    liftVerticalDeposit = false;
-                    liftDeposit = true;
-                    liftHome = false;
-                    liftCollect = false;
-                } else {
-                    relicMode = false;
-                    relicMode = false;
-                    direction = 1;
-                    pwrDamper = 1.0;
-                    if (isBlue) {
-                        //robot.ledSystem.bluePos();
-                    } else
-                       // robot.ledSystem.redPos();
-                    liftVerticalDeposit = false;
-                    liftDeposit = false;
-                    liftHome = false;
-                    liftCollect = true;
-                }
-            }
-            if (toggleAllowed(gamepad1.a, a)) {
-                //robot.glyphSystem.toggleBelt(direction < 0);
-            }
-
-
-            if (toggleAllowed(gamepad1.x, x)) {
-                //robot.glyphSystem.toggleGrip();
-            }
-
-            if(gamepad1.dpad_up) {
-                if (direction > 0) {
-//                    if (gamepad1.dpad_up) {
-//                        robot.glyphSystem.tiltPhoneUp();
-                        //robot.glyphSystem.raiseLift2();
-//                    }
-                }
-                else {
-//                    robot.glyphSystem.tiltPhoneUp();
-                    liftVerticalDeposit = true;
-                    liftDeposit = false;
-                    liftHome = false;
-                    liftCollect = false;
-                }
-            }
-            else if (gamepad1.dpad_down) {
-//                robot.glyphSystem.tiltPhoneUp();
-                //robot.glyphSystem.lowerLift2();
-            }
-            else {
-                //robot.glyphSystem.stopBelt();
-            }
-        }
 
     }
 
-    /**public boolean autoSetup(){
+    public boolean autoSetup(){
         switch(autoSetupStage) {
             case 0:
                 robot.setZeroHeading();
                 robot.resetMotors(true);
-                robot.glyphSystem.tiltPhoneDown();
-                robot.glyphSystem.closeGrip();
-                robot.glyphSystem.collect();
-                savedVuMarkCodex = getRelicCodex();
-                robot.ledSystem.offPos();
-
                 autoSetupStage++;
                 break;
             case 1:
-                if(robot.jewel.extendArm()){
-                    robot.glyphSystem.hold();
-                    autoSetupStage++;
-                }
+                /**Detach from lander**/
+                autoSetupStage++;
                 break;
-            case 2: //scan vuforia target and deploy jewel arm
-//                robot.glyphSystem.goLiftAuto();
-//                if (autoTimer < System.nanoTime()) {
-//
-//
-//                    autoTimer = futureTime(1.0f);
-                    autoSetupStage++;
-//                }
+            case 2:
+                /**Turn on camera to see which is gold**/
+                autoSetupStage++;
                 break;
-            case 3: //get the glyph in front after phone is out of the way
-//                robot.glyphSystem.goLiftAuto();
-//                if (autoTimer < System.nanoTime()) {
-//
-//                    robot.glyphSystem.collect();
-                    autoSetupStage++;
-//                }
+            case 3:
+                /**Create 3 cases for navigation to proper mineral and push a little extra. default to center**/
+                autoSetupStage++;
                 break;
             case 4:
-//                if (robot.driveForward(false, .05, .15)) {
-//                    autoTimer = futureTime(3.0f);
-//                    robot.glyphSystem.closeGripTight();
-////                    robot.glyphSystem.hold();
-//                    robot.glyphSystem.goLiftAuto();
-                    robot.resetMotors(true);
-                    autoSetupStage++;
-//                }
+                robot.resetMotors(true);
+                autoSetupStage++;
                 break;
-
             case 5:
-//                if(autoTimer < System.nanoTime()){
-//                    robot.glyphSystem.hold();
-//                    robot.resetMotors(true);
-                    autoSetupStage++;
-//                }
-            break;
-
-            case 6:
-                if (autoTimer < System.nanoTime()) {
-                    robot.resetMotors(true);
-                    jewelMatches = robot.doesJewelMatch(isBlue);
-                    autoTimer = futureTime(.75f);
-
-                    if ((isBlue && jewelMatches) || (!isBlue && jewelMatches)) {
-
-                        robot.jewel.hitLeft();
-                    } else {
-
-                        robot.jewel.hitRight();
-                    }
-                    autoSetupStage++;
-                }
+                autoSetupStage++;
                 break;
-            case 7: //small turn to knock off jewel
-//                if ((isBlue && jewelMatches)||(!isBlue && jewelMatches)){
-//                    if(robot.rotateIMU(13, 2.5)){
-//                        autoTimer = futureTime(1.5f);
-//                        autoStage++;
-//                        robot.resetMotors(true);
-//                    }
-//                }
-//                else{
-//                    if(robot.rotateIMU(347, 2.5)){
-//                        autoTimer = futureTime(1.5f);
-//                        autoStage++;
-//                        robot.resetMotors(true);
-//                    }/
-//                }
+            case 6:
+                autoSetupStage++;
+                break;
+            case 7:
                 autoSetupStage++;
                 break;
             case 8:
-                if (autoTimer < System.nanoTime()) { //wait for kick
-//                    robot.jewel.center();
-//                    autoTimer=futureTime(1.5f);
-                    robot.jewel.hitLeft();
-                }
-                if(robot.jewel.retractArm()){
-                   if(isBlue) {
-                       robot.ledSystem.bluePos();
-                       autoSetupStage++;
-                   }
-                    else
-                    {
-                        robot.ledSystem.redPos();
-                        autoSetupStage++;
-                    }
-
-                }
-//                if(autoTimer<System.nanoTime()){
-//                    robot.glyphSystem.goLiftCollect();
-//                }
+                autoSetupStage++;
                 break;
             case 9:
-                robot.glyphSystem.goLiftCollect();
-                if(robot.driveForward(false, .02, .75)) {
-                    robot.resetMotors(true);
-                    autoSetupStage++;
-                }
+                autoSetupStage++;
                 break;
             case 10:
-                robot.glyphSystem.goLiftCollect();
-                if(robot.getPitch()<3 || robot.getPitch()>357){
-                    autoSetupStage++;
-                }break;
+                autoSetupStage++;
+                break;
             case 11:
-                robot.glyphSystem.goLiftCollect();
-                if(robot.driveForward(true, .01, .75)){
-                    robot.resetMotors(true);
-                    autoSetupStage++;
-                }
+                autoSetupStage++;
                 break;
             case 12:
-                if (robot.driveForward(false, .1, .35)) {
-//                    robot.jewel.stopArm();
-                    robot.resetMotors(true);
-                     autoSetupStage++;
-                }
+                autoSetupStage++;
                 break;
-            case 13: //lift jewel arm
-                if(robot.glyphSystem.goLiftCollect()) {
-//                robot.jewel.liftArm();
-////                if (autoTimer < System.nanoTime()) {
-                    robot.jewel.stopArm();
-                    autoSetupStage++;
-                }
-//                    autoTimer = futureTime(1.5f);
-////                }
-
+            case 13:
+                autoSetupStage++;
                 break;
             case 14:
-//                if(autoTimer < System.nanoTime()){
-//                    robot.glyphSystem.collect();
-//                    robot.glyphSystem.tiltPhoneUp();
-//                    autoTimer = futureTime(1.5f);
-                robot.jewel.stopArm();
                 autoSetupStage++;
-//                }
                 break;
             case 15:
-                if(autoTimer < System.nanoTime()){
-//                    robot.glyphSystem.closeGripTight();
-//
-                    robot.jewel.stopArm();
-                    autoSetupStage++;
-                    robot.resetMotors(true);
-                }
+                autoSetupStage++;
                 break;
             case 16:
-                //if(robot.rotateIMU(0, 1)){
-                    robot.resetMotors(true);
-                    autoSetupStage = 0;
-                    return true;
-                //}
-                //break;
-             case 17:
-//                if(robot.driveForward(true, .3, .5)){
-//                    robot.resetMotors(true);
-//                    robot.glyphSystem.goLiftAuto2();
-//                    autoSetupStage = 0;
-//                    return true;
-//                }
+                autoSetupStage++;
                 break;
+             case 17:
+                autoSetupStage++;
+                 break;
         }
         return false;
     }
-
+/**
     private void autonomous3() {
 
         switch(autoStage) {

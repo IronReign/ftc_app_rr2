@@ -203,7 +203,7 @@ public class GlyphSystem2 {
             case 0:
                 tiltPhoneUp();
                 motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                motorLift.setPower(.6);
+//                elbow.setPower(.6);
                 liftStage++;
                 break;
             case 1:
@@ -284,7 +284,7 @@ public class GlyphSystem2 {
             case 0:
                 tiltPhoneUp();
                 motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                motorLift.setPower(.6);
+//                elbow.setPower(.6);
                 liftStage++;
                 break;
             case 1:
@@ -326,7 +326,7 @@ public class GlyphSystem2 {
                 break;
             case 1:
                 if(motorLift.getCurrentPosition() > liftDeposit - 200) {
-//                    motorLift.setPower(.2);
+//                    elbow.setPower(.2);
                     motorLift.setTargetPosition(liftRecoveryPos);
                     liftTimer = futureTime(1.5f);
                 }
@@ -336,7 +336,7 @@ public class GlyphSystem2 {
                 }
                 break;
             case 2:
-//                motorLift.setPower(.6);
+//                elbow.setPower(.6);
                 if(motorLift.getCurrentPosition() > liftFlatUpper || motorLift.getCurrentPosition() < liftFlatLower){
                     motorLift.setPower(.2);
                 }
@@ -434,17 +434,17 @@ public class GlyphSystem2 {
     }
 
 //    public void raiseLift2(){
-//        if (motorLift.getCurrentPosition() < liftMax && motorLift.getTargetPosition() < liftMax) {
-//            motorLift.setTargetPosition((int) Math.min(motorLift.getCurrentPosition() + liftPlanck, liftMax));
-//            motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//            motorLift.setPower(1);
+//        if (elbow.getCurrentPosition() < liftMax && elbow.getTargetPosition() < liftMax) {
+//            elbow.setTargetPosition((int) Math.min(elbow.getCurrentPosition() + liftPlanck, liftMax));
+//            elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            elbow.setPower(1);
 //        }
 //    }
 //    public void lowerLift2() {
-//        if (motorLift.getCurrentPosition() > liftMin && motorLift.getTargetPosition() > liftMin) {
-//            motorLift.setTargetPosition((int) Math.max(motorLift.getCurrentPosition() - liftPlanck, liftMin));
-//            motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//            motorLift.setPower(.8);
+//        if (elbow.getCurrentPosition() > liftMin && elbow.getTargetPosition() > liftMin) {
+//            elbow.setTargetPosition((int) Math.max(elbow.getCurrentPosition() - liftPlanck, liftMin));
+//            elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            elbow.setPower(.8);
 //        }
 //    }
 

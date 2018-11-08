@@ -252,7 +252,7 @@ public class PoseSurtr
 
         moveMode = MoveMode.still;
 
-//        this.glyphSystem = new GlyphSystem(motorLift, servoGripRight, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
+//        this.glyphSystem = new GlyphSystem(elbow, servoGripRight, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
 
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit            = BNO055IMU.AngleUnit.DEGREES;

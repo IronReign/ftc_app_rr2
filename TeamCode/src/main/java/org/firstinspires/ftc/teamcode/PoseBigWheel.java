@@ -1,21 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Log;
-
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.firstinspires.ftc.teamcode.PIDController;
-import org.firstinspires.ftc.teamcode.RC;
 
 
 /**
@@ -46,8 +40,7 @@ public class PoseBigWheel
 
     DcMotor motorLeft = null;
     DcMotor motorRight = null;
-    DcMotor leftElbow = null;
-    DcMotor rightElbow = null;
+    DcMotor elbow = null;
     DcMotor superman = null;
     DcMotor intake = null;
 
@@ -102,6 +95,9 @@ public class PoseBigWheel
     private double wheelbase; //the width between the wheels
 
     public int servoTesterPos = 1600;
+
+    SupermanSystem supermanSystem;
+    ElbowSystem elbowSystem;
 
 
 
@@ -220,10 +216,9 @@ public class PoseBigWheel
 
         this.motorLeft = this.hwMap.dcMotor.get("motorLeft");
         this.motorRight = this.hwMap.dcMotor.get("motorRight");
-        this.leftElbow = this.hwMap.dcMotor.get("leftElbow");
-        this.rightElbow = this.hwMap.dcMotor.get("rightElbow");
+        this.elbow = this.hwMap.dcMotor.get("elbow");
         this.intake = this.hwMap.dcMotor.get("intake");
-        this.superman = this.hwMap.dcMotor.get("superman");
+        this.superman = this.hwMap.dcMotor.get("elbow");
 
         isIntakeOn = false;
 
@@ -244,6 +239,8 @@ public class PoseBigWheel
         parametersIMULift.loggingEnabled = true;
         parametersIMULift.loggingTag = "IMULift";
 
+        supermanSystem = new SupermanSystem(superman);
+        elbowSystem = new ElbowSystem(elbow, intake);
 
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);

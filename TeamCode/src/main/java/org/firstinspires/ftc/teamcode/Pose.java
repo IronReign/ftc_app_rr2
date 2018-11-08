@@ -262,7 +262,7 @@ public class Pose
         this.motorFrontRight    = this.hwMap.dcMotor.get("motorFrontRight");
         this.motorBackLeft      = this.hwMap.dcMotor.get("motorBackLeft");
         this.motorBackRight     = this.hwMap.dcMotor.get("motorBackRight");
-        this.motorLift          = this.hwMap.dcMotor.get("motorLift");
+        this.motorLift          = this.hwMap.dcMotor.get("elbow");
         this.headLamp           = this.hwMap.dcMotor.get("headLamp");
         this.servoGripRight     = this.hwMap.servo.get("servoGripRight");
         this.servoGripLeft      = this.hwMap.servo.get("servoGripLeft");
@@ -300,7 +300,7 @@ public class Pose
 
         moveMode = MoveMode.still;
 
-//        this.glyphSystem = new GlyphSystem(motorLift, servoGripRight, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
+//        this.glyphSystem = new GlyphSystem(elbow, servoGripRight, motorGripLeft, motorGripRight, servoLiftLeft, servoLiftRight, servoPhone);
         this.jewel = new JewelArm(servoJewelExtender,servoJewelRight, colorJewel, servoJewelFlipper);
 
         this.relicArm = new RelicArm(relicShoulder, relicElbow, relicGrip);
