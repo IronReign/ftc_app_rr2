@@ -575,20 +575,19 @@ public class Game_6832 extends LinearOpMode {
             robot.driveMixerTank(pwrFwd, pwrRot);
         }
 
-        /**if(gamepad1.dpad_up) {
-            robot.superman.raiseLift();
-        }else if (gamepad1.dpad_down){
-            robot.superman.lowerLift();
-        }else{
-            robot.superman.stopLift();
-        }**/
-
         if(gamepad1.y) robot.collector.advance();
         if(gamepad1.a) robot.collector.retreat();
         if(gamepad1.x) robot.collector.kill();
         if(gamepad1.b) robot.collector.restart(.5);
         if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
         if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
+
+        if(gamepad2.y) robot.superman.advance();
+        if(gamepad2.a) robot.superman.retreat();
+        if(gamepad2.x) robot.superman.kill();
+        if(gamepad2.b) robot.superman.restart(.5);
+        if(gamepad2.dpad_up) robot.superman.setTargetPosition(robot.superman.posIntake);
+        if(gamepad2.dpad_down) robot.superman.setTargetPosition(robot.superman.posLatch);
 
 
     }
