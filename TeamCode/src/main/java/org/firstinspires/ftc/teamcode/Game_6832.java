@@ -583,6 +583,7 @@ public class Game_6832 extends LinearOpMode {
             robot.supermanSystem.stopLift();
         }
 
+<<<<<<< HEAD
         if(gamepad1.y) {
             robot.elbowSystem.extendElbow();
         }else if (gamepad1.a){
@@ -590,6 +591,14 @@ public class Game_6832 extends LinearOpMode {
         }else{
             robot.elbowSystem.stopElbow();
         }
+=======
+        if(gamepad1.y) robot.collector.advance();
+        if(gamepad1.a) robot.collector.retreat();
+        if(gamepad1.x) robot.collector.kill();
+        if(gamepad1.b) robot.collector.restart(.5);
+        if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
+        if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
+>>>>>>> upstream/master
 
         if(false){
             if(toggleAllowed(gamepad1.x, x)){
@@ -605,6 +614,7 @@ public class Game_6832 extends LinearOpMode {
 
     }
 
+<<<<<<< HEAD
     public boolean autoSetup(){
         switch(autoSetupStage) {
             case 0:
@@ -1555,6 +1565,9 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
+=======
+ /**
+>>>>>>> upstream/master
     public void resetAuto(){
         autoStage = 0;
         autoTimer = 0;
@@ -1675,6 +1688,22 @@ public class Game_6832 extends LinearOpMode {
             }
         });
 
+        telemetry.addLine()
+                .addData("elbowA", new Func<String>() {
+                    @Override public String value() {
+                        return Boolean.toString(robot.collector.isActive());
+                    }
+                })
+                .addData("elbowC", new Func<String>() {
+                    @Override public String value() {
+                        return Integer.toString(robot.collector.getCurrentPosition());
+                    }
+                })
+                .addData("elbowT", new Func<String>() {
+                    @Override public String value() {
+                        return Integer.toString(robot.collector.getTargetPosition());
+                    }
+                });
 
         telemetry.addLine()
                 .addData("active", new Func<String>() {

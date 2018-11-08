@@ -38,11 +38,24 @@ public class PoseBigWheel
     public double kdDrive = 0.001; //derivative constant multiplier
 
 
+<<<<<<< HEAD
     DcMotor motorLeft = null;
     DcMotor motorRight = null;
     DcMotor elbow = null;
+=======
+    DcMotor driveLeft = null;
+    DcMotor driveRight = null;
+    DcMotor elbowLeft = null;
+    DcMotor elbowRight = null;
+>>>>>>> upstream/master
     DcMotor superman = null;
     DcMotor intake = null;
+
+
+
+    //subsystems
+
+    Collector collector = null;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
@@ -214,16 +227,29 @@ public class PoseBigWheel
          */
 
 
+<<<<<<< HEAD
         this.motorLeft = this.hwMap.dcMotor.get("motorLeft");
         this.motorRight = this.hwMap.dcMotor.get("motorRight");
         this.elbow = this.hwMap.dcMotor.get("elbow");
+=======
+        this.driveLeft = this.hwMap.dcMotor.get("driveLeft");
+        this.driveRight = this.hwMap.dcMotor.get("driveRight");
+        this.elbowLeft = this.hwMap.dcMotor.get("elbowLeft");
+        this.elbowRight = this.hwMap.dcMotor.get("elbowRight");
+>>>>>>> upstream/master
         this.intake = this.hwMap.dcMotor.get("intake");
         this.superman = this.hwMap.dcMotor.get("elbow");
+
+        driveLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        driveRight.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        collector = new Collector(elbowLeft, elbowRight, intake);
+        collector.setPower(.5);
 
         isIntakeOn = false;
 
 
-        this.motorRight.setDirection(DcMotorSimple.Direction.REVERSE);
+//        this.driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
@@ -251,7 +277,7 @@ public class PoseBigWheel
     /**
      * update the current location of the robot. This implementation gets heading and orientation
      * from the Bosch BNO055 IMU and assumes a simple differential steer robot with left and right motor
-     * encoders.
+     * encoders. also updates the positions of robot subsystems; make sure to add each subsystem's update class as more are implemented.
      *
      *
      * The current naive implementation assumes an unobstructed robot - it cannot account
@@ -281,6 +307,8 @@ public class PoseBigWheel
 
             initialized = true;
         }
+
+        collector.update();
 
 
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
@@ -577,8 +605,8 @@ public class PoseBigWheel
         powerLeft += rotate;
         powerRight += -rotate;
         //provide power to the motors
-        motorLeft.setPower(clampMotor(powerLeft));
-        motorRight.setPower(clampMotor(powerRight));
+        driveLeft.setPower(clampMotor(powerLeft));
+        driveRight.setPower(clampMotor(powerRight));
 
     }
 
@@ -588,15 +616,15 @@ public class PoseBigWheel
      * @param enableEncoders if true, the motors will continue to have encoders active after reset
      */
     public void resetMotors(boolean enableEncoders){
-        motorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        driveLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        driveRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         if (enableEncoders) {
-            motorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motorRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            driveLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            driveRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         else {
-            motorLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            motorRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            driveLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            driveRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
     }
@@ -637,7 +665,7 @@ public class PoseBigWheel
      * retrieve the average value of ticks on all motors
      */
     public long getAverageTicks(){
-        long averageTicks = (motorLeft.getCurrentPosition() + motorRight.getCurrentPosition())/4;
+        long averageTicks = (driveLeft.getCurrentPosition() + driveRight.getCurrentPosition())/4;
         return averageTicks;
     }
 
@@ -646,7 +674,7 @@ public class PoseBigWheel
      * retrieve the average of the absolute value of ticks on all motors
      */
     public long getAverageAbsTicks(){
-        long averageTicks = (Math.abs(motorLeft.getCurrentPosition()) + Math.abs(motorRight.getCurrentPosition()))/4;
+        long averageTicks = (Math.abs(driveLeft.getCurrentPosition()) + Math.abs(driveRight.getCurrentPosition()))/4;
         return averageTicks;
     }
 
