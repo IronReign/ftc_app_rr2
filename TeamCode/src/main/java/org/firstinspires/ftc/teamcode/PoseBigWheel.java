@@ -38,16 +38,11 @@ public class PoseBigWheel
     public double kdDrive = 0.001; //derivative constant multiplier
 
 
-<<<<<<< HEAD
-    DcMotor motorLeft = null;
-    DcMotor motorRight = null;
-    DcMotor elbow = null;
-=======
+
     DcMotor driveLeft = null;
     DcMotor driveRight = null;
     DcMotor elbowLeft = null;
     DcMotor elbowRight = null;
->>>>>>> upstream/master
     DcMotor superman = null;
     DcMotor intake = null;
 
@@ -110,7 +105,6 @@ public class PoseBigWheel
     public int servoTesterPos = 1600;
 
     SupermanSystem supermanSystem;
-    ElbowSystem elbowSystem;
 
 
 
@@ -227,16 +221,11 @@ public class PoseBigWheel
          */
 
 
-<<<<<<< HEAD
-        this.motorLeft = this.hwMap.dcMotor.get("motorLeft");
-        this.motorRight = this.hwMap.dcMotor.get("motorRight");
-        this.elbow = this.hwMap.dcMotor.get("elbow");
-=======
+
         this.driveLeft = this.hwMap.dcMotor.get("driveLeft");
         this.driveRight = this.hwMap.dcMotor.get("driveRight");
         this.elbowLeft = this.hwMap.dcMotor.get("elbowLeft");
         this.elbowRight = this.hwMap.dcMotor.get("elbowRight");
->>>>>>> upstream/master
         this.intake = this.hwMap.dcMotor.get("intake");
         this.superman = this.hwMap.dcMotor.get("elbow");
 
@@ -266,7 +255,6 @@ public class PoseBigWheel
         parametersIMULift.loggingTag = "IMULift";
 
         supermanSystem = new SupermanSystem(superman);
-        elbowSystem = new ElbowSystem(elbow, intake);
 
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);

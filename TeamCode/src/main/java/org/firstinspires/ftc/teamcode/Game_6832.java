@@ -583,38 +583,16 @@ public class Game_6832 extends LinearOpMode {
             robot.supermanSystem.stopLift();
         }
 
-<<<<<<< HEAD
-        if(gamepad1.y) {
-            robot.elbowSystem.extendElbow();
-        }else if (gamepad1.a){
-            robot.elbowSystem.retractElbow();
-        }else{
-            robot.elbowSystem.stopElbow();
-        }
-=======
         if(gamepad1.y) robot.collector.advance();
         if(gamepad1.a) robot.collector.retreat();
         if(gamepad1.x) robot.collector.kill();
         if(gamepad1.b) robot.collector.restart(.5);
         if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
         if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
->>>>>>> upstream/master
-
-        if(false){
-            if(toggleAllowed(gamepad1.x, x)){
-                robot.elbowSystem.extendElbow2();
-            }else{
-                robot.elbowSystem.retractElbow2();
-            }
-
-        }
-
-
 
 
     }
 
-<<<<<<< HEAD
     public boolean autoSetup(){
         switch(autoSetupStage) {
             case 0:

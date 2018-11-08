@@ -58,7 +58,7 @@ public class TensorflowIntegration extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        
+
     }
 
     /*
