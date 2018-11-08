@@ -575,13 +575,13 @@ public class Game_6832 extends LinearOpMode {
             robot.driveMixerTank(pwrFwd, pwrRot);
         }
 
-        if(gamepad1.dpad_up) {
-            robot.supermanSystem.raiseLift();
+        /**if(gamepad1.dpad_up) {
+            robot.superman.raiseLift();
         }else if (gamepad1.dpad_down){
-            robot.supermanSystem.lowerLift();
+            robot.superman.lowerLift();
         }else{
-            robot.supermanSystem.stopLift();
-        }
+            robot.superman.stopLift();
+        }**/
 
         if(gamepad1.y) robot.collector.advance();
         if(gamepad1.a) robot.collector.retreat();

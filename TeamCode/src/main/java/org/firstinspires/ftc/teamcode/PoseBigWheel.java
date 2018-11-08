@@ -104,7 +104,7 @@ public class PoseBigWheel
 
     public int servoTesterPos = 1600;
 
-    SupermanSystem supermanSystem;
+    Superman superman;
 
 
 
@@ -254,7 +254,7 @@ public class PoseBigWheel
         parametersIMULift.loggingEnabled = true;
         parametersIMULift.loggingTag = "IMULift";
 
-        supermanSystem = new SupermanSystem(superman);
+        superman = new Superman(superman);
 
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
