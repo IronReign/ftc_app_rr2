@@ -611,7 +611,8 @@ public class Game_6832 extends LinearOpMode {
         if(gamepad1.a) robot.collector.retreat();
         if(gamepad1.x) robot.collector.kill();
         if(gamepad1.b) robot.collector.restart(.5);
-
+        if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
+        if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
 
 
         if(false){//!relicMode) {

@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import static java.lang.Math.abs;
+
 /**
  * Created by 2938061 on 11/10/2017.
  */
@@ -16,15 +18,16 @@ public class Collector {
     DcMotor elbowRight = null;
     DcMotor intake = null;
 
-    public int elbowPos = 0;
-    public double elbowPwr = 0;
+    int elbowPosInternal = 0;
+    int elbowPos = 0;
+    double elbowPwr = 0;
 
 
     //all filler values; need to be updated to reflect actual positions
-    public int posIntake   = 100;
+    public int posIntake   = 4200;
     public int posDeposit  = 100;
     public int posPreLatch = 100;
-    public int posLatch    = 100;
+    public int posLatch    = 0;
     public int posSuperman = 100;
 
     //filler value; needs to be updated to reflect actual ratio
@@ -46,7 +49,8 @@ public class Collector {
     }
 
     public void update(){
-        if(active) {
+        if(active && elbowPosInternal!=elbowPos) { //don't keep updating if we are close to target position
+            elbowPosInternal = elbowPos;
             elbowLeft.setTargetPosition(elbowPos);
             elbowRight.setTargetPosition(elbowPos);
             elbowLeft.setPower(elbowPwr);
