@@ -50,6 +50,7 @@ public class PoseBigWheel
     //subsystems
 
     Collector collector = null;
+    Superman supermanSystem;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
@@ -230,6 +231,7 @@ public class PoseBigWheel
 
         collector = new Collector(elbowLeft, elbowRight, intake);
         collector.setPower(.5);
+        supermanSystem = new Superman(superman);
 
         isIntakeOn = false;
 

@@ -35,7 +35,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.HINT;
 import com.vuforia.PIXEL_FORMAT;
@@ -56,7 +55,6 @@ import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
 
-import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
@@ -167,6 +165,8 @@ public class Game_6832 extends LinearOpMode {
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
 
+    TensorflowIntegration tf;
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -246,6 +246,9 @@ public class Game_6832 extends LinearOpMode {
             else{
                 telemetry.addData("Vu", "Inactive");
             }
+
+            tf = new TensorflowIntegration();
+            tf.tfInit(hardwareMap, telemetry);
 
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
@@ -613,6 +616,18 @@ public class Game_6832 extends LinearOpMode {
         if(gamepad1.b) robot.collector.restart(.5);
         if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
         if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
+        if(gamepad1.right_bumper) tf.tfDisable();
+        if(gamepad1.left_bumper) telemetry.addData("TF Detection", "%s", tf.detect());
+
+        if(gamepad2.y) robot.supermanSystem.advance();
+        if(gamepad2.a) robot.supermanSystem.retreat();
+        if(gamepad2.x) robot.supermanSystem.kill();
+        if(gamepad2.b) robot.supermanSystem.restart(.5);
+        if(gamepad2.dpad_up) robot.supermanSystem.setTargetPosition(robot.collector.posIntake);
+        if(gamepad2.dpad_down) robot.supermanSystem.setTargetPosition(robot.collector.posLatch);
+        if(gamepad2.right_bumper) robot.collector.collection();
+        else if(gamepad2.left_bumper) robot.collector.rejection();
+        else robot.collector.stopIntake();
 
 
         if(false){//!relicMode) {

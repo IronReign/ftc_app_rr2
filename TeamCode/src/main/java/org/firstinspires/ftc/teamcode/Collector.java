@@ -58,6 +58,11 @@ public class Collector {
         }
     }
 
+
+    public void collection(){ intake.setPower(1);}
+    public void rejection(){ intake.setPower(-1);}
+    public void stopIntake(){ intake.setPower(0);}
+
     public boolean isActive(){
         return active;
     }
