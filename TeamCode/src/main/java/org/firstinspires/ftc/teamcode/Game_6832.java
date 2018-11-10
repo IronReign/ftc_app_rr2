@@ -275,6 +275,7 @@ public class Game_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
+                        autoSetup();
                         //autonomous();
                         break;
                     case 2:
@@ -523,7 +524,163 @@ public class Game_6832 extends LinearOpMode {
     }
 **/
 
+    public boolean autoSetup(){
+        switch(autoSetupStage) {
+            case 0:
+                robot.setZeroHeading();
+                robot.resetMotors(true);
+                autoSetupStage++;
+                break;
+            case 1:
+                /**Detach from lander**/
+                telemetry.addData("TF Detection", "%s", tf.detect());
+                //autoSetupStage++;
+                break;
+            case 2:
+                /**Turn on camera to see which is gold**/
+                autoSetupStage++;
+                break;
+            case 3:
+                /**Create 3 cases for navigation to proper mineral and push a little extra. default to center**/
+                autoSetupStage++;
+                break;
+            case 4:
+                /**Correcting the angle so it faces the minerals**/
+                if(robot.rotateIMU(0, 1)){
+                    robot.resetMotors(true);
+                    autoSetupStage++;
+                }
+                break;
+            case 5:
+                /**Driving to remove gold off pedastal**/
+                if(robot.driveForward(false, .3, .74)){
+                    robot.resetMotors(true);
+                    autoSetupStage++;
+                }
+                break;
+            case 6:
+                /**Rotate to face center if applicable**/
+                autoSetupStage++;
+                break;
+            case 7:
+                /**Correct appropriate distance to drive to approach center of the mineral**/
+                autoSetupStage++;
+                break;
+            case 8:
+                /**Rotate to face forward**/
+                autoSetupStage++;
+                break;
+            case 9:
+                autoSetupStage++;
+                break;
+            case 10:
+                autoSetupStage++;
+                break;
+            case 11:
+                autoSetupStage++;
+                break;
+            case 12:
+                autoSetupStage++;
+                break;
+            case 13:
+                autoSetupStage++;
+                break;
+            case 14:
+                autoSetupStage++;
+                break;
+            case 15:
+                autoSetupStage++;
+                break;
+            case 16:
+                autoSetupStage++;
+                break;
+            case 17:
+                autoSetupStage++;
+                break;
+            default:
+                robot.resetMotors(true);
+                autoSetupStage = 0;
+                return true;
+        }
+        return false;
+    }
 
+    private void auto1() { //Starts depot side and end opposite crater
+        switch (autoStage) {
+            case 0:
+                robot.setZeroHeading();
+                robot.resetMotors(true);
+                autoStage++;
+                break;
+            case 1:
+                if(autoSetup()){
+                    autoStage++;
+                }
+                break;
+            case 2:
+                //Drive into depot
+                if(robot.driveForward(false, .3, .74)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 3:
+                //Yeet ducky into depot
+                /*if(robot.collector.moveTo(straightposition)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }*/
+                autoStage++;
+                break;
+            case 4:
+                //Retract arm
+                /*if(robot.collector.moveTo(rest position)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }*/
+                autoStage++;
+                break;
+            case 5:
+                //Drive backward to safe distance from wall
+                if(robot.driveForward(true, .3, .7)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 6:
+                //rotate to be parallel with wall
+                if(robot.rotateIMU(-135, 3)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 7:
+                //drive to crater area
+                if(robot.driveForward(false, 1, .75)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 8:
+                //extend into depot to prepare for start of match and get parking points
+                /*if(robot.collector.moveTo(straightposition)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }*/
+                autoStage++;
+                break;
+            default:
+                robot.resetMotors(true);
+                autoStage = 0;
+                active = false;
+                state = 0;
+                break;
+
+        }
+    }
+
+
+    public boolean supermanTester = false;
 
     public void joystickDrive(){
 
@@ -600,34 +757,37 @@ public class Game_6832 extends LinearOpMode {
                 robot.superman.setPower(-.80);
             }
         }*/
-        if(gamepad1.dpad_up) {
-            robot.superman.setPower(.75);
-        }else if (gamepad1.dpad_down){
-            robot.superman.setPower(-.75);
+
+
+        if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
+            supermanTester = true;
         }else{
-            robot.superman.setPower(0);
-            //robot.superman.setTargetPosition(robot.superman.getCurrentPosition());
-            //robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            supermanTester = false;
         }
 
-        if(gamepad1.y) robot.collector.advance();
-        if(gamepad1.a) robot.collector.retreat();
-        if(gamepad1.x) robot.collector.kill();
-        if(gamepad1.b) robot.collector.restart(.5);
-        if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
-        if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
-        if(gamepad1.right_bumper) tf.tfDisable();
-        if(gamepad1.left_bumper) telemetry.addData("TF Detection", "%s", tf.detect());
+        if(!supermanTester){
+            if(gamepad1.y) robot.collector.advance();
+            if(gamepad1.a) robot.collector.retreat();
+            if(gamepad1.x) robot.collector.kill();
+            if(gamepad1.b) robot.collector.restart(.5);
+            if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
+            if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
+            if(gamepad1.right_bumper) tf.tfDisable();
+            if(gamepad1.dpad_right) telemetry.addData("TF Detection", "%s", tf.detect());
+        }else{
+            if(gamepad2.y) robot.supermanSystem.advance();
+            if(gamepad2.a) robot.supermanSystem.retreat();
+            if(gamepad2.x) robot.supermanSystem.kill();
+            if(gamepad2.b) robot.supermanSystem.restart(.5);
+            if(gamepad2.dpad_up) robot.supermanSystem.setTargetPosition(robot.collector.posIntake);
+            if(gamepad2.dpad_down) robot.supermanSystem.setTargetPosition(robot.collector.posLatch);
+            if(Math.abs(gamepad2.left_trigger)>.5) robot.collector.collection();
+            else if(Math.abs(gamepad2.right_trigger)>.5) robot.collector.rejection();
+            else robot.collector.stopIntake();
+        }
 
-        if(gamepad2.y) robot.supermanSystem.advance();
-        if(gamepad2.a) robot.supermanSystem.retreat();
-        if(gamepad2.x) robot.supermanSystem.kill();
-        if(gamepad2.b) robot.supermanSystem.restart(.5);
-        if(gamepad2.dpad_up) robot.supermanSystem.setTargetPosition(robot.collector.posIntake);
-        if(gamepad2.dpad_down) robot.supermanSystem.setTargetPosition(robot.collector.posLatch);
-        if(gamepad2.right_bumper) robot.collector.collection();
-        else if(gamepad2.left_bumper) robot.collector.rejection();
-        else robot.collector.stopIntake();
+
+
 
 
         if(false){//!relicMode) {

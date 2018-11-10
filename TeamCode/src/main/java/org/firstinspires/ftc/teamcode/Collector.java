@@ -95,11 +95,11 @@ public class Collector {
     }
 
     public void advance(){
-        setTargetPosition(getCurrentPosition() + 60);
+        setTargetPosition(getCurrentPosition() + 10);
     }
 
     public void retreat(){
-        setTargetPosition(getCurrentPosition() - 60);
+        setTargetPosition(getCurrentPosition() - 10);
     }
 
     public void runToAngle(double angle){
