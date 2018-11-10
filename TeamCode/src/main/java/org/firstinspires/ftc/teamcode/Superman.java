@@ -10,9 +10,10 @@ public class Superman {
     double supermanPwr = 0;
     //all filler values; need to be updated to reflect actual positions
     public int posIntake = 10;
-    public int posDeposit = 606;
+    public int posDeposit = 585;
     public int posPreLatch = 10;
     public int posLatch = 297;
+    public int posPostLatch=10;
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
     public boolean active = true;

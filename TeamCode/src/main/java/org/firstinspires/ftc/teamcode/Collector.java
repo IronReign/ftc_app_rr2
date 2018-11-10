@@ -28,6 +28,7 @@ public class Collector {
     public int posDeposit  = 3231;
     public int posPreLatch = 2025;
     public int posLatch    = 2718;
+    public int posPostLatch = 20;
 
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;

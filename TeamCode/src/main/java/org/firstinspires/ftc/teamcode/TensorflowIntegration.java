@@ -45,6 +45,8 @@ public class TensorflowIntegration {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
+
+    private List<Recognition> cacheRecognitions = null;
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
      * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
@@ -76,7 +78,8 @@ public class TensorflowIntegration {
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
          */
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
-        parameters.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;;
+        parameters.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
+        ;
         parameters.cameraDirection = CameraDirection.FRONT;
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -115,36 +118,37 @@ public class TensorflowIntegration {
 
     public GoldPos detect() {
         List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-        updatedRecognitions.remove(2);
         if (updatedRecognitions != null) {
-            if (updatedRecognitions.size() == 3) {
-                int goldMineralX = -1;
-                int silverMineral1X = -1;
-                int silverMineral2X = -1;
-                for (Recognition recognition : updatedRecognitions) {
-                    if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                        goldMineralX = (int) recognition.getLeft();
-                    } else if (silverMineral1X == -1) {
-                        silverMineral1X = (int) recognition.getLeft();
-                    } else {
-                        silverMineral2X = (int) recognition.getLeft();
-                    }
-                }
-                if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1)
-                    if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                        return GoldPos.LEFT;
-                    } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                        return GoldPos.RIGHT;
-                    } else {
-                        return GoldPos.MIDDLE;
-                    }
-            }
+            cacheRecognitions = updatedRecognitions;
         }
-        return GoldPos.ERROR;
+        if (cacheRecognitions.size() == 3) {
+            int goldMineralX = -1;
+            int silverMineral1X = -1;
+            int silverMineral2X = -1;
+            for (Recognition recognition : cacheRecognitions) {
+                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                    goldMineralX = (int) recognition.getLeft();
+                } else if (silverMineral1X == -1) {
+                    silverMineral1X = (int) recognition.getLeft();
+                } else {
+                    silverMineral2X = (int) recognition.getLeft();
+                }
+            }
+            if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1)
+                if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
+                    return GoldPos.LEFT;
+                } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
+                    return GoldPos.RIGHT;
+                } else {
+                    return GoldPos.MIDDLE;
+                }
+        }
+        return GoldPos.ERROR1;
+
     }
 
     public enum GoldPos {
-        LEFT, MIDDLE, RIGHT, ERROR;
+        LEFT, MIDDLE, RIGHT, ERROR1;
     }
 
 }

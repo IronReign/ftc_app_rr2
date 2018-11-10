@@ -66,7 +66,7 @@ public class PoseBigWheel
 
     private long flingTimer = 0;
     private int flingSpeed  = 5000; //ticks per second
-    private int forwardTPM = (int) (2439f * .75); //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int forwardTPM = (int) (1078); //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
 
     private double poseX;
     private double poseY;
@@ -226,10 +226,10 @@ public class PoseBigWheel
         this.intake = this.hwMap.dcMotor.get("intake");
         this.supermanMotor = this.hwMap.dcMotor.get("supermanMotor");
 
-        driveLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
         driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        driveRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
 
         collector = new Collector(elbowLeft, elbowRight, intake);
         collector.setPower(.5);
@@ -295,8 +295,13 @@ public class PoseBigWheel
             initialized = true;
         }
 
+        if(posePitch>40){
+            superman.restart(.6);
+        }
+
         collector.update();
         superman.update();
+
 
 
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
@@ -604,6 +609,8 @@ public class PoseBigWheel
      * @param enableEncoders if true, the motors will continue to have encoders active after reset
      */
     public void resetMotors(boolean enableEncoders){
+        driveLeft.setPower(0);
+        driveRight.setPower(0);
         driveLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         if (enableEncoders) {

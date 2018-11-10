@@ -137,6 +137,7 @@ public class Game_6832 extends LinearOpMode {
     private double vuPwr = 0;
     public boolean vuFlashDemo = false;
     boolean visionConfigured = false;
+    int mineralState = 2;
 
     //sensors/sensing-related variables
     Orientation angles;
@@ -185,13 +186,13 @@ public class Game_6832 extends LinearOpMode {
 
         Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 */
-        tf = new TensorflowIntegration();
+        /*tf = new TensorflowIntegration();
         tf.initVuforia();
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
             tf.initTfod(hardwareMap);
         } else {
             telemetry.addData("Sorry!", "This device is not compatible with TFOD");
-        }
+        }*/
        // tf.tfInit(hardwareMap, telemetry);
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
@@ -262,10 +263,10 @@ public class Game_6832 extends LinearOpMode {
 
 
 //        robot.jewel.liftArm();
-        runtime.reset();
+       /* runtime.reset();
         if (tf.tfod != null) {
             tf.tfod.activate();
-        }
+        }*/
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -281,10 +282,11 @@ public class Game_6832 extends LinearOpMode {
                         //autonomous();
                         break;
                     case 2:
-                        testDistnace();
+                        if(testDistnace())active=false;
                         //autonomous2();
                         break;
                     case 3:
+                        if(testIMU())active=false;
                         //auto4();
                         break;
                     case 4:
@@ -298,7 +300,7 @@ public class Game_6832 extends LinearOpMode {
                         }
                         break;
                     case 6: //provides data for left/right calibration
-
+                        auto1();
                         break;
                     case 7: //IMU demo mode
 //                        if(robot.jewel.retractArm())
@@ -537,6 +539,7 @@ public class Game_6832 extends LinearOpMode {
                 if(robot.driveForward(false, .5, .5)){
                     robot.resetMotors(true);
                     autoSetupStage++;
+                    return  true;
                 }
                 break;
             default:
@@ -545,6 +548,63 @@ public class Game_6832 extends LinearOpMode {
                 return true;
         }
         return false;
+    }
+
+    public boolean testIMU(){
+        switch(autoSetupStage){
+            case 0:
+                robot.setZeroHeading();
+                robot.resetMotors(true);
+                autoSetupStage++;
+                break;
+            case 1:
+                if(robot.rotateIMU(90, 3 )){
+                    robot.resetMotors(true);
+                    autoSetupStage++;
+                    return  true;
+                }
+                break;
+            default:
+                robot.resetMotors(true);
+                autoSetupStage = 0;
+                return true;
+        }
+        return false;
+    }
+
+    public boolean turnMineral(){
+        switch(mineralState){
+            case 0:
+                if(robot.rotateIMU(30, 2)) return true;
+                break;
+            case 1:
+                if(robot.rotateIMU(0, 1.5)) return true;
+                break;
+            case 2:
+                if(robot.rotateIMU(330, 2)) return true;
+                break;
+            default:
+                return true;
+        }
+        return false;
+    }
+
+    public boolean turnDepot(){
+        switch(mineralState){
+            case 0:
+                if(robot.rotateIMU(-90, 3)) return true;
+                break;
+            case 1:
+                if(robot.rotateIMU(0, 1.5)) return true;
+                break;
+            case 2:
+                if(robot.rotateIMU(20, 3)) return true;
+                break;
+            default:
+                return true;
+        }
+        return false;
+
     }
 
     public boolean autoSetup(){
@@ -556,42 +616,89 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 1:
                 /**Detach from lander**/
-                telemetry.addData("TF Detection", "%s", tf.detect());
-                //autoSetupStage++;
+                //telemetry.addData("TF Detection", "%s", tf.detect());
+                autoSetupStage++;
                 break;
             case 2:
                 /**Turn on camera to see which is gold**/
+                tf.tfInit(hardwareMap, telemetry);
+                TensorflowIntegration.GoldPos gp = tf.detect();
+                switch (gp) {
+                    case LEFT:
+                        mineralState = 0;
+                        break;
+                    case MIDDLE:
+                        mineralState = 1;
+                        break;
+                    case RIGHT:
+                        mineralState = 2;
+                        break;
+                    default:
+                        mineralState = 1;
+                        break;
+                }
+                tf.tfDisable();
                 autoSetupStage++;
                 break;
             case 3:
-                /**Create 3 cases for navigation to proper mineral and push a little extra. default to center**/
-                autoSetupStage++;
-                break;
-            case 4:
-                /**Correcting the angle so it faces the minerals**/
-                if(robot.rotateIMU(0, 1)){
+                if(turnMineral()){
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
                 break;
+            case 4:
+                if(mineralState == 1) {
+                    if (robot.driveForward(true, .65, .65)) {
+                        robot.resetMotors(true);
+                        autoSetupStage++;
+                    }
+                }
+                else{
+                    if (robot.driveForward(true, .85, .65)) {
+                        robot.resetMotors(true);
+                        autoSetupStage++;
+                    }
+                }
+                break;
             case 5:
                 /**Driving to remove gold off pedastal**/
-                if(robot.driveForward(false, .3, .74)){
+                if(turnDepot()){
                     robot.resetMotors(true);
                     autoSetupStage++;
                 }
                 break;
             case 6:
-                /**Rotate to face center if applicable**/
-                autoSetupStage++;
-                break;
+                if(mineralState == 1) {
+                    if (robot.driveForward(true, .85, .65)) {
+                        robot.resetMotors(true);
+                        autoSetupStage++;
+                    }
+                }
+                if(mineralState == 0) {
+                    if (robot.driveForward(true, .65, .65)) {
+                        robot.resetMotors(true);
+                        autoSetupStage++;
+                    }
+                }
+                else{
+                    if (robot.driveForward(true, .95, .65)) {
+                        robot.resetMotors(true);
+                        autoSetupStage++;
+                    }
+                }break;
             case 7:
                 /**Correct appropriate distance to drive to approach center of the mineral**/
+                autoTimer = futureTime(1);
+//                robot.collector.collection();
                 autoSetupStage++;
                 break;
             case 8:
+                if(autoTimer < System.nanoTime()){
+//                    robot.collector.stopIntake();
+                    autoSetupStage++;
+                }
                 /**Rotate to face forward**/
-                autoSetupStage++;
+//                autoSetupStage++;
                 break;
             case 9:
                 autoSetupStage++;
@@ -622,7 +729,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             default:
                 robot.resetMotors(true);
-                autoSetupStage = 0;
+//                autoSetupStage = 0;
                 return true;
         }
         return false;
@@ -642,17 +749,18 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 2:
                 //Drive into depot
-                if(robot.driveForward(false, .3, .74)){
+                if(robot.rotateIMU(135, 5)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
             case 3:
                 //Drop ducky into depot
-                /*if(robot.collector.moveTo(straightposition)){
+                /*if(robot.collector.setTargetPosition()){
                     robot.resetMotors(true);
                     autoStage++;
                 }*/
+                if(robot.driveForward(true, 2.7, .6))
                 autoStage++;
                 break;
             case 4:
@@ -663,7 +771,7 @@ public class Game_6832 extends LinearOpMode {
                 }*/
                 autoStage++;
                 break;
-            case 5:
+            /*case 5:
                 //Drive backward to safe distance from wall
                 if(robot.driveForward(true, .3, .7)){
                     robot.resetMotors(true);
@@ -689,9 +797,9 @@ public class Game_6832 extends LinearOpMode {
                 /*if(robot.collector.moveTo(straightposition)){
                     robot.resetMotors(true);
                     autoStage++;
-                }*/
+                }
                 autoStage++;
-                break;
+                break;*/
             default:
                 robot.resetMotors(true);
                 autoStage = 0;
@@ -703,7 +811,6 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-    public boolean supermanTester = false;
 
     public void joystickDrive(){
 
@@ -763,7 +870,7 @@ public class Game_6832 extends LinearOpMode {
         }
 
         if (!suppressJoysticks) {
-            robot.driveMixerTank(-pwrFwd, pwrRot);
+            robot.driveMixerTank(pwrFwd, pwrRot);
         }
 
 
@@ -790,9 +897,9 @@ public class Game_6832 extends LinearOpMode {
         }*/
 
 
-        if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
+        /*if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
             supermanTester = !supermanTester;
-        }
+        }*/
 
         if(gamepad1.y){//y is deposit
             robot.collector.setTargetPosition(robot.collector.posDeposit);
@@ -802,10 +909,45 @@ public class Game_6832 extends LinearOpMode {
             robot.collector.setTargetPosition(robot.collector.posIntake);
             robot.superman.setTargetPosition(robot.superman.posIntake);
         }
-        if()
+        if(gamepad1.x){
+            robot.collector.setTargetPosition(robot.collector.posPreLatch);
+            robot.superman.setTargetPosition(robot.superman.posPreLatch);
+        }
+        if(toggleAllowed(gamepad1.b,b)){
+            if(robot.collector.getTargetPosition()!=robot.collector.posLatch) {
+                robot.collector.setTargetPosition(robot.collector.posLatch);
+                robot.superman.setTargetPosition(robot.superman.posLatch);
+            }
+            else {
+                robot.collector.setTargetPosition(robot.collector.posPostLatch);
+                robot.superman.setTargetPosition(robot.superman.posPostLatch);
+            }
+        }
+
+        if(gamepad1.dpad_down){
+            robot.superman.advance();
+        }
+        if(gamepad1.dpad_up){
+            robot.superman.retreat();
+        }
+        if(gamepad1.dpad_right){
+            robot.collector.advance();
+        }
+        if(gamepad1.dpad_left){
+            robot.collector.retreat();
+        }
+
+        if(gamepad1.left_bumper){
+            robot.collector.kill();
+            robot.superman.kill();
+        }
+        if(gamepad1.right_bumper){
+            robot.collector.restart(.5);
+            robot.superman.restart(.75);
+        }
 
 
-
+        /*
         if(!supermanTester){
             if(gamepad1.y) robot.collector.advance();
             if(gamepad1.a) robot.collector.retreat();
@@ -825,7 +967,7 @@ public class Game_6832 extends LinearOpMode {
             if(Math.abs(gamepad1.left_trigger)>.5) robot.collector.collection();
             else if(Math.abs(gamepad1.right_trigger)>.5) robot.collector.rejection();
             else robot.collector.stopIntake();
-        }
+        }*/
 
 
 
