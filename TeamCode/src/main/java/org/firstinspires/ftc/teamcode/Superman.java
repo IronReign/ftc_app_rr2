@@ -9,14 +9,13 @@ public class Superman {
     int supermanPos = 0;
     double supermanPwr = 0;
     //all filler values; need to be updated to reflect actual positions
-    public int posIntake = 4200;
-    public int posDeposit = 100;
-    public int posPreLatch = 100;
-    public int posLatch = 0;
-    public int posSuperman = 100;
+    public int posIntake = 10;
+    public int posDeposit = 606;
+    public int posPreLatch = 10;
+    public int posLatch = 297;
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
-    public boolean active;
+    public boolean active = true;
 
     public Superman(DcMotor superman) {
         superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -64,11 +63,13 @@ public class Superman {
     }
 
     public void advance() {
-        setTargetPosition(getCurrentPosition() + 60);
+        if(getCurrentPosition()>0)
+            setTargetPosition(getCurrentPosition() + 30);
     }
 
     public void retreat() {
-        setTargetPosition(getCurrentPosition() - 60);
+        if(getCurrentPosition()<400)
+            setTargetPosition(getCurrentPosition() - 30);
     }
 
     public void runToAngle(double angle) {

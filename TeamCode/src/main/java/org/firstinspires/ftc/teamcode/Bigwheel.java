@@ -65,7 +65,7 @@ public class Bigwheel extends LinearOpMode {
     private DcMotor rightDrive = null;
     private DcMotor liftMotor = null;
     private DcMotor intakeMotor = null;
-    //private DcMotor superman = null;
+    //private DcMotor supermanMotor = null;
 
     private boolean isBlue = false;
 
@@ -103,7 +103,7 @@ public class Bigwheel extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         liftMotor = hardwareMap.get(DcMotor.class, "lift");
         intakeMotor = hardwareMap.get(DcMotor.class, "intake");
-        //superman = hardwareMap.get(DcMotor.class, "superman");
+        //supermanMotor = hardwareMap.get(DcMotor.class, "supermanMotor");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -111,7 +111,7 @@ public class Bigwheel extends LinearOpMode {
         liftMotor.setMode(RUN_TO_POSITION);
         rightDrive.setDirection(FORWARD);
         intakeMotor.setDirection(FORWARD);
-        //superman.setMode(RUN_TO_POSITION);
+        //supermanMotor.setMode(RUN_TO_POSITION);
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
@@ -216,11 +216,11 @@ public class Bigwheel extends LinearOpMode {
             intakeMotor.setPower(0);
         }*/
         /*if (gamepad1.dpad_up){
-            superman.setPower(.75);
+            supermanMotor.setPower(.75);
         }else if(gamepad1.dpad_down){
-            superman.setPower(-.75);
+            supermanMotor.setPower(-.75);
         }else{
-            superman.setPower(0);
+            supermanMotor.setPower(0);
         }*/
 
 
@@ -236,7 +236,7 @@ public class Bigwheel extends LinearOpMode {
         }*/
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
-       // telemetry.addData("Motors", "lift (%.2f), superman (%.2f)", liftMotor, superman);
+       // telemetry.addData("Motors", "lift (%.2f), supermanMotor (%.2f)", liftMotor, supermanMotor);
         telemetry.update();
     }
     public void stateSwitch() {

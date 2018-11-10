@@ -42,7 +42,7 @@ public class PoseBigWheel
     DcMotor driveRight = null;
     DcMotor elbowLeft = null;
     DcMotor elbowRight = null;
-    DcMotor superman = null;
+    DcMotor supermanMotor = null;
     DcMotor intake = null;
 
 
@@ -50,7 +50,7 @@ public class PoseBigWheel
     //subsystems
 
     Collector collector = null;
-    Superman supermanSystem;
+    Superman superman;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
@@ -224,14 +224,16 @@ public class PoseBigWheel
         this.elbowLeft = this.hwMap.dcMotor.get("elbowLeft");
         this.elbowRight = this.hwMap.dcMotor.get("elbowRight");
         this.intake = this.hwMap.dcMotor.get("intake");
-        this.superman = this.hwMap.dcMotor.get("superman");
+        this.supermanMotor = this.hwMap.dcMotor.get("supermanMotor");
 
         driveLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
         collector = new Collector(elbowLeft, elbowRight, intake);
         collector.setPower(.5);
-        supermanSystem = new Superman(superman);
+        superman = new Superman(supermanMotor);
 
         isIntakeOn = false;
 
@@ -294,6 +296,7 @@ public class PoseBigWheel
         }
 
         collector.update();
+        superman.update();
 
 
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
@@ -329,7 +332,7 @@ public class PoseBigWheel
         poseY += displacement * Math.sin(poseHeadingRad);
 
 
-        superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void updateSensors(){

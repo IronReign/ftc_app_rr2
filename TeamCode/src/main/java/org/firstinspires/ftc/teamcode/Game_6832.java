@@ -36,9 +36,7 @@ import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.vuforia.HINT;
 import com.vuforia.PIXEL_FORMAT;
-import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Func;
@@ -177,7 +175,7 @@ public class Game_6832 extends LinearOpMode {
 
         configureDashboard();
 
-        VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
+       /* VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         params.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
         params.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
 
@@ -186,12 +184,15 @@ public class Game_6832 extends LinearOpMode {
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
 
         Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
-
-        //set vuforia to look for assets from the Relic Recovery library
-        relicCodex = locale.loadTrackablesFromAsset("RelicVuMark");
-        relicCodex.get(0).setName("RelicTemplate");
-
-        relicTemplate = relicCodex.get(0);
+*/
+        tf = new TensorflowIntegration();
+        tf.initVuforia();
+        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
+            tf.initTfod(hardwareMap);
+        } else {
+            telemetry.addData("Sorry!", "This device is not compatible with TFOD");
+        }
+       // tf.tfInit(hardwareMap, telemetry);
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
@@ -247,8 +248,7 @@ public class Game_6832 extends LinearOpMode {
                 telemetry.addData("Vu", "Inactive");
             }
 
-            tf = new TensorflowIntegration();
-            tf.tfInit(hardwareMap, telemetry);
+
 
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
@@ -263,7 +263,9 @@ public class Game_6832 extends LinearOpMode {
 
 //        robot.jewel.liftArm();
         runtime.reset();
-
+        if (tf.tfod != null) {
+            tf.tfod.activate();
+        }
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -279,6 +281,7 @@ public class Game_6832 extends LinearOpMode {
                         //autonomous();
                         break;
                     case 2:
+                        testDistnace();
                         //autonomous2();
                         break;
                     case 3:
@@ -523,6 +526,26 @@ public class Game_6832 extends LinearOpMode {
         return false;
     }
 **/
+    public boolean testDistnace(){
+        switch(autoSetupStage){
+            case 0:
+                robot.setZeroHeading();
+                robot.resetMotors(true);
+                autoSetupStage++;
+                break;
+            case 1:
+                if(robot.driveForward(false, .5, .5)){
+                    robot.resetMotors(true);
+                    autoSetupStage++;
+                }
+                break;
+            default:
+                robot.resetMotors(true);
+                autoSetupStage = 0;
+                return true;
+        }
+        return false;
+    }
 
     public boolean autoSetup(){
         switch(autoSetupStage) {
@@ -608,8 +631,8 @@ public class Game_6832 extends LinearOpMode {
     private void auto1() { //Starts depot side and end opposite crater
         switch (autoStage) {
             case 0:
-                robot.setZeroHeading();
-                robot.resetMotors(true);
+                //robot.setZeroHeading();
+                //robot.resetMotors(true);
                 autoStage++;
                 break;
             case 1:
@@ -625,7 +648,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 3:
-                //Yeet ducky into depot
+                //Drop ducky into depot
                 /*if(robot.collector.moveTo(straightposition)){
                     robot.resetMotors(true);
                     autoStage++;
@@ -731,8 +754,16 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
+
+        if (robot.getPitch()>45) {
+            if (pwrDamper != .33) {
+                pwrDamper = .33;
+            } else
+                pwrDamper = 1.0;
+        }
+
         if (!suppressJoysticks) {
-            robot.driveMixerTank(pwrFwd, pwrRot);
+            robot.driveMixerTank(-pwrFwd, pwrRot);
         }
 
 
@@ -745,25 +776,35 @@ public class Game_6832 extends LinearOpMode {
         int restposition = 0;
 
         /*if(toggleAllowed(gamepad1.y, y)){
-            if (robot.superman.getCurrentPosition() < standposition && robot.superman.getTargetPosition() < standposition) {
-                robot.superman.setTargetPosition((int) Math.min(robot.superman.getCurrentPosition(), standposition));
-                robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.superman.setPower(.80);
+            if (robot.supermanMotor.getCurrentPosition() < standposition && robot.supermanMotor.getTargetPosition() < standposition) {
+                robot.supermanMotor.setTargetPosition((int) Math.min(robot.supermanMotor.getCurrentPosition(), standposition));
+                robot.supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.supermanMotor.setPower(.80);
             }
         }else{
-            if (robot.superman.getCurrentPosition() > restposition && robot.superman.getTargetPosition() > restposition) {
-                robot.superman.setTargetPosition((int) Math.min(robot.superman.getCurrentPosition(), restposition));
-                robot.superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.superman.setPower(-.80);
+            if (robot.supermanMotor.getCurrentPosition() > restposition && robot.supermanMotor.getTargetPosition() > restposition) {
+                robot.supermanMotor.setTargetPosition((int) Math.min(robot.supermanMotor.getCurrentPosition(), restposition));
+                robot.supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.supermanMotor.setPower(-.80);
             }
         }*/
 
 
         if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
-            supermanTester = true;
-        }else{
-            supermanTester = false;
+            supermanTester = !supermanTester;
         }
+
+        if(gamepad1.y){//y is deposit
+            robot.collector.setTargetPosition(robot.collector.posDeposit);
+            robot.superman.setTargetPosition(robot.superman.posDeposit);
+        }
+        if(gamepad1.a){
+            robot.collector.setTargetPosition(robot.collector.posIntake);
+            robot.superman.setTargetPosition(robot.superman.posIntake);
+        }
+        if()
+
+
 
         if(!supermanTester){
             if(gamepad1.y) robot.collector.advance();
@@ -775,14 +816,14 @@ public class Game_6832 extends LinearOpMode {
             if(gamepad1.right_bumper) tf.tfDisable();
             if(gamepad1.dpad_right) telemetry.addData("TF Detection", "%s", tf.detect());
         }else{
-            if(gamepad2.y) robot.supermanSystem.advance();
-            if(gamepad2.a) robot.supermanSystem.retreat();
-            if(gamepad2.x) robot.supermanSystem.kill();
-            if(gamepad2.b) robot.supermanSystem.restart(.5);
-            if(gamepad2.dpad_up) robot.supermanSystem.setTargetPosition(robot.collector.posIntake);
-            if(gamepad2.dpad_down) robot.supermanSystem.setTargetPosition(robot.collector.posLatch);
-            if(Math.abs(gamepad2.left_trigger)>.5) robot.collector.collection();
-            else if(Math.abs(gamepad2.right_trigger)>.5) robot.collector.rejection();
+            if(gamepad1.y) robot.superman.advance();
+            if(gamepad1.a) robot.superman.retreat();
+            if(gamepad1.x) robot.superman.kill();
+            if(gamepad1.b) robot.superman.restart(.75);
+            if(gamepad1.dpad_up) robot.superman.setTargetPosition(robot.collector.posIntake);
+            if(gamepad1.dpad_down) robot.superman.setTargetPosition(robot.collector.posLatch);
+            if(Math.abs(gamepad1.left_trigger)>.5) robot.collector.collection();
+            else if(Math.abs(gamepad1.right_trigger)>.5) robot.collector.rejection();
             else robot.collector.stopIntake();
         }
 
@@ -796,12 +837,7 @@ public class Game_6832 extends LinearOpMode {
                 //robot.glyphSystem.toggleBottomGrip();
             }
 
-            if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
-                if (pwrDamper != .33) {
-                    pwrDamper = .33;
-                } else
-                    pwrDamper = 1.0;
-            }
+
 
             if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
 //                robot.glyphSystem.tiltPhoneUp();

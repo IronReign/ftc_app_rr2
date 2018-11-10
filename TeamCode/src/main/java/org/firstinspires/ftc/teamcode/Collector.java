@@ -25,15 +25,14 @@ public class Collector {
 
     //all filler values; need to be updated to reflect actual positions
     public int posIntake   = 4200;
-    public int posDeposit  = 100;
-    public int posPreLatch = 100;
-    public int posLatch    = 0;
-    public int posSuperman = 100;
+    public int posDeposit  = 3231;
+    public int posPreLatch = 2025;
+    public int posLatch    = 2718;
 
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
 
-    public boolean active;
+    public boolean active = true;
 
     public Collector(DcMotor elbowLeft, DcMotor elbowRight, DcMotor intake){
 
@@ -95,11 +94,11 @@ public class Collector {
     }
 
     public void advance(){
-        setTargetPosition(getCurrentPosition() + 10);
+        setTargetPosition(getCurrentPosition() + 100);
     }
 
     public void retreat(){
-        setTargetPosition(getCurrentPosition() - 10);
+        setTargetPosition(getCurrentPosition() - 100);
     }
 
     public void runToAngle(double angle){
