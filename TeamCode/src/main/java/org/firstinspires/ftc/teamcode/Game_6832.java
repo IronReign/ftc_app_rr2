@@ -186,14 +186,9 @@ public class Game_6832 extends LinearOpMode {
 
         Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 */
-        /*tf = new TensorflowIntegration();
-        tf.initVuforia();
-        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
-            tf.initTfod(hardwareMap);
-        } else {
-            telemetry.addData("Sorry!", "This device is not compatible with TFOD");
-        }*/
-       // tf.tfInit(hardwareMap, telemetry);
+        tf = new TensorflowIntegration();
+
+
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
@@ -689,12 +684,12 @@ public class Game_6832 extends LinearOpMode {
             case 7:
                 /**Correct appropriate distance to drive to approach center of the mineral**/
                 autoTimer = futureTime(1);
-//                robot.collector.collection();
+                robot.collector.collection();
                 autoSetupStage++;
                 break;
             case 8:
                 if(autoTimer < System.nanoTime()){
-//                    robot.collector.stopIntake();
+                    robot.collector.stopIntake();
                     autoSetupStage++;
                 }
                 /**Rotate to face forward**/
