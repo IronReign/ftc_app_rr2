@@ -932,6 +932,8 @@ public class Game_6832 extends LinearOpMode {
             robot.collector.retreat();
         }
 
+       robot.intake.setPower(gamepad1.left_trigger - gamepad1.right_trigger);
+
         if(gamepad1.left_bumper){
             robot.collector.kill();
             robot.superman.kill();
