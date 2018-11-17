@@ -116,6 +116,8 @@ public class TensorflowIntegration {
         }
     }
 
+    public VuforiaLocalizer getInternalVuforia() {return vuforia;}
+
     public GoldPos detect() {
         List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
         if (updatedRecognitions != null) {
