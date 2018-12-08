@@ -1,23 +1,17 @@
 /*
 Copyright (c) 2016 Robert Atkinson
-
 All rights reserved.
-
 Redistribution and use in source and binary forms, with or without modification,
 are permitted (subject to the limitations in the disclaimer below) provided that
 the following conditions are met:
-
 Redistributions of source code must retain the above copyright notice, this list
 of conditions and the following disclaimer.
-
 Redistributions in binary form must reproduce the above copyright notice, this
 list of conditions and the following disclaimer in the documentation and/or
 other materials provided with the distribution.
-
 Neither the name of Robert Atkinson nor the names of his contributors may be used to
 endorse or promote products derived from this software without specific prior
 written permission.
-
 NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
 LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -32,6 +26,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -45,12 +40,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
+
+import static org.firstinspires.ftc.teamcode.PoseKraken.servoNormalize;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -65,45 +66,31 @@ import java.util.Locale;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Game_Surtr", group="Linear Opmode")  // @Autonomous(...) is the other common choice
+@TeleOp(name="Cart", group="Linear Opmode")  // @Autonomous(...) is the other common choice
 //  @Autonomous
 
-public class Game_Surtur extends LinearOpMode {
+public class Cart extends LinearOpMode {
 
     //hi im testing something
 
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private PoseSurtr Surtr = new PoseSurtr();
-
+    private PoseCart robot = new PoseCart();
 
     private boolean active = true;
     boolean joystickDriveStarted = false;
     public boolean suppressJoysticks = false;
-    boolean balancing = false;
 
     private int state = 0;
-    private boolean isBlue = false;
-
 
     //drive train control variables
     private double pwrDamper = 1;
     private double pwrFwd = 0;
-    private double pwrStf = 0;
     private double pwrRot = 0;
-    private double pwrFwdL = 0;
-    private double pwrStfL = 0;
-    private double pwrFwdR = 0;
-    private double pwrStfR = 0;
-    private boolean enableTank = false;
-    private int direction = -1;  //-1 to reverse direction
-
-
-    //staging and timer variables
-    private int autoStage = 0;
-    private int autoSetupStage = 0;
-    private  int vuTestMode = 0;
+    private boolean bypassJoysticks = false;
+    private long damperTimer = 0;
+    private int direction = 1;  //-1 to reverse direction
 
 
     //vision objects/vision-based variables
@@ -120,12 +107,13 @@ public class Game_Surtur extends LinearOpMode {
 
     //sensors/sensing-related variables
     Orientation angles;
+    boolean jewelMatches = false;
     boolean vuActive = false;
 
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
-    double testableDouble = Surtr.kpDrive;
+    double testableDouble = robot.kpDrive;
     double testableHeading = 0;
     boolean testableDirection = true;
 
@@ -150,7 +138,7 @@ public class Game_Surtur extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        Surtr.init(this.hardwareMap, isBlue);
+        robot.init(this.hardwareMap);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -172,19 +160,19 @@ public class Game_Surtur extends LinearOpMode {
         relicCodex.get(0).setName("RelicTemplate");
 
 
+
         relicTemplate = relicCodex.get(0);
 
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
         //activate vuforia to start identifying targets/vuMarks
 //        relicCodex.activate();
-        Surtr.resetMotors(true);
 
         mDetector = new ColorBlobDetector();
 
+        relicCodex.activate();
+
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
-
-
 
             synchronized (this) {
                 try {
@@ -194,7 +182,6 @@ public class Game_Surtur extends LinearOpMode {
                     return;
                 }
             }
-
 
             stateSwitch();
 
@@ -207,11 +194,7 @@ public class Game_Surtur extends LinearOpMode {
 //            else if(toggleAllowed(gamepad1.start, startBtn) && state==0){
 //                relicCodex.deactivate();
 //            }
-            if(toggleAllowed(gamepad1.x,x)) {
 
-                    isBlue = !isBlue;
-
-            }
             if(vuActive){
                 telemetry.addData("Vu", "Active");
             }
@@ -220,7 +203,6 @@ public class Game_Surtur extends LinearOpMode {
             }
 
             telemetry.addData("Status", "Initialized");
-            telemetry.addData("Status", "Side: " + getAlliance());
             telemetry.update();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
@@ -229,7 +211,7 @@ public class Game_Surtur extends LinearOpMode {
 
 
 
-//        Surtr.jewel.liftArm();
+//        robot.jewel.liftArm();
         runtime.reset();
 
 
@@ -242,79 +224,75 @@ public class Game_Surtur extends LinearOpMode {
                     case 0: //code for tele-op control
                         joystickDrive();
                         break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    case 4:
+                    case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
                         demo((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
                         break;
-                    case 5: //provides data for forwards/backwards calibration
-                        joystickDriveStarted = false;
-                        if(Surtr.driveForward(true, .4, .35)) {
-                            state = 0;
-                            active = false;
-                        }
+                    case 2:
+
                         break;
-                    case 6: //provides data for left/right calibration
-                        joystickDriveStarted = false;
-                        if(Surtr.driveIMUDistance(Surtr.kpDrive, .5, 0, false, .5, false)) active = false;
-                        break;
-                    case 7:
-                        break;
-                    case 8: //servo testing mode
-//                        Surtr.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
-//                        Surtr.relicArm.closeGrip();
-                        break;
-                    case 9:
-                        break;
-                    case 10:
+                    case 3:
+
                         break;
                     default:
-                        Surtr.stopAll();
+                        robot.stopAll();
                         break;
                 }
-                Surtr.updateSensors();
+                robot.updateSensors();
             }
             else {
-                Surtr.stopAll();
+                robot.stopAll();
             }
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
     }
 
-
-
-
     public void demo(VuforiaTrackableDefaultListener beaconTarget, double distance){
-        if(gamepad1.x){
-            Surtr.maintainHeading(gamepad1.x);
-        }
-        else {
+//        if(gamepad1.x){
+//            robot.maintainHeading(gamepad1.x);
+//        }
+//        else {
+//
+//
+//        }
+//        if(gamepad1.y) {
+            robot.driveToTargetVu(beaconTarget, distance, .5, true);
+//        }
 
 
-        }
-        if(gamepad1.y) {
-            Surtr.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, true, false);
-        }
-
-
-        if(gamepad1.a) {
-            Surtr.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, false, false);
-        }
+//        if(gamepad1.a) {
+//            robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, false, false);
+//        }
 
     }
 
 
 
 
+    public String getRelicCodexStr(){
+        RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
+        if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
+            if(relicConfig == RelicRecoveryVuMark.LEFT) return "left";
+            else if(relicConfig == RelicRecoveryVuMark.RIGHT) return "right";
+            else return "center";
+        }
+        return "unknown";
+    }
+
+    public int getRelicCodex(){
+        RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
+        if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
+            if(relicConfig == RelicRecoveryVuMark.LEFT) return 0;
+            else if(relicConfig == RelicRecoveryVuMark.RIGHT) return 2;
+            else return 1;
+        }
+        return 1;
+    }
 
 
 
-    public void joystickDrive(){
+
+    public void joystickDrive() {
 
         /*button indexes:
         0  = a
@@ -331,72 +309,17 @@ public class Game_Surtur extends LinearOpMode {
         */
 
         if (!joystickDriveStarted) {
-            Surtr.resetMotors(true);
             joystickDriveStarted = true;
         }
 
-//        else{
-//            if(toggleAllowed(gamepad1.b, b)){
-//                Surtr.glyphSystem.togglePhoneTilt();
-//            }
-//        }
-
-        if (balancing) { //balance with a simple drive forward from edge of stone
-
-            if(Surtr.driveForward(true, .42, .45)){
-                suppressJoysticks=false;
-                Surtr.resetMotors(true);
-                balancing = false;
-                }
-        }
-            else {
-                suppressJoysticks = false;
-
-            }
-
-//        if(relicMode){
-//            Surtr.glyphSystem.tiltPhoneMax();
-//        }
-
-
-
-
         pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
-        pwrStf = direction * pwrDamper * gamepad1.left_stick_x;
-        pwrRot = pwrDamper * .75 * gamepad1.right_stick_x;
+        pwrRot = pwrDamper * gamepad1.right_stick_x;
 
+        robot.driveMixerTank(pwrFwd, pwrRot, gamepad1.right_bumper);
 
-//        pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
-
-        pwrFwdL = direction * pwrDamper * gamepad1.left_stick_y;
-        pwrStfL = direction * pwrDamper * gamepad1.left_stick_x;
-
-        pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
-        pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
-
-        if (!suppressJoysticks) {
-            if (enableTank) {
-//            Surtr.driveMixerMecTank(pwrFwdL, pwrStfL, pwrFwdR, pwrStfR);
-                Surtr.driveMixerMecField(pwrFwd, pwrStf, pwrRot, Surtr.getHeading());
-            } else {
-                Surtr.driveMixerMec(pwrFwd, pwrStf, pwrRot);
-            }
-        }
-
-        if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
-            if (pwrDamper != .33) {
-                pwrDamper = .33;
-            } else
-                pwrDamper = 1.0;
-        }
-
-        if(toggleAllowed(gamepad1.x, x)){
-            Surtr.toggleCannon();
-        }
     }
 
-
-    //the method that controls the main state of the Surtr; must be called in the main loop outside of the main switch
+    //the method that controls the main state of the robot; must be called in the main loop outside of the main switch
     public void stateSwitch() {
 
         /*button indexes:
@@ -420,9 +343,8 @@ public class Game_Surtur extends LinearOpMode {
                 if (state < 0) {
                     state = 10;
                 }
-                Surtr.resetMotors(true);
                 active = false;
-                }
+            }
 
             if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
 
@@ -430,28 +352,11 @@ public class Game_Surtur extends LinearOpMode {
                 if (state > 10) {
                     state = 0;
                 }
-                Surtr.resetMotors(true);
                 active = false;
             }
-
-//            if (!active) {
-//                if (toggleAllowed(gamepad1.b, b)) {
-//
-//                    state++;
-//                    if (state > 10) {
-//                        state = 0;
-//                    }
-//                    Surtr.resetMotors(true);
-//                    active = false;
-//                    resetAuto();
-//                    codexFlashStage = 0;
-//
-//                }
-//            }
         }
 
         if (toggleAllowed(gamepad1.start, startBtn)) {
-            Surtr.resetMotors(true);
             active = !active;
         }
     }
@@ -493,16 +398,6 @@ public class Game_Surtur extends LinearOpMode {
     }
 
 
-    public String getAlliance(){
-        if(isBlue)
-            return "Blue";
-        return "Red";
-    }
-
-
-
-
-
     void configureDashboard() {
         // Configure the dashboard.
 
@@ -514,7 +409,7 @@ public class Game_Surtur extends LinearOpMode {
                 // Acquiring the angles is relatively expensive; we don't want
                 // to do that in each of the three items that need that info, as that's
                 // three times the necessary expense.
-                angles = Surtr.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+                angles = robot.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
             }
         });
 
@@ -530,50 +425,34 @@ public class Game_Surtur extends LinearOpMode {
                         return Integer.toString(state);
                     }
                 });
-//                .addData("servoJewelExtender", new Func<String>() {
-//                    @Override public String value() {
-//                        return Integer.toString(Surtr.jewel.jewelPos);
-//                    }
-//                });
 //        telemetry.addLine()
 //                .addData("Kp", new Func<String>() {
 //                    @Override public String value() {
-//                        return "" + Surtr.getKpDrive();
+//                        return "" + robot.getKpDrive();
 //                    }
 //                })
 //                .addData("Kd", new Func<String>() {
 //                    @Override public String value() {
-//                        return "" + Surtr.getKdDrive();
+//                        return "" + robot.getKdDrive();
 //                    }
 //                });
 //
         telemetry.addLine()
 //                .addData("phone pos", new Func<String>() {
 //                    @Override public String value() {
-//                        return Integer.toString(Surtr.glyphSystem.maintainPhoneTilt());
+//                        return Integer.toString(robot.glyphSystem.maintainPhoneTilt());
 //                    }
 //                })
                 .addData("status", new Func<String>() {
                     @Override public String value() {
-                        return Surtr.imu.getSystemStatus().toShortString();
+                        return robot.imu.getSystemStatus().toShortString();
                     }
                 })
                 .addData("calib", new Func<String>() {
                     @Override public String value() {
-                        return Surtr.imu.getCalibrationStatus().toString();
+                        return robot.imu.getCalibrationStatus().toString();
                     }
                 });
-//                .addData("Jewel Red", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + Surtr.colorJewel.red();
-//                    }
-//                })
-//
-//                .addData("Jewel Blue", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + Surtr.colorJewel.blue();
-//                    }
-//                })
 
 //                .addData("Relic Codex", new Func<String>() {
 //                    @Override public String value() {
@@ -586,99 +465,35 @@ public class Game_Surtur extends LinearOpMode {
 //                    }
 //                });
 
-//        telemetry.addLine()
+        telemetry.addLine()
 //                .addData("heading", new Func<String>() {
 //                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(Surtr.getHeading());
+//                        return formatAngle(angles.angleUnit, angles.firstAngle);
+//                        return Double.toString(robot.getHeading());
 //                    }
 //                })
 //                .addData("pitch", new Func<String>() {
 //                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(Surtr.getPitch());
+//                        return formatAngle(angles.angleUnit, angles.firstAngle);
+//                        return Double.toString(robot.getPitch());
 //                    }
 //                })
 //                .addData("roll", new Func<String>() {
 //                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(Surtr.getRoll());
-//                    }
-//                });
-//                .addData("glyph roll", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(Surtr.glyphSystem.roll);
-//                    }
-//                })
-//                .addData("glyph ticks", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Integer.toString(Surtr.glyphSystem.getMotorLiftPosition());
-//                    }
-//                });
-//                .addData("headingRaw", new Func<String>() {
-//                    @Override public String value() {
 //                        return formatAngle(angles.angleUnit, angles.firstAngle);
-//
-//                    }
-//                })
-//                .addData("headingOffset", new Func<String>() {
-//                    @Override public String value() {
-//                        return Double.toString(Surtr.offsetHeading);
-//
-//                    }
-//                })
-//
-//                .addData("rollRaw", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.secondAngle);
-//                        return Double.toString(Surtr.getRoll());
-//                    }
-//                })
-//                .addData("pitchRaw", new Func<String>() {
-//                    @Override public String value() {
-//                        return formatAngle(angles.angleUnit, angles.thirdAngle);
+//                        return Double.toString(robot.getRoll());
 //                    }
 //                });
-//        telemetry.addLine()
-//                .addData("auto stage", new Func<String>() {
-//                    @Override public String value() {
-//                        return String.valueOf(autoStage);
-//                    }
-//                })
-                //.addData("glyph distance", new Func<String>() {
-                //    @Override public String value() {
-                //        return String.valueOf(Surtr.glyphUpper.getDistance(DistanceUnit.CM));
-                //    }
-                //})
-//                .addData("TicksFL", new Func<String>() {
-//                    @Override public String value() {
-//                        return Long.toString(Surtr.motorFront.getCurrentPosition());
-//                    }
-//                })
-//                .addData("TicksBL", new Func<String>() {
-//                    @Override public String value() {
-//                        return Long.toString(Surtr.motorBack.getCurrentPosition());
-//                    }
-//                })
-//                .addData("TicksAvg", new Func<String>() {
-//                    @Override public String value() {
-//                        return Long.toString(Surtr.getAverageTicks());
-//                    }
-//                });
-//        telemetry.addLine()
-//
-//                .addData("PID Calc", new Func<String>() {
-//                    @Override public String value() {
-//                        return Double.toString(Surtr.drivePID.performPID() );
-//                    }
-//                })
-//                .addData("PID Err", new Func<String>() {
-//                    @Override public String value() {
-//                        return Double.toString(Surtr.drivePID.getError());
-//                    }
-//                });
+                .addData("PID Calc", new Func<String>() {
+                    @Override public String value() {
+                        return Double.toString(robot.drivePID.performPID() );
+                    }
+                })
+                .addData("PID Err", new Func<String>() {
+                    @Override public String value() {
+                        return Double.toString(robot.drivePID.getError());
+                    }
+                });
     }
     String formatAngle(AngleUnit angleUnit, double angle) {
         return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));

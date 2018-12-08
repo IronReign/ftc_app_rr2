@@ -261,6 +261,18 @@ public class PoseBigWheel
     }
 
 
+
+    public void resetIMU(){
+        BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+        parametersIMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled = true;
+        parametersIMU.loggingTag = "IMU";
+
+        imu.initialize(parametersIMU);
+    }
+
+
     /**
      * update the current location of the robot. This implementation gets heading and orientation
      * from the Bosch BNO055 IMU and assumes a simple differential steer robot with left and right motor
@@ -337,7 +349,6 @@ public class PoseBigWheel
         poseY += displacement * Math.sin(poseHeadingRad);
 
 
-        supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void updateSensors(){
@@ -923,7 +934,7 @@ public class PoseBigWheel
         return vuDepth - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
     }//getJewelConfig
 
-    public double driveToBeacon(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
+    public double driveToTargetVu(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
 
         //double vuDepth = 0;
         double pwr = 0;
@@ -951,7 +962,7 @@ public class PoseBigWheel
         }//else
 
         return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
-    }//driveToBeacon
+    }//driveToTargetVu
 
 
     public double getBeaconOffset(boolean isBlue, int beaconConfig){

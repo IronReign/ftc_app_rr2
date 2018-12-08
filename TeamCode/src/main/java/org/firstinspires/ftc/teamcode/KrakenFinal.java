@@ -49,7 +49,7 @@ import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
 
-import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
+import static org.firstinspires.ftc.teamcode.PoseKraken.servoNormalize;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
@@ -77,7 +77,7 @@ public class KrakenFinal extends LinearOpMode {
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private Pose robot = new Pose();
+    private PoseKraken robot = new PoseKraken();
 
     SoundPlayer deadShotSays = SoundPlayer.getInstance();
 

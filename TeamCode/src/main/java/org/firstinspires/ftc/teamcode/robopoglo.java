@@ -33,11 +33,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import static org.firstinspires.ftc.teamcode.Pose.servoNormalize;
+import static org.firstinspires.ftc.teamcode.PoseKraken.servoNormalize;
 
 
 /**

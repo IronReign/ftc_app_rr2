@@ -262,6 +262,7 @@ public class Game_6832 extends LinearOpMode {
         if (tf.tfod != null) {
             tf.tfod.activate();
         }*/
+        robot.superman.restart(.75);
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -305,6 +306,8 @@ public class Game_6832 extends LinearOpMode {
                     case 8: //servo testing mode
 //                        robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
 //                        robot.relicArm.closeGrip();
+                        if(gamepad1.x)
+                            robot.maintainHeading(gamepad1.x);
                         break;
                     case 9:
                         //autonomous3();
@@ -348,12 +351,12 @@ public class Game_6832 extends LinearOpMode {
 
         }
         if(gamepad1.y) {
-            //robot.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, true, false);
+            //robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, true, false);
         }
 
 
         if(gamepad1.a) {
-           // robot.driveToBeacon(beaconTarget, isBlue, 0, distance, .5, false, false);
+           // robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, false, false);
         }
 
     }
@@ -939,8 +942,10 @@ public class Game_6832 extends LinearOpMode {
             robot.superman.kill();
         }
         if(gamepad1.right_bumper){
-            robot.collector.restart(.5);
+            //robot.resetIMU();
+            robot.collector.restart(1);
             robot.superman.restart(.75);
+            robot.maintainHeading(gamepad1.right_bumper);
         }
 
 
@@ -1188,6 +1193,23 @@ public class Game_6832 extends LinearOpMode {
                         return Integer.toString(state);
                     }
                 });
+        telemetry.addLine()
+                .addData("roll", new Func<String>() {
+                    @Override public String value() {
+                        return robot.getRoll()+"";
+                    }
+                })
+                .addData("pitch", new Func<String>() {
+                    @Override public String value() {
+                        return robot.getPitch()+"";
+                    }
+                })
+                .addData("yaw", new Func<String>() {
+                    @Override public String value() {
+                        return robot.getHeading()+"";
+                    }
+                });
+
 //                .addData("Servo Tester", new Func<String>() {
 //                    @Override public String value() {
 //                        return Integer.toString(robot.servoTesterPos);

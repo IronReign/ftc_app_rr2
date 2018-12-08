@@ -64,12 +64,12 @@ public class Superman {
     }
 
     public void advance() {
-        if(getCurrentPosition()>0)
+        if(getCurrentPosition()<500)
             setTargetPosition(getCurrentPosition() + 30);
     }
 
     public void retreat() {
-        if(getCurrentPosition()<400)
+        if(getCurrentPosition()>-30)
             setTargetPosition(getCurrentPosition() - 30);
     }
 

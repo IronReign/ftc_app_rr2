@@ -29,7 +29,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefau
  * @since 2016-12-10
  */
 
-public class Pose
+public class PoseKraken
 {
 
     HardwareMap hwMap;
@@ -186,7 +186,7 @@ public class Pose
      * @param heading The heading of the robot
      * @param speed The speed of the robot
      */
-    public Pose(double x, double y, double heading, double speed)
+    public PoseKraken(double x, double y, double heading, double speed)
     {
 
         poseX     = x;
@@ -205,7 +205,7 @@ public class Pose
      * @param y     The position relative to the y axis of the field
      * @param angle The vuAngle of the robot
      */
-    public Pose(double x, double y, double angle)
+    public PoseKraken(double x, double y, double angle)
     {
 
         poseX     = x;
@@ -219,7 +219,7 @@ public class Pose
      * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 vuAngle.
      * Useful for determining the Pose of the robot relative to the origin.
      */
-    public Pose()
+    public PoseKraken()
     {
 
         poseX     = 0;
@@ -1418,7 +1418,7 @@ public class Pose
         }//else
 
         return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
-    }//driveToBeacon
+    }//driveToTargetVu
 
 
     public double getBeaconOffset(boolean isBlue, int beaconConfig){

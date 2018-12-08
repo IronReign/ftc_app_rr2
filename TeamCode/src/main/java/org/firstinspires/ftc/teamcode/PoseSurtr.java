@@ -1353,7 +1353,7 @@ public class PoseSurtr
         }//else
 
         return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
-    }//driveToBeacon
+    }//driveToTargetVu
 
 
     public double getBeaconOffset(boolean isBlue, int beaconConfig){
