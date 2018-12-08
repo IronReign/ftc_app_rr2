@@ -52,7 +52,7 @@ import com.qualcomm.robotcore.util.Range;
  */
 
 @TeleOp(name="CartBot", group="Linear Opmode")
-//@Disabled
+@Disabled
 public class cartbot extends LinearOpMode {
 
     // Declare OpMode members.
