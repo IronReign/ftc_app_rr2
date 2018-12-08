@@ -123,7 +123,7 @@ public class TensorflowIntegration implements VisionProvider {
         if (updatedRecognitions != null) {
             cacheRecognitions = updatedRecognitions;
         }
-        if (cacheRecognitions.size() == 3) {
+        if (cacheRecognitions.size() == 2) {
             int goldMineralX = -1;
             int silverMineral1X = -1;
             int silverMineral2X = -1;
@@ -135,6 +135,9 @@ public class TensorflowIntegration implements VisionProvider {
                 } else {
                     silverMineral2X = (int) recognition.getLeft();
                 }
+            }
+            if(goldMineralX==-1){
+                cacheRecognitions.get(2).getLeft();
             }
             if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1)
                 if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
