@@ -256,7 +256,7 @@ public class Cart extends LinearOpMode {
 //
 //        }
 //        if(gamepad1.y) {
-            robot.driveToTargetVu(beaconTarget, distance, .5, true);
+            robot.driveToTargetVu(beaconTarget, distance, .75, !gamepad1.x);
 //        }
 
 
@@ -464,6 +464,18 @@ public class Cart extends LinearOpMode {
 //                        return Integer.toString(savedVuMarkCodex);
 //                    }
 //                });
+
+        telemetry.addLine()
+                .addData("left", new Func<String>() {
+                    @Override public String value() {
+                        return robot.driveLeft.getPosition() + "";
+                    }
+                })
+                .addData("right", new Func<String>() {
+                    @Override public String value() {
+                        return robot.driveLeft.getPosition() + "";
+                    }
+                });
 
         telemetry.addLine()
 //                .addData("heading", new Func<String>() {

@@ -36,13 +36,13 @@ public class PoseCart
 
     PIDController drivePID = new PIDController(0, 0, 0);
 
-    public double kpDrive = 0.035; //proportional constant multiplier
-    public double kiDrive = 0.000; //integral constant multiplier
-    public double kdDrive = 0.001; //derivative constant multiplier
+    public double kpDrive = 0.09; //proportional constant multiplier
+    public double kiDrive = 0.00; //integral constant multiplier
+    public double kdDrive = 0.04; //derivative constant multiplier
 
 
-    private Servo driveLeft = null;
-    private Servo driveRight = null;
+    public Servo driveLeft = null;
+    public Servo driveRight = null;
     private Servo cannon = null;
     private int drive = 1500;
     private long damperTimer = 0;
@@ -369,7 +369,7 @@ public class PoseCart
     public void movePID(double Kp, double Ki, double Kd, double pwr, double currentAngle, double targetAngle) {
 
         //initialization of the PID calculator's output range, target value and multipliers
-        drivePID.setOutputRange(-.5,.5);
+        drivePID.setOutputRange(-.75,.75);
         drivePID.setPID(Kp, Ki, Kd);
         drivePID.setSetpoint(targetAngle);
         drivePID.enable();
@@ -828,7 +828,7 @@ public class PoseCart
                 pwr = 0; //(vuDepth - bufferDistance/1200.0);
             else
                 // this is a very simple proportional on the distance to target - todo - convert to PID control
-                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
+                pwr = -clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/600.0));//but this should be equivalent
 //            Log.i("Beacon Angle", String.valueOf(vuAngle));
             movePID(kpDrive, kiDrive, kdDrive, pwr, -vuAngle, 0);
 
