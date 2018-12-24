@@ -30,6 +30,7 @@ public class Collector {
     public int posLatch    = 2718;
     public int posPostLatch = 20;
 
+
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
 
@@ -95,11 +96,12 @@ public class Collector {
     }
 
     public void advance(){
-        setTargetPosition(getCurrentPosition() + 100);
+
+        setTargetPosition(Math.min(getCurrentPosition() + 100, posIntake));
     }
 
     public void retreat(){
-        setTargetPosition(getCurrentPosition() - 100);
+        setTargetPosition(Math.max(getCurrentPosition() - 100, 0));
     }
 
     public void runToAngle(double angle){
