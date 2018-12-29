@@ -26,10 +26,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.vision;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -38,10 +36,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.teamcode.RC;
 
 import java.util.List;
 
-public class TensorflowIntegration {
+public class TensorflowIntegration implements VisionProvider {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -96,7 +95,8 @@ public class TensorflowIntegration {
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
     }
 
-    public void tfInit(HardwareMap hardwareMap, Telemetry telemetry) {
+    @Override
+    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry) {
         initVuforia();
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
@@ -110,12 +110,14 @@ public class TensorflowIntegration {
         }
     }
 
-    public void tfDisable() {
+    @Override
+    public void shutdownVision() {
         if (tfod != null) {
             tfod.shutdown();
         }
     }
 
+    @Override
     public GoldPos detect() {
         List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
         if (updatedRecognitions != null) {
@@ -145,10 +147,6 @@ public class TensorflowIntegration {
         }
         return GoldPos.ERROR1;
 
-    }
-
-    public enum GoldPos {
-        LEFT, MIDDLE, RIGHT, ERROR1;
     }
 
 }
