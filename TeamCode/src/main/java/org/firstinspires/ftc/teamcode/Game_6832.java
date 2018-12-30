@@ -38,7 +38,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.PIXEL_FORMAT;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -50,6 +49,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
+import org.firstinspires.ftc.teamcode.vision.GoldPos;
+import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
+import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
+import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 
 import java.util.Locale;
 
@@ -164,7 +167,9 @@ public class Game_6832 extends LinearOpMode {
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
 
-    TensorflowIntegration tf;
+    private VisionProvider vp;
+    private int visionProvider;
+    private static final Class<? extends VisionProvider>[] visionProviders = new Class[]{TensorflowIntegration.class, OpenCVIntegration.class};
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -186,7 +191,9 @@ public class Game_6832 extends LinearOpMode {
 
         Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 */
-        tf = new TensorflowIntegration();
+
+//        Instead will instantiate after init loop
+//        vp = new TensorflowIntegration();
 
 
 
@@ -236,6 +243,11 @@ public class Game_6832 extends LinearOpMode {
                 if(autoDelay>15) autoDelay = 0;
 
             }
+            if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+                visionProvider++;
+                if(visionProvider == visionProviders.length)
+                    visionProvider = 0;
+            }
 
             if(vuActive){
                 telemetry.addData("Vu", "Active");
@@ -249,13 +261,17 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
+            telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProvider].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
             telemetry.update();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
-
-
+        try {
+            vp = visionProviders[visionProvider].newInstance();
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException(e);
+        }
 
 //        robot.jewel.liftArm();
        /* runtime.reset();
@@ -614,29 +630,34 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 1:
                 /**Detach from lander**/
-                //telemetry.addData("TF Detection", "%s", tf.detect());
                 autoSetupStage++;
                 break;
             case 2:
                 /**Turn on camera to see which is gold**/
-                tf.tfInit(hardwareMap, telemetry);
-                TensorflowIntegration.GoldPos gp = tf.detect();
-                switch (gp) {
-                    case LEFT:
-                        mineralState = 0;
-                        break;
-                    case MIDDLE:
-                        mineralState = 1;
-                        break;
-                    case RIGHT:
-                        mineralState = 2;
-                        break;
-                    default:
-                        mineralState = 1;
-                        break;
+                vp.initializeVision(hardwareMap, telemetry);
+                GoldPos gp = vp.detect();
+                // Hold state lets us know that we haven't finished looping through detection
+                if (gp != GoldPos.HOLD_STATE) {
+                    switch (gp) {
+                        case LEFT:
+                            mineralState = 0;
+                            break;
+                        case MIDDLE:
+                            mineralState = 1;
+                            break;
+                        case RIGHT:
+                            mineralState = 2;
+                            break;
+                        default: //ERROR1, ERROR2, ERROR3
+                            mineralState = 1;
+                            break;
+                    }
+                    telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
+                    vp.shutdownVision();
+                    autoSetupStage++;
+                } else {
+                    telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
                 }
-                tf.tfDisable();
-                autoSetupStage++;
                 break;
             case 3:
                 if(turnMineral()){
