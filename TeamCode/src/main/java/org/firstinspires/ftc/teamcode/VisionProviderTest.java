@@ -32,24 +32,47 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
 import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
+import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Tensorflow Test", group = "Concept")
-public class TFTest extends LinearOpMode {
+@TeleOp(name = "VisionProvider Test", group = "Linear Opmode")
+public class VisionProviderTest extends LinearOpMode {
+
+    private static final Class<? extends VisionProvider>[] visionProviders =
+            new Class[]{TensorflowIntegration.class, OpenCVIntegration.class};
     @Override
     public void runOpMode() {
-        TensorflowIntegration tf = new TensorflowIntegration();
-        tf.tfInit(hardwareMap, telemetry);
+        int visionProviderState = 0;
+        boolean toggle = false;
+        while (!isStarted()) {
+            if (gamepad1.dpad_left && !toggle) {
+                toggle = true;
+                visionProviderState++;
+                if(visionProviderState == visionProviders.length)
+                    visionProviderState = 0;
+            } else {
+                toggle = false;
+            }
+        }
         telemetry.addData("Status", "Initialized");
+        telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProviderState].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
         telemetry.update();
         waitForStart();
+        VisionProvider vp;
+        try {
+            vp = visionProviders[visionProviderState].newInstance();
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException(e);
+        }
+        vp.initializeVision(hardwareMap, telemetry);
         while (opModeIsActive()) {
-            telemetry.addData("TF", "%s", tf.detect());
+            telemetry.addData("VisionDetection: ", "%s", vp.detect());
             telemetry.update();
         }
-        tf.tfDisable();
+        vp.shutdownVision();
     }
 }
