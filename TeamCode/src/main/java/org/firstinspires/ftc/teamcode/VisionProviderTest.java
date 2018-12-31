@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
 import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
@@ -46,6 +47,8 @@ public class VisionProviderTest extends LinearOpMode {
             new Class[]{TensorflowIntegration.class, OpenCVIntegration.class};
     @Override
     public void runOpMode() {
+        telemetry.addData("Status", "Configuration");
+        telemetry.update();
         int visionProviderState = 0;
         boolean toggle = false;
         while (!isStarted()) {
@@ -57,11 +60,11 @@ public class VisionProviderTest extends LinearOpMode {
             } else {
                 toggle = false;
             }
+            telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProviderState].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
+            telemetry.update();
         }
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProviderState].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
+        telemetry.addData("Status", "Started");
         telemetry.update();
-        waitForStart();
         VisionProvider vp;
         try {
             vp = visionProviders[visionProviderState].newInstance();
@@ -69,8 +72,12 @@ public class VisionProviderTest extends LinearOpMode {
             throw new RuntimeException(e);
         }
         vp.initializeVision(hardwareMap, telemetry);
+        GoldPos gp;
         while (opModeIsActive()) {
-            telemetry.addData("VisionDetection: ", "%s", vp.detect());
+            gp = vp.detect();
+            if (gp != GoldPos.HOLD_STATE)
+                telemetry.addData("VisionDetection", "%s", vp.detect());
+            telemetry.addData("HoldState", "%s", gp == GoldPos.HOLD_STATE ? "YES" : "NO");
             telemetry.update();
         }
         vp.shutdownVision();
