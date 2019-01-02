@@ -168,7 +168,7 @@ public class Game_6832 extends LinearOpMode {
     private int startBtn = 10; //toggle active (always)
 
     private VisionProvider vp;
-    private int visionProvider;
+    private int visionProviderState;
     private static final Class<? extends VisionProvider>[] visionProviders = new Class[]{TensorflowIntegration.class, OpenCVIntegration.class};
 
     @Override
@@ -244,9 +244,9 @@ public class Game_6832 extends LinearOpMode {
 
             }
             if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                visionProvider++;
-                if(visionProvider == visionProviders.length)
-                    visionProvider = 0;
+                visionProviderState++;
+                if(visionProviderState == visionProviders.length)
+                    visionProviderState = 0;
             }
 
             if(vuActive){
@@ -261,14 +261,14 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
-            telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProvider].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
+            telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProviderState].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
             telemetry.update();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
         try {
-            vp = visionProviders[visionProvider].newInstance();
+            vp = visionProviders[visionProviderState].newInstance();
         } catch (IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
@@ -399,149 +399,6 @@ public class Game_6832 extends LinearOpMode {
         }
         return 1;
     }
-
-    /**public boolean flashRelicCodex(){
-        switch (savedVuMarkCodex){
-            case 0:
-                switch (codexFlashStage){
-                    case 0:
-                        codexFlashTimer = futureTime(.5f);
-                        robot.headLampOff();
-                        codexFlashStage++;
-                        break;
-                    case 1:
-                        if(codexFlashTimer < System.nanoTime()) {
-                            codexFlashTimer = futureTime(.15f);
-                            robot.headLampOn();
-                            codexFlashStage++;
-                        }
-                        break;
-                    case 2:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(0);
-                            codexFlashTimer = futureTime(.5f);
-                            codexFlashStage++;}
-                        break;
-                    case 3:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLampOn();
-                            codexFlashStage = 0;
-                            return true;
-                        }
-                        break;
-                    default:
-                        codexFlashStage = 0;
-                        break;
-                }
-                break;
-            case 1:
-                switch (codexFlashStage){
-                    case 0:
-                        codexFlashTimer = futureTime(.5f);
-                        robot.headLamp.setPower(0);
-                        codexFlashStage++;
-                        break;
-                    case 1:
-                        if(codexFlashTimer < System.nanoTime()) {
-                            codexFlashTimer = futureTime(.15f);
-                            robot.headLampOn();
-                            codexFlashStage++;
-                        }
-                        break;
-                    case 2:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(0);
-                            codexFlashTimer = futureTime(.15f);
-                            codexFlashStage++;}
-                        break;
-                    case 3:
-                        if(codexFlashTimer < System.nanoTime()) {
-                            codexFlashTimer = futureTime(.15f);
-                            robot.headLampOn();
-                            codexFlashStage++;
-                        }
-                        break;
-                    case 4:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(0);
-                            codexFlashTimer = futureTime(.5f);
-                            codexFlashStage++;}
-                        break;
-                    case 5:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLampOn();
-                            codexFlashStage = 0;
-                            return true;
-                        }
-                        break;
-                    default:
-                        codexFlashStage = 0;
-                        break;
-                }
-                break;
-            case 2:
-                switch (codexFlashStage){
-                    case 0:
-                        codexFlashTimer = futureTime(.5f);
-                        robot.headLamp.setPower(0);
-                        codexFlashStage++;
-                        break;
-                    case 1:
-                        if(codexFlashTimer < System.nanoTime()) {
-                            codexFlashTimer = futureTime(.15f);
-                            robot.headLampOn();
-                            codexFlashStage++;
-                        }
-                        break;
-                    case 2:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(0);
-                            codexFlashTimer = futureTime(.15f);
-                            codexFlashStage++;}
-                        break;
-                    case 3:
-                        if(codexFlashTimer < System.nanoTime()) {
-                            codexFlashTimer = futureTime(.15f);
-                            robot.headLampOn();
-                            codexFlashStage++;
-                        }
-                        break;
-                    case 4:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(0);
-                            codexFlashTimer = futureTime(.15f);
-                            codexFlashStage++;}
-                        break;
-                    case 5:
-                        if(codexFlashTimer < System.nanoTime()) {
-                            codexFlashTimer = futureTime(.15f);
-                            robot.headLampOn();
-                            codexFlashStage++;
-                        }
-                        break;
-                    case 6:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLamp.setPower(0);
-                            codexFlashTimer = futureTime(.5f);
-                            codexFlashStage++;}
-                        break;
-                    case 7:
-                        if(codexFlashTimer < System.nanoTime()){
-                            robot.headLampOn();
-                            codexFlashStage = 0;
-                            return true;
-                        }
-                        break;
-                    default:
-                        codexFlashStage = 0;
-                        break;
-                }
-                break;
-
-        }
-        return false;
-    }
-**/
     public boolean testDistnace(){
         switch(autoSetupStage){
             case 0:
@@ -648,7 +505,13 @@ public class Game_6832 extends LinearOpMode {
                         case RIGHT:
                             mineralState = 2;
                             break;
-                        default: //ERROR1, ERROR2, ERROR3
+                        case NONE_FOUND:
+                            mineralState = 1;
+                            break;
+                        case ERROR1:
+                        case ERROR2:
+                        case ERROR3:
+                        default:
                             mineralState = 1;
                             break;
                     }

@@ -145,7 +145,7 @@ public class TensorflowIntegration implements VisionProvider {
                     return GoldPos.MIDDLE;
                 }
         }
-        return GoldPos.ERROR1;
+        return GoldPos.NONE_FOUND;
 
     }
 
