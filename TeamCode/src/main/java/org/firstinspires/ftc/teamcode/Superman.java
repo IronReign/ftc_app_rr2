@@ -63,14 +63,12 @@ public class Superman {
         active = true;
     }
 
-    public void advance() {
-        if(getCurrentPosition()<500)
-            setTargetPosition(getCurrentPosition() + 30);
+    public void raise() {
+        setTargetPosition(Math.min(getCurrentPosition() + 30, posDeposit));
     }
 
-    public void retreat() {
-        if(getCurrentPosition()>-30)
-            setTargetPosition(getCurrentPosition() - 30);
+    public void lower() {
+        setTargetPosition(Math.max(getCurrentPosition() -30, 0));
     }
 
     public void runToAngle(double angle) {

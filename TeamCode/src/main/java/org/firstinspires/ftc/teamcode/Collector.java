@@ -95,13 +95,12 @@ public class Collector {
         active = true;
     }
 
-    public void advance(){
-
+    public void open(){
         setTargetPosition(Math.min(getCurrentPosition() + 100, posIntake));
     }
 
-    public void retreat(){
-        setTargetPosition(Math.max(getCurrentPosition() - 100, 0));
+    public void close(){
+        setTargetPosition(Math.max(getCurrentPosition() - 100, posPostLatch));
     }
 
     public void runToAngle(double angle){

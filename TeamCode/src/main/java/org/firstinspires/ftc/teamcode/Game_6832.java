@@ -807,16 +807,16 @@ public class Game_6832 extends LinearOpMode {
         }
 
         if(gamepad1.dpad_down){
-            robot.superman.advance();
+            robot.superman.lower();
         }
         if(gamepad1.dpad_up){
-            robot.superman.retreat();
+            robot.superman.raise();
         }
         if(gamepad1.dpad_right){
-            robot.collector.advance();
+            robot.collector.open();
         }
         if(gamepad1.dpad_left){
-            robot.collector.retreat();
+            robot.collector.close();
         }
 
        robot.intake.setPower(gamepad1.left_trigger - gamepad1.right_trigger);
@@ -835,8 +835,8 @@ public class Game_6832 extends LinearOpMode {
 
         /*
         if(!supermanTester){
-            if(gamepad1.y) robot.collector.advance();
-            if(gamepad1.a) robot.collector.retreat();
+            if(gamepad1.y) robot.collector.raise();
+            if(gamepad1.a) robot.collector.lower();
             if(gamepad1.x) robot.collector.kill();
             if(gamepad1.b) robot.collector.restart(.5);
             if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
@@ -844,8 +844,8 @@ public class Game_6832 extends LinearOpMode {
             if(gamepad1.right_bumper) tf.tfDisable();
             if(gamepad1.dpad_right) telemetry.addData("TF Detection", "%s", tf.detect());
         }else{
-            if(gamepad1.y) robot.superman.advance();
-            if(gamepad1.a) robot.superman.retreat();
+            if(gamepad1.y) robot.superman.raise();
+            if(gamepad1.a) robot.superman.lower();
             if(gamepad1.x) robot.superman.kill();
             if(gamepad1.b) robot.superman.restart(.75);
             if(gamepad1.dpad_up) robot.superman.setTargetPosition(robot.collector.posIntake);
