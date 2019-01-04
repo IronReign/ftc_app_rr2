@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.vision;
 
 import android.database.sqlite.SQLiteClosable;
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.vuforia.Image;
@@ -32,10 +33,12 @@ public class OpenCVIntegration implements VisionProvider {
     private Point lowest;
 
     private void initVuforia() {
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+        //VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(com.qualcomm.ftcrobotcontroller.R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
+        vuforia.setFrameQueueCapacity(1);
     }
 
     public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -48,11 +51,44 @@ public class OpenCVIntegration implements VisionProvider {
     public void shutdownVision() {}
 
     public GoldPos detect() {
+
+//            if (q.isEmpty())
+//                return GoldPos.HOLD_STATE;
+            VuforiaLocalizer.CloseableFrame frame = null; //q.poll();
+        try {
+            frame = vuforia.getFrameQueue().take();
+            Image img = VisionUtils.getImageFromFrame(frame, PIXEL_FORMAT.RGB565);
+            if (img == null) return GoldPos.ERROR1;
+            Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
+            bm.copyPixelsFromBuffer(img.getPixels());
+            mat = VisionUtils.bitmapToMat(bm, CvType.CV_8UC3);
+
+            RoverRuckusGripPipeline pipeline = new RoverRuckusGripPipeline();
+            pipeline.process(mat);
+            contours = pipeline.filterContoursOutput();
+
+            if (contours.size() == 0)
+                return GoldPos.NONE_FOUND;
+            else return GoldPos.MIDDLE;
+        }
+            catch (Exception e) {
+
+                Log.d("No Frame", e.toString());
+                return GoldPos.ERROR2;
+
+            }//if frame null
+
+
+    }
+
+    /* kvnote: I really have no clue how this is supposed to work
+    public GoldPos detect() {
         if (state == -2) {
             if (q.isEmpty())
                 return GoldPos.HOLD_STATE;
             VuforiaLocalizer.CloseableFrame frame = q.poll();
             Image img = VisionUtils.getImageFromFrame(frame, PIXEL_FORMAT.RGB565);
+            if (img == null) return GoldPos.ERROR1;
             Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
             bm.copyPixelsFromBuffer(img.getPixels());
             mat = VisionUtils.bitmapToMat(bm, CvType.CV_8UC3);
@@ -81,6 +117,7 @@ public class OpenCVIntegration implements VisionProvider {
         state++;
         return GoldPos.HOLD_STATE;
     }
+    */
 
     private static Point centroidish(MatOfPoint matOfPoint) {
         Rect br = Imgproc.boundingRect(matOfPoint);
