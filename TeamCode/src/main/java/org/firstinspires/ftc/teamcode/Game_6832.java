@@ -279,6 +279,7 @@ public class Game_6832 extends LinearOpMode {
             tf.tfod.activate();
         }*/
         robot.superman.restart(.75);
+        robot.superman.restart(.75);
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -490,7 +491,7 @@ public class Game_6832 extends LinearOpMode {
                 autoSetupStage++;
                 break;
             case 2:
-                /**Turn on camera to see which is gold**/
+                /**Turn on camera to see which is gold
                 vp.initializeVision(hardwareMap, telemetry);
                 GoldPos gp = vp.detect();
                 // Hold state lets us know that we haven't finished looping through detection
@@ -520,7 +521,9 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 } else {
                     telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
-                }
+                }**/
+                autoSetupStage++;
+                mineralState=1;
                 break;
             case 3:
                 if(turnMineral()){
@@ -822,8 +825,10 @@ public class Game_6832 extends LinearOpMode {
        robot.intake.setPower(gamepad1.left_trigger - gamepad1.right_trigger);
 
         if(gamepad1.left_bumper){
-            robot.collector.kill();
-            robot.superman.kill();
+            if(robot.deposit.getPosition()<1)
+                robot.deposit.setPosition(robot.deposit.getPosition()+.05);
+            else
+                robot.deposit.setPosition(robot.deposit.getPosition()-.05);
         }
         if(gamepad1.right_bumper){
             //robot.resetIMU();
@@ -1139,6 +1144,11 @@ public class Game_6832 extends LinearOpMode {
                 .addData("calib", new Func<String>() {
                     @Override public String value() {
                         return robot.imu.getCalibrationStatus().toString();
+                    }
+                })
+                .addData("servcPos", new Func<String>() {
+                    @Override public String value() {
+                        return robot.deposit.getPosition() + "";
                     }
                 });
 //                .addData("Jewel Red", new Func<String>() {

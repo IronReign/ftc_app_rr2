@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -44,6 +45,8 @@ public class PoseBigWheel
     DcMotor elbowRight = null;
     DcMotor supermanMotor = null;
     DcMotor intake = null;
+
+    Servo deposit = null;
 
 
 
@@ -225,6 +228,7 @@ public class PoseBigWheel
         this.elbowRight = this.hwMap.dcMotor.get("elbowRight");
         this.intake = this.hwMap.dcMotor.get("intake");
         this.supermanMotor = this.hwMap.dcMotor.get("supermanMotor");
+        this.deposit = this.hwMap.servo.get("deposit");
 
         driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
         driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
