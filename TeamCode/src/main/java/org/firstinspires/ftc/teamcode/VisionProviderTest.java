@@ -57,7 +57,7 @@ public class VisionProviderTest extends LinearOpMode {
                 visionProviderState++;
                 if(visionProviderState == visionProviders.length)
                     visionProviderState = 0;
-            } else {
+            } else if (!gamepad1.dpad_left){
                 toggle = false;
             }
             telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProviderState].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
@@ -72,12 +72,13 @@ public class VisionProviderTest extends LinearOpMode {
             throw new RuntimeException(e);
         }
         vp.initializeVision(hardwareMap, telemetry);
-        GoldPos gp;
+        GoldPos gp = null;
         while (opModeIsActive()) {
-            gp = vp.detect();
-            if (gp != GoldPos.HOLD_STATE)
-                telemetry.addData("VisionDetection", "%s", vp.detect());
-            telemetry.addData("HoldState", "%s", gp == GoldPos.HOLD_STATE ? "YES" : "NO");
+            GoldPos newGp = vp.detect();
+            if (newGp != GoldPos.HOLD_STATE)
+                gp = newGp;
+            telemetry.addData("VisionDetection", "%s", gp);
+            telemetry.addData("HoldState", "%s", newGp == GoldPos.HOLD_STATE ? "YES" : "NO");
             telemetry.update();
         }
         vp.shutdownVision();
