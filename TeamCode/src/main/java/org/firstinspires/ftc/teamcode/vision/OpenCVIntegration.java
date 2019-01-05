@@ -1,11 +1,8 @@
 package org.firstinspires.ftc.teamcode.vision;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.provider.ContactsContract;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.vuforia.Image;
 import com.vuforia.PIXEL_FORMAT;
@@ -38,6 +35,8 @@ public class OpenCVIntegration implements VisionProvider {
     private Point lowest;
     private Telemetry telemetry;
     private FtcDashboard dashboard;
+
+    private int _numbefOfContours = -9999;
 
     private void initVuforia() {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -76,6 +75,7 @@ public class OpenCVIntegration implements VisionProvider {
             RoverRuckusGripPipeline pipeline = new RoverRuckusGripPipeline();
             pipeline.process(mat);
             contours = pipeline.filterContoursOutput();
+            _numbefOfContours = contours.size();
 
             Mat overlay = pipeline.resizeImageOutput().clone();
             for (int i = 0; i < contours.size(); i++) {
@@ -84,9 +84,6 @@ public class OpenCVIntegration implements VisionProvider {
             Bitmap overlayBitmap = Bitmap.createBitmap(overlay.width(), overlay.height(), Bitmap.Config.RGB_565);
             Utils.matToBitmap(overlay, overlayBitmap);
             dashboard.sendImage(overlayBitmap);
-
-            telemetry.addData("#contours", contours.size());
-
         } else if (state == 0) {
             if (contours.size() == 0) {
                 state = -2;
@@ -98,6 +95,7 @@ public class OpenCVIntegration implements VisionProvider {
             if (lowest.y > centroid.y)
                 lowest = centroid;
         } else if (state == contours.size()) {
+            state = -2;
             if (lowest.x < 320d / 3)
                 return GoldPos.LEFT;
             else if (lowest.x < 640d / 3)
@@ -109,6 +107,7 @@ public class OpenCVIntegration implements VisionProvider {
         }
         state++;
         telemetry.addData("OpenCV State Machine State", state);
+        telemetry.addData("OpenCV # of contours", _numbefOfContours);
         return GoldPos.HOLD_STATE;
     }
 
