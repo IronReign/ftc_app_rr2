@@ -78,7 +78,6 @@ public class VisionProviderTest extends LinearOpMode {
             if (gp != GoldPos.HOLD_STATE)
                 telemetry.addData("VisionDetection", "%s", vp.detect());
             telemetry.addData("HoldState", "%s", gp == GoldPos.HOLD_STATE ? "YES" : "NO");
-            telemetry.addData("Error1", "%s", gp == GoldPos.ERROR1 ? "YES" : "NO");
             telemetry.update();
         }
         vp.shutdownVision();
