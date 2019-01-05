@@ -44,7 +44,7 @@ import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 public class VisionProviderTest extends LinearOpMode {
 
     private static final Class<? extends VisionProvider>[] visionProviders =
-            new Class[]{TensorflowIntegration.class, OpenCVIntegration.class};
+            new Class[]{OpenCVIntegration.class, TensorflowIntegration.class};
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Configuration");

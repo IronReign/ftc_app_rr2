@@ -77,7 +77,7 @@ public class OpenCVIntegration implements VisionProvider {
             pipeline.process(mat);
             contours = pipeline.filterContoursOutput();
 
-            Mat overlay = new Mat(240, 320, CvType.CV_8UC3);
+            Mat overlay = pipeline.resizeImageOutput().clone();
             for (int i = 0; i < contours.size(); i++) {
                 Imgproc.drawContours(overlay, contours, i, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 2);
             }
@@ -85,9 +85,13 @@ public class OpenCVIntegration implements VisionProvider {
             Utils.matToBitmap(overlay, overlayBitmap);
             dashboard.sendImage(overlayBitmap);
 
+            telemetry.addData("#contours", contours.size());
+
         } else if (state == 0) {
-            if (contours.size() == 0)
+            if (contours.size() == 0) {
+                state = -2;
                 return GoldPos.NONE_FOUND;
+            }
             lowest = centroidish(contours.get(0));
         } else if (state < contours.size()) {
             Point centroid = centroidish(contours.get(state));
@@ -104,6 +108,7 @@ public class OpenCVIntegration implements VisionProvider {
             return GoldPos.ERROR2;
         }
         state++;
+        telemetry.addData("OpenCV State Machine State", state);
         return GoldPos.HOLD_STATE;
     }
 
