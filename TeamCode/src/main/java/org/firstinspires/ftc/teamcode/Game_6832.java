@@ -627,9 +627,10 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 10:
                 //go to crater
-                if(robot.driveForward(false, 2.7, .6))
+                if(robot.driveForward(false, 2.7, .6)) {
                     robot.resetMotors(true);
                     autoStage++;
+                }
                 break;
             default:
                 robot.resetMotors(true);
