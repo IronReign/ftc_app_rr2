@@ -202,6 +202,8 @@ public class FtcRobotControllerActivity extends Activity
   protected WifiMuteStateMachine wifiMuteStateMachine;
   protected MotionDetection motionDetection;
 
+    static{ System.loadLibrary("opencv_java320"); }
+
   protected class RobotRestarter implements Restarter {
 
     public void requestRestart() {
@@ -273,11 +275,6 @@ public class FtcRobotControllerActivity extends Activity
     Assert.assertTrue(AppUtil.getInstance().isRobotController());
 
 
-    if (!OpenCVLoader.initDebug()) {
-      Log.e(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), not working.");
-    } else {
-      Log.d(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), working.");
-    }
 
 
     // Quick check: should we pretend we're not here, and so allow the Lynx to operate as
