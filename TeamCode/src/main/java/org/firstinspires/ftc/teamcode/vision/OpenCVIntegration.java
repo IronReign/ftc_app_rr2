@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.teamcode.vision;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.provider.ContactsContract;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.vuforia.Image;
 import com.vuforia.PIXEL_FORMAT;
@@ -12,11 +16,13 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.RC;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
+import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.List;
@@ -31,6 +37,7 @@ public class OpenCVIntegration implements VisionProvider {
     private List<MatOfPoint> contours;
     private Point lowest;
     private Telemetry telemetry;
+    private FtcDashboard dashboard;
 
     private void initVuforia() {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -46,6 +53,7 @@ public class OpenCVIntegration implements VisionProvider {
         q = vuforia.getFrameQueue();
         state = -2;
         this.telemetry = telemetry;
+        dashboard = FtcDashboard.getInstance();
     }
 
     public void shutdownVision() {}
@@ -68,6 +76,15 @@ public class OpenCVIntegration implements VisionProvider {
             RoverRuckusGripPipeline pipeline = new RoverRuckusGripPipeline();
             pipeline.process(mat);
             contours = pipeline.filterContoursOutput();
+
+            Mat overlay = new Mat(240, 320, CvType.CV_8UC3);
+            for (int i = 0; i < contours.size(); i++) {
+                Imgproc.drawContours(overlay, contours, i, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 2);
+            }
+            Bitmap overlayBitmap = Bitmap.createBitmap(overlay.width(), overlay.height(), Bitmap.Config.RGB_565);
+            Utils.matToBitmap(overlay, overlayBitmap);
+            dashboard.sendImage(overlayBitmap);
+
         } else if (state == 0) {
             if (contours.size() == 0)
                 return GoldPos.NONE_FOUND;
