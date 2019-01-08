@@ -29,12 +29,13 @@ public class OpenCVIntegration implements VisionProvider {
 
     private VuforiaLocalizer vuforia;
     private BlockingQueue<VuforiaLocalizer.CloseableFrame> q;
-    private int state = -3;
+    private int state = -1;
     private Mat mat;
     private List<MatOfPoint> contours;
     private Point lowest;
     private Telemetry telemetry;
     private FtcDashboard dashboard;
+    private RoverRuckusGripPipeline pipeline;
 
     private int _numbefOfContours = -9999;
 
@@ -50,60 +51,66 @@ public class OpenCVIntegration implements VisionProvider {
     public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry) {
         initVuforia();
         q = vuforia.getFrameQueue();
-        state = -2;
+        state = 0;
         this.telemetry = telemetry;
         dashboard = FtcDashboard.getInstance();
+        pipeline = new RoverRuckusGripPipeline();
     }
 
     public void shutdownVision() {}
 
     public GoldPos detect() {
-        if (state == -2) {
-            if (q.isEmpty())
-                return GoldPos.HOLD_STATE;
-            VuforiaLocalizer.CloseableFrame frame;
-            try {
-                frame = q.take();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            Image img = VisionUtils.getImageFromFrame(frame, PIXEL_FORMAT.RGB565);
-            Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
-            bm.copyPixelsFromBuffer(img.getPixels());
-            mat = VisionUtils.bitmapToMat(bm, CvType.CV_8UC3);
-        } else if (state == -1) {
-            RoverRuckusGripPipeline pipeline = new RoverRuckusGripPipeline();
-            pipeline.process(mat);
-            contours = pipeline.filterContoursOutput();
-            _numbefOfContours = contours.size();
-
-            Mat overlay = pipeline.resizeImageOutput().clone();
-            for (int i = 0; i < contours.size(); i++) {
-                Imgproc.drawContours(overlay, contours, i, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 2);
-            }
-            Bitmap overlayBitmap = Bitmap.createBitmap(overlay.width(), overlay.height(), Bitmap.Config.RGB_565);
-            Utils.matToBitmap(overlay, overlayBitmap);
-            dashboard.sendImage(overlayBitmap);
-        } else if (state == 0) {
-            if (contours.size() == 0) {
-                state = -2;
-                return GoldPos.NONE_FOUND;
-            }
-            lowest = centroidish(contours.get(0));
-        } else if (state < contours.size()) {
-            Point centroid = centroidish(contours.get(state));
-            if (lowest.y > centroid.y)
-                lowest = centroid;
-        } else if (state == contours.size()) {
-            state = -2;
-            if (lowest.x < 320d / 3)
-                return GoldPos.LEFT;
-            else if (lowest.x < 640d / 3)
-                return GoldPos.MIDDLE;
-            else
-                return GoldPos.RIGHT;
-        } else {
-            return GoldPos.ERROR2;
+        switch(state) {
+            case 0:
+                if (q.isEmpty())
+                    return GoldPos.HOLD_STATE;
+                VuforiaLocalizer.CloseableFrame frame;
+                try {
+                    frame = q.take();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                Image img = VisionUtils.getImageFromFrame(frame, PIXEL_FORMAT.RGB565);
+                Bitmap bm = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.RGB_565);
+                bm.copyPixelsFromBuffer(img.getPixels());
+                mat = VisionUtils.bitmapToMat(bm, CvType.CV_8UC3);
+                break;
+            case 1:
+                pipeline.process(mat);
+                contours = pipeline.filterContoursOutput();
+                _numbefOfContours = contours.size();
+                break;
+            case 2:
+                Mat overlay = pipeline.resizeImageOutput().clone();
+                for (int i = 0; i < contours.size(); i++) {
+                    Imgproc.drawContours(overlay, contours, i, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 2);
+                }
+                Bitmap overlayBitmap = Bitmap.createBitmap(overlay.width(), overlay.height(), Bitmap.Config.RGB_565);
+                Utils.matToBitmap(overlay, overlayBitmap);
+                dashboard.sendImage(overlayBitmap);
+                break;
+            case 3:
+                if (contours.size() == 0) {
+                    state = -2;
+                    return GoldPos.NONE_FOUND;
+                }
+                lowest = null;
+                for (MatOfPoint contour : contours) {
+                    Point centroid = centroidish(contour);
+                    if (lowest.y > centroid.y)
+                        lowest = centroid;
+                }
+                break;
+            case 4:
+                state = 0;
+                if (lowest.x < 320d / 3)
+                    return GoldPos.LEFT;
+                else if (lowest.x < 640d / 3)
+                    return GoldPos.MIDDLE;
+                else
+                    return GoldPos.RIGHT;
+            default:
+                return GoldPos.ERROR2;
         }
         state++;
         telemetry.addData("OpenCV State Machine State", state);
