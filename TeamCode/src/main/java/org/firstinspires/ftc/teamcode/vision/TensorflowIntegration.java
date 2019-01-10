@@ -96,7 +96,7 @@ public class TensorflowIntegration implements VisionProvider {
     }
 
     @Override
-    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry) {
+    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry) {
         initVuforia();
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {

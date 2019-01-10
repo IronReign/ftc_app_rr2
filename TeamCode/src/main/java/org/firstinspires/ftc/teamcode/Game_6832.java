@@ -49,6 +49,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
+import org.firstinspires.ftc.teamcode.vision.DummyVisionIntegration;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
 import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
@@ -142,6 +143,7 @@ public class Game_6832 extends LinearOpMode {
     boolean visionConfigured = false;
     int mineralState = 2;
 
+
     //sensors/sensing-related variables
     Orientation angles;
     boolean jewelMatches = false;
@@ -166,10 +168,12 @@ public class Game_6832 extends LinearOpMode {
     private int left_bumper = 8; //increment state down (always)
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
-
+    
     private VisionProvider vp;
     private int visionProviderState;
-    private static final Class<? extends VisionProvider>[] visionProviders = new Class[]{TensorflowIntegration.class, OpenCVIntegration.class};
+    private boolean visionProviderFinalized;
+    public boolean enableTelemetry = false;
+    private static final Class<? extends VisionProvider>[] visionProviders = new Class[]{OpenCVIntegration.class, TensorflowIntegration.class , DummyVisionIntegration.class};
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -181,29 +185,13 @@ public class Game_6832 extends LinearOpMode {
 
         configureDashboard();
 
-       /* VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-        params.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
-        params.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
-
-        locale = ClassFactory.createVuforiaLocalizer(params);
-        locale.setFrameQueueCapacity(1);
-        Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
-
-        Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
-*/
-
-//        Instead will instantiate after init loop
-//        vp = new TensorflowIntegration();
-
-
-
 //        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
 
-        //activate vuforia to start identifying targets/vuMarks
-//        relicCodex.activate();
         robot.resetMotors(true);
 
         mDetector = new ColorBlobDetector();
+
+        visionProviderFinalized = false;
 
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
@@ -223,9 +211,6 @@ public class Game_6832 extends LinearOpMode {
                 vuActive = true;
 
             }
-//            else if(toggleAllowed(gamepad1.start, startBtn) && state==0){
-//                relicCodex.deactivate();
-//            }
             if(toggleAllowed(gamepad1.x,x)) {
 
                     isBlue = !isBlue;
@@ -243,10 +228,21 @@ public class Game_6832 extends LinearOpMode {
                 if(autoDelay>15) autoDelay = 0;
 
             }
-            if(toggleAllowed(gamepad1.dpad_left, dpad_left)){
+            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)){
                 visionProviderState++;
                 if(visionProviderState == visionProviders.length)
                     visionProviderState = 0;
+            }
+            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)){
+                try {
+                    vp = visionProviders[visionProviderState].newInstance();
+                } catch (IllegalAccessException | InstantiationException e) {
+                    throw new RuntimeException(e);
+                }
+                visionProviderFinalized = true;
+            }
+            if(toggleAllowed(gamepad1.dpad_right, dpad_right)){
+                enableTelemetry = !enableTelemetry;
             }
 
             if(vuActive){
@@ -261,25 +257,25 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
-            telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProviderState].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
+            telemetry.addData("Status", "VisionBackend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
+            telemetry.addData("Status", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
             telemetry.update();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
-        try {
-            vp = visionProviders[visionProviderState].newInstance();
-        } catch (IllegalAccessException | InstantiationException e) {
-            throw new RuntimeException(e);
-        }
+
 
 //        robot.jewel.liftArm();
-       /* runtime.reset();
-        if (tf.tfod != null) {
-            tf.tfod.activate();
-        }*/
+
+        if(vp == null) {
+            vp = new DummyVisionIntegration();
+            vp.initializeVision(hardwareMap, telemetry, false);
+        }
+
         robot.superman.restart(.75);
         robot.superman.restart(.75);
+
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -656,8 +652,7 @@ public class Game_6832 extends LinearOpMode {
                 autoSetupStage++;
                 break;
             case 2:
-                /**Turn on camera to see which is gold
-                vp.initializeVision(hardwareMap, telemetry);
+                //Turn on camera to see which is gold
                 GoldPos gp = vp.detect();
                 // Hold state lets us know that we haven't finished looping through detection
                 if (gp != GoldPos.HOLD_STATE) {
@@ -686,9 +681,8 @@ public class Game_6832 extends LinearOpMode {
                     autoSetupStage++;
                 } else {
                     telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
-                }**/
+                }
                 autoSetupStage++;
-                mineralState=1;
                 break;
             case 3:
                 if(turnMineral()){

@@ -36,6 +36,7 @@ public class OpenCVIntegration implements VisionProvider {
     private Telemetry telemetry;
     private FtcDashboard dashboard;
     private RoverRuckusGripPipeline pipeline;
+    private boolean enableTelemetry;
 
     private int _numbefOfContours = -9999;
 
@@ -48,12 +49,14 @@ public class OpenCVIntegration implements VisionProvider {
         vuforia.setFrameQueueCapacity(1);
     }
 
-    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry) {
+    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry) {
         initVuforia();
         q = vuforia.getFrameQueue();
         state = 0;
         this.telemetry = telemetry;
-        dashboard = FtcDashboard.getInstance();
+        this.enableTelemetry = enableTelemetry;
+        if(enableTelemetry)
+            dashboard = FtcDashboard.getInstance();
         pipeline = new RoverRuckusGripPipeline();
     }
 
@@ -81,6 +84,8 @@ public class OpenCVIntegration implements VisionProvider {
                 _numbefOfContours = contours.size();
                 break;
             case 2:
+                if(!enableTelemetry)
+                    break;
                 Mat overlay = pipeline.resizeImageOutput().clone();
                 for (int i = 0; i < contours.size(); i++) {
                     Imgproc.drawContours(overlay, contours, i, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 2);
