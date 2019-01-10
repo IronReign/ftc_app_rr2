@@ -54,6 +54,7 @@ import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
 import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
+import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
 import java.util.Locale;
 
@@ -173,7 +174,7 @@ public class Game_6832 extends LinearOpMode {
     private int visionProviderState;
     private boolean visionProviderFinalized;
     public boolean enableTelemetry = false;
-    private static final Class<? extends VisionProvider>[] visionProviders = new Class[]{OpenCVIntegration.class, TensorflowIntegration.class , DummyVisionIntegration.class};
+    private static final Class<? extends VisionProvider>[] visionProviders = VisionProviders.visionProviders;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -236,12 +237,13 @@ public class Game_6832 extends LinearOpMode {
             if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)){
                 try {
                     vp = visionProviders[visionProviderState].newInstance();
+                    vp.initializeVision(hardwareMap, telemetry, enableTelemetry);
                 } catch (IllegalAccessException | InstantiationException e) {
                     throw new RuntimeException(e);
                 }
                 visionProviderFinalized = true;
             }
-            if(toggleAllowed(gamepad1.dpad_right, dpad_right)){
+            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_right, dpad_right)){
                 enableTelemetry = !enableTelemetry;
             }
 
@@ -266,10 +268,8 @@ public class Game_6832 extends LinearOpMode {
 
 
 
-//        robot.jewel.liftArm();
-
         if(vp == null) {
-            vp = new DummyVisionIntegration();
+            vp = VisionProviders.defaultVisionProvider();
             vp.initializeVision(hardwareMap, telemetry, false);
         }
 

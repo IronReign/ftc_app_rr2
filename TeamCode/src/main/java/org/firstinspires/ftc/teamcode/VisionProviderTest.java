@@ -32,10 +32,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.vision.DummyVisionIntegration;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
 import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
+import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
 /**
  * Demonstrates empty OpMode
@@ -43,35 +45,41 @@ import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 @TeleOp(name = "VisionProvider Test", group = "Linear Opmode")
 public class VisionProviderTest extends LinearOpMode {
 
-    private static final Class<? extends VisionProvider>[] visionProviders =
-            new Class[]{OpenCVIntegration.class, TensorflowIntegration.class};
+    private static final Class<? extends VisionProvider>[] visionProviders = VisionProviders.visionProviders;
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Configuration");
         telemetry.update();
         int visionProviderState = 0;
         boolean toggle = false;
+        boolean visionProviderFinalized = false;
+        VisionProvider vp = null;
         while (!isStarted()) {
-            if (gamepad1.dpad_left && !toggle) {
+            if (!visionProviderFinalized && gamepad1.dpad_left && !toggle) {
                 toggle = true;
                 visionProviderState++;
                 if(visionProviderState == visionProviders.length)
                     visionProviderState = 0;
-            } else if (!gamepad1.dpad_left){
+            } else if (!visionProviderFinalized && !gamepad1.dpad_left){
                 toggle = false;
+            } else if (!visionProviderFinalized && gamepad1.dpad_up) {
+                try {
+                    vp = visionProviders[visionProviderState].newInstance();
+                    vp.initializeVision(hardwareMap, telemetry, true);
+                } catch (IllegalAccessException | InstantiationException e) {
+                    throw new RuntimeException(e);
+                }
+                visionProviderFinalized = true;
             }
-            telemetry.addData("Status", "VisionBackend: %s", visionProviders[visionProviderState].getSimpleName().replaceAll("org.firstinspires.ftc.teamcode", "OFFT"));
+            telemetry.addData("Status", "VisionBackend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
             telemetry.update();
         }
         telemetry.addData("Status", "Started");
         telemetry.update();
-        VisionProvider vp;
-        try {
-            vp = visionProviders[visionProviderState].newInstance();
-        } catch (IllegalAccessException | InstantiationException e) {
-            throw new RuntimeException(e);
+        if (vp == null) {
+            vp = new DummyVisionIntegration();
+            vp.initializeVision(hardwareMap, telemetry, true);
         }
-        vp.initializeVision(hardwareMap, telemetry, true);
         GoldPos gp = null;
         while (opModeIsActive()) {
             GoldPos newGp = vp.detect();

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.vision;
+package org.firstinspires.ftc.teamcode.vision.dogecv;
 
 import android.graphics.Bitmap;
 
@@ -13,32 +13,27 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.RC;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
+import org.firstinspires.ftc.teamcode.vision.GoldPos;
+import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-public class OpenCVIntegration implements VisionProvider {
+public class DogeCVIntegration implements VisionProvider {
 
     private VuforiaLocalizer vuforia;
     private BlockingQueue<VuforiaLocalizer.CloseableFrame> q;
     private int state = -1;
-    private Mat mat;
+    private Mat mat, display;
     private List<MatOfPoint> contours;
-    private Point lowest;
     private Telemetry telemetry;
     private FtcDashboard dashboard;
-    private RoverRuckusGripPipeline pipeline;
     private boolean enableTelemetry;
-
-    private int _numbefOfContours = -9999;
+    private DogeCVPipeline pipeline;
 
     private void initVuforia() {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -49,6 +44,7 @@ public class OpenCVIntegration implements VisionProvider {
         vuforia.setFrameQueueCapacity(1);
     }
 
+    @Override
     public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry) {
         initVuforia();
         q = vuforia.getFrameQueue();
@@ -57,13 +53,14 @@ public class OpenCVIntegration implements VisionProvider {
         this.enableTelemetry = enableTelemetry;
         if(enableTelemetry)
             dashboard = FtcDashboard.getInstance();
-        pipeline = new RoverRuckusGripPipeline();
+        pipeline = new DogeCVPipeline();
     }
 
     public void shutdownVision() {}
 
+    @Override
     public GoldPos detect() {
-        switch(state) {
+        switch (state) {
             case 0:
                 if (q.isEmpty())
                     return GoldPos.HOLD_STATE;
@@ -79,61 +76,21 @@ public class OpenCVIntegration implements VisionProvider {
                 mat = VisionUtils.bitmapToMat(bm, CvType.CV_8UC3);
                 break;
             case 1:
-                pipeline.process(mat);
-                mat.release();
-                contours = pipeline.filterContoursOutput();
-                _numbefOfContours = contours.size();
+                display = pipeline.process(mat);
                 break;
             case 2:
                 if(!enableTelemetry)
                     break;
-                Mat overlay = pipeline.normalizeOutput().clone();
-                for (int i = 0; i < contours.size(); i++) {
-                    Imgproc.drawContours(overlay, contours, i, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 2);
-                }
-                Bitmap overlayBitmap = Bitmap.createBitmap(overlay.width(), overlay.height(), Bitmap.Config.RGB_565);
-                Utils.matToBitmap(overlay, overlayBitmap);
-                dashboard.sendImage(overlayBitmap);
-                overlay.release();
+                Bitmap displayBitmap = Bitmap.createBitmap(display.width(), display.height(), Bitmap.Config.RGB_565);
+                Utils.matToBitmap(display, displayBitmap);
+                dashboard.sendImage(displayBitmap);
+                display.release();
                 break;
             case 3:
-                pipeline.resizeImageOutput().release();
-                pipeline.normalizeOutput().release();
-                pipeline.hsvThresholdOutput().release();
-                if (contours.size() == 0) {
-                    state = -2;
-                    return GoldPos.NONE_FOUND;
-                }
-                lowest = null;
-                for (MatOfPoint contour : contours) {
-                    Point centroid = centroidish(contour);
-                    if (lowest.y > centroid.y)
-                        lowest = centroid;
-                }
-                break;
-            case 4:
-                for (MatOfPoint contour : pipeline.findContoursOutput())
-                    contour.release();
-                for (MatOfPoint contour : pipeline.filterContoursOutput())
-                    contour.release();
                 state = 0;
-                if (lowest.x < 320d / 3)
-                    return GoldPos.LEFT;
-                else if (lowest.x < 640d / 3)
-                    return GoldPos.MIDDLE;
-                else
-                    return GoldPos.RIGHT;
-            default:
-                return GoldPos.ERROR2;
+                return pipeline.getCurrentOrder();
         }
         state++;
-        telemetry.addData("OpenCV State Machine State", state);
-        telemetry.addData("OpenCV # of contours", _numbefOfContours);
         return GoldPos.HOLD_STATE;
-    }
-
-    private static Point centroidish(MatOfPoint matOfPoint) {
-        Rect br = Imgproc.boundingRect(matOfPoint);
-        return new Point(br.x + br.width/2,br.y + br.height/2);
     }
 }
