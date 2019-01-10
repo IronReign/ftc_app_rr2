@@ -71,7 +71,7 @@ public class VisionProviderTest extends LinearOpMode {
         } catch (IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
-        vp.initializeVision(hardwareMap, telemetry);
+        vp.initializeVision(hardwareMap, telemetry, true);
         GoldPos gp = null;
         while (opModeIsActive()) {
             GoldPos newGp = vp.detect();
