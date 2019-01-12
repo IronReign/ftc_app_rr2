@@ -488,9 +488,35 @@ public class Game_6832 extends LinearOpMode {
                 autoStage++;
                 break;
             case 1:
-                //detect mineral
+                //Turn on camera to see which is gold
+                GoldPos gp = vp.detect();
+                // Hold state lets us know that we haven't finished looping through detection
+                if (gp != GoldPos.HOLD_STATE) {
+                    switch (gp) {
+                        case LEFT:
+                            min = 0;
+                            break;
+                        case MIDDLE:
+                            min = 1;
+                            break;
+                        case RIGHT:
+                            min = 2;
+                            break;
+                        case NONE_FOUND:
+                        case ERROR1:
+                        case ERROR2:
+                        case ERROR3:
+                        default:
+                            mineralState = 0;
+                            break;
+                    }
+                    telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
+                    vp.shutdownVision();
+                    autoSetupStage++;
+                } else {
+                    telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
+                }
                 autoStage++;
-                min = 0;
                 break;
             case 2://turn to mineral
                 switch(min){
