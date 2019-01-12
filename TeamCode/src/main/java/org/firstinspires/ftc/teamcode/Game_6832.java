@@ -236,6 +236,8 @@ public class Game_6832 extends LinearOpMode {
             }
             if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)){
                 try {
+                    telemetry.addData("Please wait","Initializing vision");
+                    telemetry.update();
                     vp = visionProviders[visionProviderState].newInstance();
                     vp.initializeVision(hardwareMap, telemetry, enableTelemetry);
                 } catch (IllegalAccessException | InstantiationException e) {
@@ -269,6 +271,8 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(vp == null) {
+            telemetry.addData("Please wait","Initializing vision");
+            telemetry.update();
             vp = VisionProviders.defaultVisionProvider();
             vp.initializeVision(hardwareMap, telemetry, false);
         }

@@ -62,8 +62,11 @@ public class VisionProviderTest extends LinearOpMode {
                     visionProviderState = 0;
             } else if (!visionProviderFinalized && !gamepad1.dpad_left){
                 toggle = false;
-            } else if (!visionProviderFinalized && gamepad1.dpad_up) {
+            }
+            if (!visionProviderFinalized && gamepad1.dpad_up) {
                 try {
+                    telemetry.addData("Please wait","Initializing vision");
+                    telemetry.update();
                     vp = visionProviders[visionProviderState].newInstance();
                     vp.initializeVision(hardwareMap, telemetry, true);
                 } catch (IllegalAccessException | InstantiationException e) {
