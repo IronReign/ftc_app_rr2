@@ -193,37 +193,29 @@ public class DogeCVPipeline {
 
         }
 
-        // If enough elements are found, compute gold position
-        if(choosenWhiteRect.get(0) != null && choosenWhiteRect.get(1) != null  && chosenYellowRect != null){
-            int leftCount = 0;
-            for(int i=0;i<choosenWhiteRect.size();i++){
-                Rect rect = choosenWhiteRect.get(i);
-                if(chosenYellowRect.x > rect.x){
-                    leftCount++;
-                }
-            }
-            if(leftCount == 0){
-                currentOrder = GoldPos.LEFT;
-            }
 
-            if(leftCount == 1){
+        /* BEGIN IRON REIGN MODIFICATIONS */
+
+        if (chosenYellowRect != null) {
+            Point center = new Point(chosenYellowRect.x + (chosenYellowRect.width/2d), chosenYellowRect.y + (chosenYellowRect.height/2d));
+            if (center.x >= workingMat.width()/2) {
+                currentOrder = GoldPos.RIGHT;
+            } else {
                 currentOrder = GoldPos.MIDDLE;
             }
-
-            if(leftCount >= 2){
-                currentOrder = GoldPos.RIGHT;
-            }
-            isFound = true;
-            lastOrder = currentOrder;
-
-        }else{
-            currentOrder = GoldPos.NONE_FOUND;
-            isFound = false;
+        } else {
+            currentOrder = GoldPos.LEFT;
         }
+        isFound = true;
+        lastOrder = currentOrder;
+
 
         //Display Debug Information
+        Imgproc.rectangle(displayMat, new Point(displayMat.width()/2, 0), new Point(displayMat.width()/2, displayMat.height()), new Scalar(225,225,0), 4);
         Imgproc.putText(displayMat,"Gold Position: " + lastOrder.toString(),new Point(10,adjustedSize.height - 30),0,1, new Scalar(255,255,0),1);
         Imgproc.putText(displayMat,"Current Track: " + currentOrder.toString(),new Point(10,adjustedSize.height - 10),0,0.5, new Scalar(255,255,255),1);
+
+        /* END IRON REIGN MODIFICATIONS */
 
         return displayMat;
     }
