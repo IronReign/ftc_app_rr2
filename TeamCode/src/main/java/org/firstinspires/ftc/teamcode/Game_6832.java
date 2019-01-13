@@ -309,7 +309,6 @@ public class Game_6832 extends LinearOpMode {
                     case 2:
                         //if(testDistnace())active=false;
                         auto1FromScratch();
-                        telemetry.addData("states","mineralState: %d | autoStage: %d",mineralState,autoStage);
                         break;
                     case 3:
                         if(testIMU())active=false;
@@ -1354,6 +1353,10 @@ public class Game_6832 extends LinearOpMode {
                 }).addData("autoStage", new Func<Integer>() {
                     @Override public Integer value() {
                         return autoStage;
+                    }
+                }).addData("mineratState", new Func<Integer>() {
+                    @Override public Integer value() {
+                        return mineralState;
                     }
                 });
 //                .addData("Jewel Red", new Func<String>() {
