@@ -60,6 +60,7 @@ public class DogeCVIntegration implements VisionProvider {
 
     @Override
     public GoldPos detect() {
+        telemetry.addData("DogeCV State", state);
         switch (state) {
             case 0:
                 if (q.isEmpty())

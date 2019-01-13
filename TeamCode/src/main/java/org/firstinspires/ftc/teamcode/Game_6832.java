@@ -175,6 +175,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean visionProviderFinalized;
     public boolean enableTelemetry = false;
     private static final Class<? extends VisionProvider>[] visionProviders = VisionProviders.visionProviders;
+    private GoldPos initGoldPosTest = null;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -207,11 +208,11 @@ public class Game_6832 extends LinearOpMode {
             stateSwitch();
 
 
-            if(toggleAllowed(gamepad1.b, b)){
-                relicCodex.activate();
-                vuActive = true;
-
-            }
+//            if(toggleAllowed(gamepad1.b, b)){
+//                relicCodex.activate();
+//                vuActive = true;
+//
+//            }
             if(toggleAllowed(gamepad1.x,x)) {
 
                     isBlue = !isBlue;
@@ -248,6 +249,12 @@ public class Game_6832 extends LinearOpMode {
             if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_right, dpad_right)){
                 enableTelemetry = !enableTelemetry;
             }
+            if(visionProviderFinalized && gamepad1.dpad_down /*specifically not toggle allowed*/){
+                GoldPos gp = vp.detect();
+                if (gp != GoldPos.HOLD_STATE)
+                    initGoldPosTest = gp;
+                telemetry.addData("Vision", "Prep detection: %s%s", initGoldPosTest, gp==GoldPos.HOLD_STATE?" (HOLD_STATE)":"");
+            }
 
             if(vuActive){
                 telemetry.addData("Vu", "Active");
@@ -261,8 +268,8 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
-            telemetry.addData("Status", "VisionBackend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
-            telemetry.addData("Status", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
+            telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
+            telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
             telemetry.update();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
@@ -297,6 +304,7 @@ public class Game_6832 extends LinearOpMode {
                     case 2:
                         //if(testDistnace())active=false;
                         auto1FromScratch();
+                        telemetry.addData("states","mineralState: %d | autoStage: %d",mineralState,autoStage);
                         break;
                     case 3:
                         if(testIMU())active=false;
@@ -480,7 +488,6 @@ public class Game_6832 extends LinearOpMode {
     }
 
     public void auto1FromScratch(){
-        int min=0;
         switch(autoStage){
             case 0:
                 robot.setZeroHeading();
@@ -494,13 +501,13 @@ public class Game_6832 extends LinearOpMode {
                 if (gp != GoldPos.HOLD_STATE) {
                     switch (gp) {
                         case LEFT:
-                            min = 0;
+                            mineralState = 0;
                             break;
                         case MIDDLE:
-                            min = 1;
+                            mineralState = 1;
                             break;
                         case RIGHT:
-                            min = 2;
+                            mineralState = 2;
                             break;
                         case NONE_FOUND:
                         case ERROR1:
@@ -511,15 +518,15 @@ public class Game_6832 extends LinearOpMode {
                             break;
                     }
                     telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
+
                     vp.shutdownVision();
-                    autoSetupStage++;
+                    autoStage++;
                 } else {
                     telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
                 }
-                autoStage++;
                 break;
             case 2://turn to mineral
-                switch(min){
+                switch(mineralState){
                     case 0://left
                         if(robot.rotateIMU(39,3)){
                             robot.resetMotors(true);
@@ -538,7 +545,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 3://move to mineral
-                switch(min){
+                switch(mineralState){
                     case 0://left
                         if(robot.driveForward(true, .604,.65)){
                             robot.resetMotors(true);
@@ -560,7 +567,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 4://turn to depot
-                switch(min){
+                switch(mineralState){
                     case 0://left
                         if(robot.rotateIMU(345,3)){
                             robot.resetMotors(true);
@@ -579,7 +586,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 5://move to depot
-                switch(min){
+                switch(mineralState){
                     case 0://left
                         if(robot.driveForward(true, .890,.65)){
                             //start collector and timer to yeet ducky
@@ -626,7 +633,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 8:
                 //move forward a lil
-                switch(min){
+                switch(mineralState){
                     case 0://left
                         autoStage++;
                         break;

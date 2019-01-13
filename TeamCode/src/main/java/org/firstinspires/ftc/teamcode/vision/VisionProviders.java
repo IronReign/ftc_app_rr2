@@ -9,6 +9,6 @@ public final class VisionProviders {
             new Class[]{DogeCVIntegration.class, OpenCVIntegration.class, TensorflowIntegration.class , DummyVisionIntegration.class};
 
     public static final VisionProvider defaultVisionProvider() {
-        return new DummyVisionIntegration();
+        return new DogeCVIntegration();
     }
 }
