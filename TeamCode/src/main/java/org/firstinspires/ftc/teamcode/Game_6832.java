@@ -278,10 +278,15 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(vp == null) {
-            telemetry.addData("Please wait","Initializing vision");
-            telemetry.update();
-            vp = VisionProviders.defaultVisionProvider();
-            vp.initializeVision(hardwareMap, telemetry, false);
+            try {
+                telemetry.addData("Please wait","Initializing vision");
+                telemetry.update();
+                vp = visionProviders[visionProviderState].newInstance();
+                vp.initializeVision(hardwareMap, telemetry, enableTelemetry);
+            } catch (IllegalAccessException | InstantiationException e) {
+                throw new RuntimeException(e);
+            }
+            visionProviderFinalized = true;
         }
 
         robot.superman.restart(.75);

@@ -8,7 +8,4 @@ public final class VisionProviders {
     public static final Class<? extends VisionProvider>[] visionProviders =
             new Class[]{DogeCVIntegration.class, OpenCVIntegration.class, TensorflowIntegration.class , DummyVisionIntegration.class};
 
-    public static final VisionProvider defaultVisionProvider() {
-        return new DogeCVIntegration();
-    }
 }

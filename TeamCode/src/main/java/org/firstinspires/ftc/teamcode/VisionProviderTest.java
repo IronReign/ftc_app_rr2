@@ -80,8 +80,14 @@ public class VisionProviderTest extends LinearOpMode {
         telemetry.addData("Status", "Started");
         telemetry.update();
         if (vp == null) {
-            vp = new DummyVisionIntegration();
-            vp.initializeVision(hardwareMap, telemetry, true);
+            try {
+                telemetry.addData("Please wait","Initializing vision");
+                telemetry.update();
+                vp = visionProviders[visionProviderState].newInstance();
+                vp.initializeVision(hardwareMap, telemetry, true);
+            } catch (IllegalAccessException | InstantiationException e) {
+                throw new RuntimeException(e);
+            }
         }
         GoldPos gp = null;
         while (opModeIsActive()) {
