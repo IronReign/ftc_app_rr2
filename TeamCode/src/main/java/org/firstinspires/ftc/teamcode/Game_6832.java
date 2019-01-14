@@ -36,19 +36,12 @@ import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.vuforia.PIXEL_FORMAT;
 
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.teamcode.util.VisionUtils;
 import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
@@ -56,9 +49,7 @@ import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
 import java.util.Locale;
 
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -123,29 +114,13 @@ public class Game_6832 extends LinearOpMode {
     //staging and timer variables
     private int autoStage = 0;
     private int autoSetupStage = 0;
-    private  int vuTestMode = 0;
     private long autoTimer = 0;
     private long elbowTimer = 0;
     private long autoDelay = 0;
     public int codexFlashStage = 0;
-    public long codexFlashTimer = 0;
-
-    //vision objects/vision-based variables
-    public VuforiaTrackables relicCodex;
-    public int savedVuMarkCodex = 0;
-    VuforiaTrackable relicTemplate;
-    VuforiaLocalizer locale;
-    private ColorBlobDetector mDetector;
-    private int beaconConfig = 0;
-    private double vuPwr = 0;
-    public boolean vuFlashDemo = false;
-    boolean visionConfigured = false;
-    int mineralState = 2;
-
 
     //sensors/sensing-related variables
     Orientation angles;
-    boolean jewelMatches = false;
     boolean vuActive = false;
 
     //these are meant as short term testing variables, don't expect their usage
@@ -155,25 +130,31 @@ public class Game_6832 extends LinearOpMode {
     boolean testableDirection = true;
 
     //values associated with the buttons in the toggleAllowed method
-    private boolean[] buttonSavedStates = new boolean[11];
+    private boolean[] buttonSavedStates = new boolean[14];
     private int a = 0; //lower glyph lift
     private int b = 1; //toggle grip/release on glyph
     private int x = 2; //no function
     private int y = 3; //raise glyph lift
-    private int dpad_down = 4; //glyph lift bottom position
-    private int dpad_up = 5; //glyph lift top position
-    private int dpad_left = 6; //no function
-    private int dpad_right = 7; //glyph lift mid position
+    private int dpad_down = 4; //enable/disable ftcdash telemetry
+    private int dpad_up = 5; //vision init/de-init
+    private int dpad_left = 6; //vision provider switch
+    private int dpad_right = 7; //switch viewpoint
     private int left_bumper = 8; //increment state down (always)
     private int right_bumper = 9; //increment state up (always)
     private int startBtn = 10; //toggle active (always)
+    private int left_trigger = 11; //vision detection
+    private int right_trigger = 12;
+    private int back_button = 13;
     
     private VisionProvider vp;
     private int visionProviderState;
     private boolean visionProviderFinalized;
-    public boolean enableTelemetry = false;
+    private boolean enableTelemetry = false;
     private static final Class<? extends VisionProvider>[] visionProviders = VisionProviders.visionProviders;
+    private int viewpoint = 2;
+    private static final Viewpoint[] viewpoints = Viewpoint.values();
     private GoldPos initGoldPosTest = null;
+    private int mineralState = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -185,11 +166,11 @@ public class Game_6832 extends LinearOpMode {
 
         configureDashboard();
 
-//        waitForStart(); //this is commented out but left here to document that we are still doing the functions that waitForStart() normally does, but needed to customize it.
+        // waitForStart();
+        // this is commented out but left here to document that we are still doing the
+        // functions that waitForStart() normally does, but needed to customize it.
 
         robot.resetMotors(true);
-
-        mDetector = new ColorBlobDetector();
 
         visionProviderFinalized = false;
 
@@ -205,69 +186,45 @@ public class Game_6832 extends LinearOpMode {
 
             stateSwitch();
 
-
-//            if(toggleAllowed(gamepad1.b, b)){
-//                relicCodex.activate();
-//                vuActive = true;
-//
-//            }
             if(toggleAllowed(gamepad1.x,x)) {
-
                     isBlue = !isBlue;
-
             }
             if(toggleAllowed(gamepad1.a,a)){
-
                 autoDelay--;
                 if(autoDelay < 0) autoDelay = 15;
-
             }
             if(toggleAllowed(gamepad1.y, y)){
-
                 autoDelay++;
                 if(autoDelay>15) autoDelay = 0;
-
             }
+
             if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                visionProviderState++;
-                if(visionProviderState == visionProviders.length)
-                    visionProviderState = 0;
+                visionProviderState = (visionProviderState+1) % visionProviders.length;
             }
             if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)){
-                try {
-                    telemetry.addData("Please wait","Initializing vision");
-                    telemetry.update();
-                    vp = visionProviders[visionProviderState].newInstance();
-                    vp.initializeVision(hardwareMap, telemetry, enableTelemetry, Viewpoint.WEBCAM);
-                } catch (IllegalAccessException | InstantiationException e) {
-                    throw new RuntimeException(e);
-                }
-                visionProviderFinalized = true;
+                initializeVisionProvider(); //this is blocking
+            } else if (visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
+                deinitializeVisionProvider(); //also blocking, but should be very quick
             }
-            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_right, dpad_right)){
-                enableTelemetry = !enableTelemetry;
+            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)){
+                enableTelemetry = !enableTelemetry; //enable/disable FtcDashboard telemetry
             }
-            if(visionProviderFinalized && gamepad1.dpad_down /*specifically not toggle allowed*/){
+            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_right, dpad_right)) {
+                viewpoint = (viewpoint+1) % viewpoints.length;
+            }
+            if(visionProviderFinalized && gamepad1.left_trigger > 0.3){
                 GoldPos gp = vp.detect();
                 if (gp != GoldPos.HOLD_STATE)
                     initGoldPosTest = gp;
                 telemetry.addData("Vision", "Prep detection: %s%s", initGoldPosTest, gp==GoldPos.HOLD_STATE?" (HOLD_STATE)":"");
             }
 
-            if(vuActive){
-                telemetry.addData("Vu", "Active");
-            }
-            else{
-                telemetry.addData("Vu", "Inactive");
-            }
-
-
-
+            telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
+            telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
+            telemetry.addData("Vision", "Viewpoint: %s", viewpoints[viewpoint]);
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
-            telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
-            telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
             telemetry.update();
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
@@ -276,15 +233,7 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(vp == null) {
-            try {
-                telemetry.addData("Please wait","Initializing vision");
-                telemetry.update();
-                vp = visionProviders[visionProviderState].newInstance();
-                vp.initializeVision(hardwareMap, telemetry, enableTelemetry, Viewpoint.WEBCAM);
-            } catch (IllegalAccessException | InstantiationException e) {
-                throw new RuntimeException(e);
-            }
-            visionProviderFinalized = true;
+            initializeVisionProvider(); //this is blocking
         }
 
         robot.superman.restart(.75);
@@ -312,8 +261,8 @@ public class Game_6832 extends LinearOpMode {
                         if(testIMU())active=false;
                         //auto4();
                         break;
-                    case 4:
-                        demo((VuforiaTrackableDefaultListener) relicTemplate.getListener(),500);
+                    case 4: //IMU Following
+                        demo();
                         break;
                     case 5: //provides data for forwards/backwards calibration
                         joystickDriveStarted = false;
@@ -340,15 +289,6 @@ public class Game_6832 extends LinearOpMode {
                         //autonomous3();
                         break;
                     case 10: //vision testing
-                        if(visionConfigured)
-                        {
-                            getColumnPos((getImageFromFrame(locale.getFrameQueue().take(), PIXEL_FORMAT.RGB565)),1, mDetector);
-                        }
-                        else //setup colorblobtracker
-                        {
-                            mDetector.setHsvColor(VisionUtils.OTHER_RED_HIGH);
-                            visionConfigured=true;
-                        }
 //                        autonomous3();
                         break;
                     default:
@@ -365,51 +305,43 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
+    private void deinitializeVisionProvider() {
+        telemetry.addData("Please wait","Deinitializing vision");
+        telemetry.update();
+        vp.shutdownVision();
+        vp = null;
+    }
+
+    private void initializeVisionProvider() {
+        try {
+            telemetry.addData("Please wait","Initializing vision");
+            telemetry.update();
+            vp = visionProviders[visionProviderState].newInstance();
+            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoints[viewpoint]);
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException(e);
+        }
+        visionProviderFinalized = true;
+    }
 
 
-
-    public void demo(VuforiaTrackableDefaultListener beaconTarget, double distance){
+    public void demo(){
         //robot.glyphSystem.tiltPhoneDown();
         if(gamepad1.x){
             robot.maintainHeading(gamepad1.x);
         }
-        else {
-
-
-        }
+        /*
         if(gamepad1.y) {
-            //robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, true, false);
+            robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, true, false);
         }
 
 
         if(gamepad1.a) {
-           // robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, false, false);
+            robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, false, false);
         }
-
+        */
     }
 
-
-
-
-    public String getRelicCodexStr(){
-        RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
-        if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
-            if(relicConfig == RelicRecoveryVuMark.LEFT) return "left";
-            else if(relicConfig == RelicRecoveryVuMark.RIGHT) return "right";
-            else return "center";
-        }
-        return "unknown";
-    }
-
-    public int getRelicCodex(){
-        RelicRecoveryVuMark relicConfig = RelicRecoveryVuMark.from(relicTemplate);
-        if(relicConfig != RelicRecoveryVuMark.UNKNOWN){
-            if(relicConfig == RelicRecoveryVuMark.LEFT) return 0;
-            else if(relicConfig == RelicRecoveryVuMark.RIGHT) return 2;
-            else return 1;
-        }
-        return 1;
-    }
     public boolean testDistnace(){
         switch(autoSetupStage){
             case 0:
