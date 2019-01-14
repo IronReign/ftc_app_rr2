@@ -17,8 +17,9 @@ public class DummyVisionIntegration implements VisionProvider {
     }
 
     @Override
-    public void shutdownVision() {
+    public void shutdownVision() {}
 
-    }
+    @Override
+    public void reset() {}
 
 }

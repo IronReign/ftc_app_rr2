@@ -55,6 +55,7 @@ public class OpenCVIntegration implements VisionProvider {
         vuforia.setFrameQueueCapacity(1);
     }
 
+    @Override
     public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry, Viewpoint viewpoint) {
         initVuforia(hardwareMap, viewpoint);
         q = vuforia.getFrameQueue();
@@ -66,8 +67,15 @@ public class OpenCVIntegration implements VisionProvider {
         pipeline = new RoverRuckusGripPipeline();
     }
 
+    @Override
     public void shutdownVision() {}
 
+    @Override
+    public void reset() {
+        state = 0;
+    }
+
+    @Override
     public GoldPos detect() {
         switch(state) {
             case 0:

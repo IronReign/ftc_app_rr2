@@ -236,6 +236,8 @@ public class Game_6832 extends LinearOpMode {
             initializeVisionProvider(); //this is blocking
         }
 
+        vp.reset();
+
         robot.superman.restart(.75);
         robot.superman.restart(.75);
 

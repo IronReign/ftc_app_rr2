@@ -150,4 +150,9 @@ public class TensorflowIntegration implements VisionProvider {
 
     }
 
+    @Override
+    public void reset() {
+
+    }
+
 }

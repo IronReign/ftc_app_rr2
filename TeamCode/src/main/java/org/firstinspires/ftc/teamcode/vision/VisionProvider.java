@@ -12,4 +12,6 @@ public interface VisionProvider {
 
     public GoldPos detect();
 
+    public void reset();
+
 }

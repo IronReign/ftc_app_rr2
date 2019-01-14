@@ -53,7 +53,6 @@ public class DogeCVIntegration implements VisionProvider {
 
     @Override
     public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry, Viewpoint viewpoint) {
-
         initVuforia(hardwareMap, viewpoint);
         q = vuforia.getFrameQueue();
         state = 0;
@@ -64,6 +63,7 @@ public class DogeCVIntegration implements VisionProvider {
         pipeline = new DogeCVPipeline();
     }
 
+    @Override
     public void shutdownVision() {}
 
     @Override
@@ -101,5 +101,10 @@ public class DogeCVIntegration implements VisionProvider {
         }
         state++;
         return GoldPos.HOLD_STATE;
+    }
+
+    @Override
+    public void reset() {
+        state = 0;
     }
 }
