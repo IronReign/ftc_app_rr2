@@ -136,7 +136,7 @@ extends java.lang.Object</pre>
 <td class="colFirst"><code>static class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.CameraMonitorFeedback.html" title="enum in org.firstinspires.ftc.robotcore.external.navigation">VuforiaLocalizer.Parameters.CameraMonitorFeedback</a></span></code>
 <div class="block"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.CameraMonitorFeedback.html" title="enum in org.firstinspires.ftc.robotcore.external.navigation"><code>VuforiaLocalizer.Parameters.CameraMonitorFeedback</code></a> enumerates the kinds of positioning feedback that
- may be drawn in the camera monitor window.</div>
+ may be drawn in the viewpoint monitor window.</div>
 </td>
 </tr>
 </table>
@@ -162,21 +162,21 @@ extends java.lang.Object</pre>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>Camera</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#camera">camera</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#viewpoint">viewpoint</a></span></code>
 <div class="block">If non-null, then this indicates the <code>Camera</code> to use with Vuforia.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.CameraDirection.html" title="enum in org.firstinspires.ftc.robotcore.external.navigation">VuforiaLocalizer.CameraDirection</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraDirection">cameraDirection</a></span></code>
-<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#camera"><code>camera</code></a> is null and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a> is the 'unknown' camera name, then
- this value is used to indicate the camera to use with Vuforia.</div>
+<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#viewpoint"><code>viewpoint</code></a> is null and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a> is the 'unknown' viewpoint name, then
+ this value is used to indicate the viewpoint to use with Vuforia.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.CameraMonitorFeedback.html" title="enum in org.firstinspires.ftc.robotcore.external.navigation">VuforiaLocalizer.Parameters.CameraMonitorFeedback</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorFeedback">cameraMonitorFeedback</a></span></code>
-<div class="block">Indicates the style of camera monitoring feedback to use.</div>
+<div class="block">Indicates the style of viewpoint monitoring feedback to use.</div>
 </td>
 </tr>
 <tr class="altColor">
@@ -184,26 +184,26 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent">cameraMonitorViewIdParent</a></span></code>
 <div class="block">The resource id of the view within <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#activity"><code>activity</code></a> that will be used
  as the parent for a live monitor which provides feedback as to what the
- camera is seeing.</div>
+ viewpoint is seeing.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>ViewGroup</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewParent">cameraMonitorViewParent</a></span></code>
 <div class="block">The view that will be used as the parent for a live monitor which provides
- feedback as to what the the camera is seeing.</div>
+ feedback as to what the the viewpoint is seeing.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>CameraName</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName">cameraName</a></span></code>
-<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#camera"><code>camera</code></a> is non-null, this value is ignored.</div>
+<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#viewpoint"><code>viewpoint</code></a> is non-null, this value is ignored.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#fillCameraMonitorViewParent">fillCameraMonitorViewParent</a></span></code>
-<div class="block">Controls whether the camera monitor should entirely fill the camera monitor view parent
+<div class="block">Controls whether the viewpoint monitor should entirely fill the viewpoint monitor view parent
  or not.</div>
 </td>
 </tr>
@@ -246,7 +246,7 @@ extends java.lang.Object</pre>
 <tr class="altColor">
 <td class="colFirst"><code>int[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#webcamCalibrationResources">webcamCalibrationResources</a></span></code>
-<div class="block">The resources (if any, may be empty or null) used to provide additional camera calibration data for
+<div class="block">The resources (if any, may be empty or null) used to provide additional viewpoint calibration data for
  webcams used with Vuforia.</div>
 </td>
 </tr>
@@ -334,15 +334,15 @@ extends java.lang.Object</pre>
  <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html" title="class in org.firstinspires.ftc.robotcore.external.navigation"><code>VuforiaLocalizer.Parameters</code></a> instance with which you initialize Vuforia.</div>
 </li>
 </ul>
-<a name="camera">
+<a name="viewpoint">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>camera</h4>
-<pre>public&nbsp;Camera camera</pre>
+<h4>viewpoint</h4>
+<pre>public&nbsp;Camera viewpoint</pre>
 <div class="block">If non-null, then this indicates the <code>Camera</code> to use with Vuforia. Otherwise,
- the camera is determined using <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a> and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraDirection"><code>cameraDirection</code></a>.</div>
+ the viewpoint is determined using <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a> and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraDirection"><code>cameraDirection</code></a>.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a>, 
@@ -357,18 +357,18 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>cameraName</h4>
 <pre>public&nbsp;CameraName cameraName</pre>
-<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#camera"><code>camera</code></a> is non-null, this value is ignored.
+<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#viewpoint"><code>viewpoint</code></a> is non-null, this value is ignored.
 
- Otherwise, if this value is neither null nor the 'unknown' camera name, the it indicates
- the name of the camera to use with Vuforia. It will be opened as needed.
+ Otherwise, if this value is neither null nor the 'unknown' viewpoint name, the it indicates
+ the name of the viewpoint to use with Vuforia. It will be opened as needed.
 
- Otherwise, if this value is the 'unknown' camera name, then this value is ignored and
- <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraDirection"><code>cameraDirection</code></a> is used to indicate the camera.
+ Otherwise, if this value is the 'unknown' viewpoint name, then this value is ignored and
+ <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraDirection"><code>cameraDirection</code></a> is used to indicate the viewpoint.
 
  Otherwise, this value is null, and an error has occurred.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#camera"><code>camera</code></a>, 
+<dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#viewpoint"><code>viewpoint</code></a>,
 <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraDirection"><code>cameraDirection</code></a></dd>
 </dl>
 </li>
@@ -380,12 +380,12 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>cameraDirection</h4>
 <pre>public&nbsp;<a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.CameraDirection.html" title="enum in org.firstinspires.ftc.robotcore.external.navigation">VuforiaLocalizer.CameraDirection</a> cameraDirection</pre>
-<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#camera"><code>camera</code></a> is null and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a> is the 'unknown' camera name, then
- this value is used to indicate the camera to use with Vuforia. Note that this value
+<div class="block">If <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#viewpoint"><code>viewpoint</code></a> is null and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a> is the 'unknown' viewpoint name, then
+ this value is used to indicate the viewpoint to use with Vuforia. Note that this value
  can only indicate the use of built-in cameras found on a phone.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#camera"><code>camera</code></a>, 
+<dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#viewpoint"><code>viewpoint</code></a>,
 <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraName"><code>cameraName</code></a></dd>
 </dl>
 </li>
@@ -412,9 +412,9 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>cameraMonitorFeedback</h4>
 <pre>public&nbsp;<a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.CameraMonitorFeedback.html" title="enum in org.firstinspires.ftc.robotcore.external.navigation">VuforiaLocalizer.Parameters.CameraMonitorFeedback</a> cameraMonitorFeedback</pre>
-<div class="block">Indicates the style of camera monitoring feedback to use. Null indicates that
+<div class="block">Indicates the style of viewpoint monitoring feedback to use. Null indicates that
  a default feedback style is to be used. <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.CameraMonitorFeedback.html#NONE"><code>None</code></a> indicates
- that the camera monitoring is to be provided, but no feedback is to be drawn thereon.</div>
+ that the viewpoint monitoring is to be provided, but no feedback is to be drawn thereon.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.CameraMonitorFeedback.html" title="enum in org.firstinspires.ftc.robotcore.external.navigation"><code>VuforiaLocalizer.Parameters.CameraMonitorFeedback</code></a>, 
@@ -431,9 +431,9 @@ extends java.lang.Object</pre>
 <pre>public&nbsp;int cameraMonitorViewIdParent</pre>
 <div class="block">The resource id of the view within <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#activity"><code>activity</code></a> that will be used
  as the parent for a live monitor which provides feedback as to what the
- camera is seeing. If both <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a> and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewParent"><code>cameraMonitorViewParent</code></a>
+ viewpoint is seeing. If both <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a> and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewParent"><code>cameraMonitorViewParent</code></a>
  are specified, <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewParent"><code>cameraMonitorViewParent</code></a> is used and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a>
- is ignored. Optional: if no view monitor parent is indicated, then no camera
+ is ignored. Optional: if no view monitor parent is indicated, then no viewpoint
  monitoring is provided. The default is zero, which does not indicate a view parent.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
@@ -450,10 +450,10 @@ extends java.lang.Object</pre>
 <h4>cameraMonitorViewParent</h4>
 <pre>public&nbsp;ViewGroup cameraMonitorViewParent</pre>
 <div class="block">The view that will be used as the parent for a live monitor which provides
- feedback as to what the the camera is seeing. If both <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a>
+ feedback as to what the the viewpoint is seeing. If both <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a>
  and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewParent"><code>cameraMonitorViewParent</code></a> are specified, <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewParent"><code>cameraMonitorViewParent</code></a> is used
  and <a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a> is ignored. Optional: if no view monitor parent is
- indicated, then no camera monitoring is provided. The default is null.</div>
+ indicated, then no viewpoint monitoring is provided. The default is null.</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a>, 
@@ -468,10 +468,10 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>fillCameraMonitorViewParent</h4>
 <pre>public&nbsp;boolean fillCameraMonitorViewParent</pre>
-<div class="block">Controls whether the camera monitor should entirely fill the camera monitor view parent
- or not. If true, then, depending on the aspect ratios of the camera and the view, some
- of the camera's data might not be seen. The default is false, which renders the entire
- camera image in the camera monitor view (if the latter is specified).</div>
+<div class="block">Controls whether the viewpoint monitor should entirely fill the viewpoint monitor view parent
+ or not. If true, then, depending on the aspect ratios of the viewpoint and the view, some
+ of the viewpoint's data might not be seen. The default is false, which renders the entire
+ viewpoint image in the viewpoint monitor view (if the latter is specified).</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../../../org/firstinspires/ftc/robotcore/external/navigation/VuforiaLocalizer.Parameters.html#cameraMonitorViewIdParent"><code>cameraMonitorViewIdParent</code></a>, 
@@ -497,8 +497,8 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>webcamCalibrationResources</h4>
 <pre>public&nbsp;int[] webcamCalibrationResources</pre>
-<div class="block">The resources (if any, may be empty or null) used to provide additional camera calibration data for
- webcams used with Vuforia. Using calibrated camera helps increase the accuracy of
+<div class="block">The resources (if any, may be empty or null) used to provide additional viewpoint calibration data for
+ webcams used with Vuforia. Using calibrated viewpoint helps increase the accuracy of
  Vuforia image target tracking. Calibration for several cameras is built into the FTC SDK;
  the optional resources here provides a means for teams to provide calibrations beyond this
  built-in set.

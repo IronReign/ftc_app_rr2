@@ -32,8 +32,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.teamcode.RC;
@@ -72,15 +72,16 @@ public class TensorflowIntegration implements VisionProvider {
     /**
      * Initialize the Vuforia localization engine.
      */
-    public void initVuforia() {
-        /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-         */
+
+    private void initVuforia(HardwareMap hardwareMap, Viewpoint viewpoint) {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
         parameters.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
-        ;
-        parameters.cameraDirection = CameraDirection.FRONT;
-        //  Instantiate the Vuforia engine
+        if (viewpoint == Viewpoint.BACK)
+            parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        else if (viewpoint == Viewpoint.WEBCAM)
+            parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        else
+            parameters.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
     }
 
@@ -96,8 +97,8 @@ public class TensorflowIntegration implements VisionProvider {
     }
 
     @Override
-    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry) {
-        initVuforia();
+    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry, Viewpoint viewpoint) {
+        initVuforia(hardwareMap, viewpoint);
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
             initTfod(hardwareMap);

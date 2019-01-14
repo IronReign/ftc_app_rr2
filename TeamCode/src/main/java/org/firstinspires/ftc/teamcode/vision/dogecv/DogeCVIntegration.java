@@ -10,9 +10,11 @@ import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.RC;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
+import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.opencv.android.Utils;
@@ -35,18 +37,24 @@ public class DogeCVIntegration implements VisionProvider {
     private boolean enableTelemetry;
     private DogeCVPipeline pipeline;
 
-    private void initVuforia() {
+    private void initVuforia(HardwareMap hardwareMap, Viewpoint viewpoint) {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
         parameters.vuforiaLicenseKey = RC.VUFORIA_LICENSE_KEY;
-        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
+        if (viewpoint == Viewpoint.BACK)
+            parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        else if (viewpoint == Viewpoint.WEBCAM)
+            parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        else
+            parameters.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
         vuforia.setFrameQueueCapacity(1);
     }
 
     @Override
-    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry) {
-        initVuforia();
+    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry, Viewpoint viewpoint) {
+
+        initVuforia(hardwareMap, viewpoint);
         q = vuforia.getFrameQueue();
         state = 0;
         this.telemetry = telemetry;

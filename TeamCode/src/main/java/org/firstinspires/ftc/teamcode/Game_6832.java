@@ -49,10 +49,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
-import org.firstinspires.ftc.teamcode.vision.DummyVisionIntegration;
+import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
-import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
-import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
@@ -75,7 +73,7 @@ import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Game_6832", group="Linear Opmode")  // @Autonomous(...) is the other common choice
+@TeleOp(name="Game_6832", group="Challenge")  // @Autonomous(...) is the other common choice
 //  @Autonomous
 
 public class Game_6832 extends LinearOpMode {
@@ -240,7 +238,7 @@ public class Game_6832 extends LinearOpMode {
                     telemetry.addData("Please wait","Initializing vision");
                     telemetry.update();
                     vp = visionProviders[visionProviderState].newInstance();
-                    vp.initializeVision(hardwareMap, telemetry, enableTelemetry);
+                    vp.initializeVision(hardwareMap, telemetry, enableTelemetry, Viewpoint.WEBCAM);
                 } catch (IllegalAccessException | InstantiationException e) {
                     throw new RuntimeException(e);
                 }
@@ -282,7 +280,7 @@ public class Game_6832 extends LinearOpMode {
                 telemetry.addData("Please wait","Initializing vision");
                 telemetry.update();
                 vp = visionProviders[visionProviderState].newInstance();
-                vp.initializeVision(hardwareMap, telemetry, enableTelemetry);
+                vp.initializeVision(hardwareMap, telemetry, enableTelemetry, Viewpoint.WEBCAM);
             } catch (IllegalAccessException | InstantiationException e) {
                 throw new RuntimeException(e);
             }

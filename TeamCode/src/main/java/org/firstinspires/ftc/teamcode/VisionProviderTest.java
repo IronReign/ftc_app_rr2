@@ -32,10 +32,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.vision.DummyVisionIntegration;
+import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
-import org.firstinspires.ftc.teamcode.vision.OpenCVIntegration;
-import org.firstinspires.ftc.teamcode.vision.TensorflowIntegration;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
@@ -68,7 +66,7 @@ public class VisionProviderTest extends LinearOpMode {
                     telemetry.addData("Please wait","Initializing vision");
                     telemetry.update();
                     vp = visionProviders[visionProviderState].newInstance();
-                    vp.initializeVision(hardwareMap, telemetry, true);
+                    vp.initializeVision(hardwareMap, telemetry, true, Viewpoint.WEBCAM);
                 } catch (IllegalAccessException | InstantiationException e) {
                     throw new RuntimeException(e);
                 }
@@ -84,7 +82,7 @@ public class VisionProviderTest extends LinearOpMode {
                 telemetry.addData("Please wait","Initializing vision");
                 telemetry.update();
                 vp = visionProviders[visionProviderState].newInstance();
-                vp.initializeVision(hardwareMap, telemetry, true);
+                vp.initializeVision(hardwareMap, telemetry, true, Viewpoint.WEBCAM);
             } catch (IllegalAccessException | InstantiationException e) {
                 throw new RuntimeException(e);
             }

@@ -97,15 +97,15 @@ Version 4.0 (released on 18.09.12)
 
 Changes include:
  * Initial support for UVC compatible cameras 
-    - If UVC camera has a unique serial number, RC will detect and enumerate by serial number.
-    - If UVC camera lacks a unique serial number, RC will only support one camera of that type connected.
+    - If UVC viewpoint has a unique serial number, RC will detect and enumerate by serial number.
+    - If UVC viewpoint lacks a unique serial number, RC will only support one viewpoint of that type connected.
     - Calibration settings for a few cameras are included (see TeamCode/src/main/res/xml/teamwebcamcalibrations.xml for details).
     - User can upload calibration files from Program and Manage web interface.
     - UVC cameras seem to draw a fair amount of electrical current from the USB bus.
          + This does not appear to present any problems for the REV Robotics Control Hub.
 	 + This does seem to create stability problems when using some cameras with an Android phone-based Robot Controller.
 	 + FTC Tech Team is investigating options to mitigate this issue with the phone-based Robot Controllers.
-    - Updated sample Vuforia Navigation and VuMark Op Modes to demonstrate how to use an internal phone-based camera and an external UVC webcam.    
+    - Updated sample Vuforia Navigation and VuMark Op Modes to demonstrate how to use an internal phone-based viewpoint and an external UVC webcam.
 
  * Support for improved motor control.
     - REV Robotics Expansion Hub firmware 1.8 and greater will support a feed forward mechanism for closed loop motor control.
@@ -506,7 +506,7 @@ Version 2.30 (released on 16.10.05)
      - Added support for AnalogOutput
      - Fix for CompassSensor setMode block
   * Vuforia
-     - Fix deadlock / make camera data available while Vuforia is running.
+     - Fix deadlock / make viewpoint data available while Vuforia is running.
      - Update to Vuforia 6.0.117 (recommended by Vuforia and Google to close security loophole).
   * Fix for autonomous 30 second timer bug (where timer was in effect, even though it appeared to have timed out).
   * opModeIsActive changes to allow cleanup after op mode is stopped (with enforced 2 second safety timeout).

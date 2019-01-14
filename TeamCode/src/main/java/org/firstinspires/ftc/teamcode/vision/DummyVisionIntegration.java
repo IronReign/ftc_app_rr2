@@ -7,7 +7,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class DummyVisionIntegration implements VisionProvider {
 
     @Override
-    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry) {
+    public void initializeVision(HardwareMap hardwareMap, Telemetry telemetry, boolean enableTelemetry, Viewpoint viewpoint) {
 
     }
 
