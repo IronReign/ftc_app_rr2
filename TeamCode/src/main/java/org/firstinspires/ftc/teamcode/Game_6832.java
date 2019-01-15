@@ -46,6 +46,8 @@ import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
+import org.firstinspires.ftc.teamcode.vision.dogecv.DogeCVFinalStep;
+import org.firstinspires.ftc.teamcode.vision.dogecv.DogeCVIntegration;
 
 import java.util.Locale;
 
@@ -153,6 +155,8 @@ public class Game_6832 extends LinearOpMode {
     private static final Class<? extends VisionProvider>[] visionProviders = VisionProviders.visionProviders;
     private int viewpoint = 2;
     private static final Viewpoint[] viewpoints = Viewpoint.values();
+    private int dogeCvFinalStep = 1;
+    private static final DogeCVFinalStep[] dogeCvFinalSteps = DogeCVFinalStep.values();
     private GoldPos initGoldPosTest = null;
     private int mineralState = 0;
 
@@ -199,7 +203,7 @@ public class Game_6832 extends LinearOpMode {
             }
 
             if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                visionProviderState = (visionProviderState+1) % visionProviders.length;
+                visionProviderState = (visionProviderState+1) % visionProviders.length; //switch vision provider
             }
             if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)){
                 initializeVisionProvider(); //this is blocking
@@ -210,7 +214,10 @@ public class Game_6832 extends LinearOpMode {
                 enableTelemetry = !enableTelemetry; //enable/disable FtcDashboard telemetry
             }
             if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_right, dpad_right)) {
-                viewpoint = (viewpoint+1) % viewpoints.length;
+                viewpoint = (viewpoint+1) % viewpoints.length; //switch viewpoint
+            }
+            if(!visionProviderFinalized && toggleAllowed(gamepad1.b, b)){
+                dogeCvFinalStep = (dogeCvFinalStep+1) % dogeCvFinalSteps.length; //switch dogecv final step
             }
             if(visionProviderFinalized && gamepad1.left_trigger > 0.3){
                 GoldPos gp = vp.detect();
@@ -222,6 +229,9 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
             telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
             telemetry.addData("Vision", "Viewpoint: %s", viewpoints[viewpoint]);
+            telemetry.addData("Vision", "DogeCVFInalStep: %s", dogeCvFinalSteps[dogeCvFinalStep]);
+
+
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
@@ -320,6 +330,8 @@ public class Game_6832 extends LinearOpMode {
             telemetry.update();
             vp = visionProviders[visionProviderState].newInstance();
             vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoints[viewpoint]);
+            if (vp instanceof DogeCVIntegration)
+                ((DogeCVIntegration) vp).setDogeCVFinalStep(dogeCvFinalSteps[dogeCvFinalStep]);
         } catch (IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }

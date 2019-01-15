@@ -36,6 +36,11 @@ public class DogeCVIntegration implements VisionProvider {
     private FtcDashboard dashboard;
     private boolean enableTelemetry;
     private DogeCVPipeline pipeline;
+    private DogeCVFinalStep finalStep;
+
+    public void setDogeCVFinalStep(DogeCVFinalStep finalStep) {
+        this.finalStep = finalStep;
+    }
 
     private void initVuforia(HardwareMap hardwareMap, Viewpoint viewpoint) {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -85,7 +90,7 @@ public class DogeCVIntegration implements VisionProvider {
                 mat = VisionUtils.bitmapToMat(bm, CvType.CV_8UC3);
                 break;
             case 1:
-                display = pipeline.process(mat);
+                display = pipeline.process(mat, finalStep);
                 break;
             case 2:
                 if(!enableTelemetry)
