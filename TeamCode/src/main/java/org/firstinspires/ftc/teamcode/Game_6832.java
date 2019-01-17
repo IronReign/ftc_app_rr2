@@ -539,7 +539,7 @@ public class Game_6832 extends LinearOpMode {
                         if(robot.driveForward(true, .890,.65)){
                             //start collector and timer to yeet ducky
                             autoTimer = futureTime(4);
-                            robot.collector.collection();
+                            robot.collector.collect();
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -548,7 +548,7 @@ public class Game_6832 extends LinearOpMode {
                         if(robot.driveForward(true, .762,.65)){
                             //start collector and timer to yeet ducky
                             autoTimer = futureTime(4);
-                            robot.collector.collection();
+                            robot.collector.collect();
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -557,7 +557,7 @@ public class Game_6832 extends LinearOpMode {
                         if(robot.driveForward(true, .890,.65)){
                             //start collector and timer to yeet ducky
                             autoTimer = futureTime(4);
-                            robot.collector.collection();
+                            robot.collector.collect();
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -718,7 +718,7 @@ public class Game_6832 extends LinearOpMode {
             case 7:
                 /**Correct appropriate distance to drive to approach center of the mineral**/
                 autoTimer = futureTime(1);
-                robot.collector.collection();
+                robot.collector.collect();
                 autoSetupStage++;
                 break;
             case 8:
@@ -785,7 +785,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 3:
                 //Drop ducky into depot
-                /*if(robot.collector.setTargetPosition()){
+                /*if(robot.collector.setElbowTargetPos()){
                     robot.resetMotors(true);
                     autoStage++;
                 }*/
@@ -912,16 +912,16 @@ public class Game_6832 extends LinearOpMode {
         int restposition = 0;
 
         /*if(toggleAllowed(gamepad1.y, y)){
-            if (robot.supermanMotor.getCurrentPosition() < standposition && robot.supermanMotor.getTargetPosition() < standposition) {
-                robot.supermanMotor.setTargetPosition((int) Math.min(robot.supermanMotor.getCurrentPosition(), standposition));
+            if (robot.supermanMotor.getElbowCurrentPos() < standposition && robot.supermanMotor.getElbowTargetPos() < standposition) {
+                robot.supermanMotor.setElbowTargetPos((int) Math.min(robot.supermanMotor.getElbowCurrentPos(), standposition));
                 robot.supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.supermanMotor.setPower(.80);
+                robot.supermanMotor.setElbowPwr(.80);
             }
         }else{
-            if (robot.supermanMotor.getCurrentPosition() > restposition && robot.supermanMotor.getTargetPosition() > restposition) {
-                robot.supermanMotor.setTargetPosition((int) Math.min(robot.supermanMotor.getCurrentPosition(), restposition));
+            if (robot.supermanMotor.getElbowCurrentPos() > restposition && robot.supermanMotor.getElbowTargetPos() > restposition) {
+                robot.supermanMotor.setElbowTargetPos((int) Math.min(robot.supermanMotor.getElbowCurrentPos(), restposition));
                 robot.supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.supermanMotor.setPower(-.80);
+                robot.supermanMotor.setElbowPwr(-.80);
             }
         }*/
 
@@ -931,34 +931,42 @@ public class Game_6832 extends LinearOpMode {
         }*/
 
         if(gamepad1.y){//y is deposit
-            robot.collector.setTargetPosition(robot.collector.posDeposit);
+            robot.collector.setElbowTargetPos(robot.collector.posDeposit);
             robot.superman.setTargetPosition(robot.superman.posDeposit);
         }
         if(gamepad1.a){
-            robot.collector.setTargetPosition(robot.collector.posIntake);
+            robot.collector.setElbowTargetPos(robot.collector.posIntake);
             robot.superman.setTargetPosition(robot.superman.posIntake);
         }
         if(gamepad1.x){
-            robot.collector.setTargetPosition(robot.collector.posPreLatch);
+            robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
             robot.superman.setTargetPosition(robot.superman.posPreLatch);
         }
         if(toggleAllowed(gamepad1.b,b)){
-            if(robot.collector.getTargetPosition()!=robot.collector.posLatch) {
-                robot.collector.setTargetPosition(robot.collector.posLatch);
+            if(robot.collector.getElbowTargetPos()!=robot.collector.posLatch) {
+                robot.collector.setElbowTargetPos(robot.collector.posLatch);
                 robot.superman.setTargetPosition(robot.superman.posLatch);
             }
             else {
-                robot.collector.setTargetPosition(robot.collector.posPostLatch);
+                robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
                 robot.superman.setTargetPosition(robot.superman.posPostLatch);
             }
         }
 
+//        if(gamepad1.dpad_down){
+//            robot.superman.lower();
+//        }
+//        if(gamepad1.dpad_up){
+//            robot.superman.raise();
+//        }
+
         if(gamepad1.dpad_down){
-            robot.superman.lower();
+            robot.collector.retract();
         }
         if(gamepad1.dpad_up){
-            robot.superman.raise();
+            robot.collector.extend();
         }
+
         if(gamepad1.dpad_right){
             robot.collector.open();
         }
@@ -966,7 +974,13 @@ public class Game_6832 extends LinearOpMode {
             robot.collector.close();
         }
 
-       robot.intake.setPower(gamepad1.left_trigger - gamepad1.right_trigger);
+       if(gamepad1.right_trigger > .5){
+            robot.collector.collect();
+       }
+
+        else if(gamepad1.left_trigger > .5){
+            robot.collector.eject();
+        }
 
         if(gamepad1.left_bumper){
             if(robot.deposit.getPosition()<1)
@@ -976,7 +990,7 @@ public class Game_6832 extends LinearOpMode {
         }
         if(gamepad1.right_bumper){
             //robot.resetIMU();
-            robot.collector.restart(1);
+            robot.collector.restart(1, .5);
             robot.superman.restart(.75);
             robot.maintainHeading(gamepad1.right_bumper);
         }
@@ -988,8 +1002,8 @@ public class Game_6832 extends LinearOpMode {
             if(gamepad1.a) robot.collector.lower();
             if(gamepad1.x) robot.collector.kill();
             if(gamepad1.b) robot.collector.restart(.5);
-            if(gamepad1.dpad_up) robot.collector.setTargetPosition(robot.collector.posIntake);
-            if(gamepad1.dpad_down) robot.collector.setTargetPosition(robot.collector.posLatch);
+            if(gamepad1.dpad_up) robot.collector.setElbowTargetPos(robot.collector.posIntake);
+            if(gamepad1.dpad_down) robot.collector.setElbowTargetPos(robot.collector.posLatch);
             if(gamepad1.right_bumper) tf.tfDisable();
             if(gamepad1.dpad_right) telemetry.addData("TF Detection", "%s", tf.detect());
         }else{
@@ -997,10 +1011,10 @@ public class Game_6832 extends LinearOpMode {
             if(gamepad1.a) robot.superman.lower();
             if(gamepad1.x) robot.superman.kill();
             if(gamepad1.b) robot.superman.restart(.75);
-            if(gamepad1.dpad_up) robot.superman.setTargetPosition(robot.collector.posIntake);
-            if(gamepad1.dpad_down) robot.superman.setTargetPosition(robot.collector.posLatch);
-            if(Math.abs(gamepad1.left_trigger)>.5) robot.collector.collection();
-            else if(Math.abs(gamepad1.right_trigger)>.5) robot.collector.rejection();
+            if(gamepad1.dpad_up) robot.superman.setElbowTargetPos(robot.collector.posIntake);
+            if(gamepad1.dpad_down) robot.superman.setElbowTargetPos(robot.collector.posLatch);
+            if(Math.abs(gamepad1.left_trigger)>.5) robot.collector.collect();
+            else if(Math.abs(gamepad1.right_trigger)>.5) robot.collector.eject();
             else robot.collector.stopIntake();
         }*/
 
@@ -1206,12 +1220,12 @@ public class Game_6832 extends LinearOpMode {
                 })
                 .addData("elbowC", new Func<String>() {
                     @Override public String value() {
-                        return Integer.toString(robot.collector.getCurrentPosition());
+                        return Integer.toString(robot.collector.getElbowCurrentPos());
                     }
                 })
                 .addData("elbowT", new Func<String>() {
                     @Override public String value() {
-                        return Integer.toString(robot.collector.getTargetPosition());
+                        return Integer.toString(robot.collector.getElbowTargetPos());
                     }
                 });
 
@@ -1279,9 +1293,15 @@ public class Game_6832 extends LinearOpMode {
                     }
                 })
 
-                .addData("supermanposition", new Func<String>(){
+                .addData("supermanPosition", new Func<String>(){
                     @Override public String value(){
                         return ""+robot.superman.getCurrentPosition();
+                    }
+                })
+
+                .addData("extendABobPosition", new Func<String>(){
+                    @Override public String value(){
+                        return ""+robot.collector.getExtendABobCurrentPos();
                     }
                 })
 
@@ -1394,12 +1414,12 @@ public class Game_6832 extends LinearOpMode {
                 //})
 //                .addData("TicksFL", new Func<String>() {
 //                    @Override public String value() {
-//                        return Long.toString(robot.motorFront.getCurrentPosition());
+//                        return Long.toString(robot.motorFront.getElbowCurrentPos());
 //                    }
 //                })
 //                .addData("TicksBL", new Func<String>() {
 //                    @Override public String value() {
-//                        return Long.toString(robot.motorBack.getCurrentPosition());
+//                        return Long.toString(robot.motorBack.getElbowCurrentPos());
 //                    }
 //                })
 //                .addData("TicksAvg", new Func<String>() {
