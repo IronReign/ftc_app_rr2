@@ -28,7 +28,7 @@ public class Collector {
 
     int extendABobPosInternal = 0;
     int extendABobPos = 0;
-    double extendABobPwr = .5;
+    double extendABobPwr = .90;
 
 
 
@@ -41,7 +41,8 @@ public class Collector {
     public int posPostLatch = 20;
     public double intakePwr = .5;
 
-    public int extendMax = 10000;
+    public int extendMax = 3700;
+    public int extendMid= 1963;
     public int extendMin = 10;
 
 
@@ -92,6 +93,7 @@ public class Collector {
 
     public void collect(){ intakeRight.setPosition(.5 + intakePwr);
         intakeLeft.setPosition(.5 + intakePwr);
+        intakeRight.setPosition(.5 + intakePwr);
     }
     public void eject(){
         intakeRight.setPosition(.5 - intakePwr);
@@ -124,6 +126,11 @@ public class Collector {
     }
     public int getElbowCurrentPos(){
         return elbowLeft.getCurrentPosition();
+        //return elbowRight.getCurrentPosition();
+    }
+    public int getElbowCurrentPos2(){
+        return elbowRight.getCurrentPosition();
+        //return elbowRight.getCurrentPosition();
     }
     public void setElbowPwr(double pwr){ elbowPwr = pwr; }
 
@@ -140,15 +147,39 @@ public class Collector {
         active = true;
     }
 
+
+    public boolean beltMin(){
+        setExtendABobTargetPos(extendMin);
+        if(getExtendABobCurrentPos() == extendMin)
+            return true;
+        return false;
+    }
+    public boolean beltMid(){
+        setExtendABobTargetPos(extendMid);
+        if(getExtendABobCurrentPos() == extendMid)
+            return true;
+        return false;
+    }
+    public boolean beltMax(){
+        setExtendABobTargetPos(extendMax);
+        if(getExtendABobCurrentPos() == extendMax)
+            return true;
+        return false;
+    }
+
+
+
+
+
     public void open(){
         setElbowTargetPos(Math.min(getElbowCurrentPos() + 100, posIntake));
     }
 
-    public void extend(){
+    public void retract(){
         setExtendABobTargetPos(Math.max(getExtendABobCurrentPos() - 100, extendMin));
     }
 
-    public void retract(){
+    public void extend(){
         setExtendABobTargetPos(Math.min(getExtendABobCurrentPos() + 100, extendMax));
     }
 

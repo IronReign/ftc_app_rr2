@@ -147,7 +147,16 @@ public class Game_6832 extends LinearOpMode {
     private int left_trigger = 11; //vision detection
     private int right_trigger = 12;
     private int back_button = 13;
-    
+
+
+
+    boolean butY = false;
+    boolean butA = false;
+    boolean butX = false;
+    boolean butB = false;
+    int targetPos = 0;
+
+
     private VisionProvider vp;
     private int visionProviderState;
     private boolean visionProviderFinalized;
@@ -930,28 +939,128 @@ public class Game_6832 extends LinearOpMode {
             supermanTester = !supermanTester;
         }*/
 
-        if(gamepad1.y){//y is deposit
-            robot.collector.setElbowTargetPos(robot.collector.posDeposit);
-            robot.superman.setTargetPosition(robot.superman.posDeposit);
+
+        if(gamepad1.y){
+            butY=true;
+            butA = false;
+            butX = false;
+            butB = false;
         }
         if(gamepad1.a){
-            robot.collector.setElbowTargetPos(robot.collector.posIntake);
-            robot.superman.setTargetPosition(robot.superman.posIntake);
+            butA=true;
+            butY = false;
+            butX = false;
+            butB = false;
         }
         if(gamepad1.x){
-            robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
-            robot.superman.setTargetPosition(robot.superman.posPreLatch);
+            butX=true;
+            butA = false;
+            butY = false;
+            butB = false;
         }
-        if(toggleAllowed(gamepad1.b,b)){
-            if(robot.collector.getElbowTargetPos()!=robot.collector.posLatch) {
-                robot.collector.setElbowTargetPos(robot.collector.posLatch);
-                robot.superman.setTargetPosition(robot.superman.posLatch);
-            }
-            else {
-                robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
-                robot.superman.setTargetPosition(robot.superman.posPostLatch);
-            }
+        if(gamepad1.b){
+            butB=true;
+            butA = false;
+            butX = false;
+            butY = false;
         }
+
+        if(butA || butB || butX || butY) {
+            if (robot.collector.beltMid()) {
+                if (butY) {//position for deposit
+                    robot.collector.setElbowTargetPos(robot.collector.posDeposit);
+                    robot.superman.setTargetPosition(robot.superman.posDeposit);
+                    targetPos = robot.collector.posDeposit;
+                }
+                if (butA) {  //position to collect minerals
+                    robot.collector.setElbowTargetPos(robot.collector.posIntake);
+                    robot.superman.setTargetPosition(robot.superman.posIntake);
+                    targetPos = robot.collector.posIntake;
+                }
+                if (butX) { //target for pre-latching
+                    robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
+                    robot.superman.setTargetPosition(robot.superman.posPreLatch);
+                    targetPos = robot.collector.posPreLatch;
+                }
+                if (toggleAllowed(butB, b)) {
+                    if (robot.collector.getElbowTargetPos() != robot.collector.posLatch) {
+                        robot.collector.setElbowTargetPos(robot.collector.posLatch);
+                        robot.superman.setTargetPosition(robot.superman.posLatch);
+                        targetPos = robot.collector.posLatch;
+                    } else {
+                        robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
+                        robot.superman.setTargetPosition(robot.superman.posPostLatch);
+                        targetPos = robot.collector.posPostLatch;
+                    }
+                }
+
+                if (robot.collector.getElbowCurrentPos() == targetPos) {
+                    butB = false;
+                    butA = false;
+                    butX = false;
+                    butY = false;
+                }
+            }
+        }else{
+            robot.collector.beltMax();
+        }
+
+        /**
+        if(butY==true ||butB==true ||butX==true ||butA==true ){
+            switch(beltPos){
+                case 0:
+                    robot.collector.setExtendABobTargetPos(robot.collector.extendMin);
+                    break;
+                case 1:
+                    robot.collector.setExtendABobTargetPos(robot.collector.extendMid);
+                    if(robot.collector.getExtendABobCurrentPos()==robot.collector.extendMid){
+                        if(butY){//y is deposit
+                            robot.collector.setElbowTargetPos(robot.collector.posDeposit);
+                            robot.superman.setTargetPosition(robot.superman.posDeposit);
+                            targetPos = robot.collector.posDeposit;
+                        }
+                        if(butA){
+                            robot.collector.setElbowTargetPos(robot.collector.posIntake);
+                            robot.superman.setTargetPosition(robot.superman.posIntake);
+                            targetPos = robot.collector.posIntake;
+                        }
+                        if(butX){
+                            robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
+                            robot.superman.setTargetPosition(robot.superman.posPreLatch);
+                            targetPos = robot.collector.posPreLatch;
+                        }
+                        if(toggleAllowed(butB,b)){
+                            if(robot.collector.getElbowTargetPos()!=robot.collector.posLatch) {
+                                robot.collector.setElbowTargetPos(robot.collector.posLatch);
+                                robot.superman.setTargetPosition(robot.superman.posLatch);
+                                targetPos = robot.collector.posLatch;
+                            }
+                            else {
+                                robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
+                                robot.superman.setTargetPosition(robot.superman.posPostLatch);
+                                targetPos = robot.collector.posPostLatch;
+                            }
+                        }
+
+                        if(robot.collector.getElbowCurrentPos()==targetPos){
+                            beltPos++;
+                        }
+                    }
+                    break;
+                case 2:
+                    robot.collector.setExtendABobTargetPos(robot.collector.extendMin);
+                    if(robot.collector.getExtendABobCurrentPos()==robot.collector.extendMid) {
+                        butY = false;
+                        butX = false;
+                        butA = false;
+                        butB = false;
+                    }
+                    break;
+
+        }
+        }**/
+
+
 
 //        if(gamepad1.dpad_down){
 //            robot.superman.lower();
@@ -1221,6 +1330,11 @@ public class Game_6832 extends LinearOpMode {
                 .addData("elbowC", new Func<String>() {
                     @Override public String value() {
                         return Integer.toString(robot.collector.getElbowCurrentPos());
+                    }
+                })
+                .addData("elbowC2", new Func<String>() {
+                    @Override public String value() {
+                        return Integer.toString(robot.collector.getElbowCurrentPos2());
                     }
                 })
                 .addData("elbowT", new Func<String>() {
