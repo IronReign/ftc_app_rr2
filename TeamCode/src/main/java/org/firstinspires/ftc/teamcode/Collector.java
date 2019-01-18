@@ -42,7 +42,7 @@ public class Collector {
     public double intakePwr = .5;
 
     public int extendMax = 3700;
-    public int extendMid= 1963;
+    public int extendMid= 2300;
     public int extendMin = 10;
 
 

@@ -1001,8 +1001,6 @@ public class Game_6832 extends LinearOpMode {
                     butY = false;
                 }
             }
-        }else{
-            robot.collector.beltMax();
         }
 
         /**
@@ -1092,10 +1090,7 @@ public class Game_6832 extends LinearOpMode {
         }
 
         if(gamepad1.left_bumper){
-            if(robot.deposit.getPosition()<1)
-                robot.deposit.setPosition(robot.deposit.getPosition()+.05);
-            else
-                robot.deposit.setPosition(robot.deposit.getPosition()-.05);
+            robot.collector.setExtendABobTargetPos(robot.collector.extendMid);
         }
         if(gamepad1.right_bumper){
             //robot.resetIMU();
