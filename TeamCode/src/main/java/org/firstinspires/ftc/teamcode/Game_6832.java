@@ -133,7 +133,7 @@ public class Game_6832 extends LinearOpMode {
     boolean testableDirection = true;
 
     //values associated with the buttons in the toggleAllowed method
-    private boolean[] buttonSavedStates = new boolean[14];
+    private boolean[] buttonSavedStates = new boolean[16];
     private int a = 0; //lower glyph lift
     private int b = 1; //toggle grip/release on glyph
     private int x = 2; //no function
@@ -148,6 +148,8 @@ public class Game_6832 extends LinearOpMode {
     private int left_trigger = 11; //vision detection
     private int right_trigger = 12;
     private int back_button = 13;
+    private int left_stick_button = 14;
+    private int right_stick_button = 15; //sound player
 
 
 
@@ -169,6 +171,9 @@ public class Game_6832 extends LinearOpMode {
     private static final DogeCVFinalStep[] dogeCvFinalSteps = DogeCVFinalStep.values();
     private GoldPos initGoldPosTest = null;
     private int mineralState = 0;
+
+    private int soundState = 0;
+    private int soundID = -1;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -236,11 +241,26 @@ public class Game_6832 extends LinearOpMode {
                 telemetry.addData("Vision", "Prep detection: %s%s", initGoldPosTest, gp==GoldPos.HOLD_STATE?" (HOLD_STATE)":"");
             }
 
+            if(soundState == 0 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
+                telemetry.addData("Please wait", "Initializing Sound");
+                telemetry.update();
+                soundID = hardwareMap.appContext.getResources().getIdentifier("gracious", "raw", hardwareMap.appContext.getPackageName());
+                boolean success = SoundPlayer.getInstance().preload(hardwareMap.appContext, soundID);
+                if (success)
+                    soundState = 1;
+                else
+                    soundState = 2;
+            }
+
             telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
             telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
             telemetry.addData("Vision", "Viewpoint: %s", viewpoints[viewpoint]);
             telemetry.addData("Vision", "DogeCVFInalStep: %s", dogeCvFinalSteps[dogeCvFinalStep]);
 
+            telemetry.addData("Sound", soundState == 0 ? "off" :
+                                               soundState == 1 ? "on" :
+                                               soundState == 2 ? "file not found" :
+                                                                 "other");
 
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
@@ -259,7 +279,7 @@ public class Game_6832 extends LinearOpMode {
         vp.reset();
 
         robot.superman.restart(.75);
-        robot.collector.restart(.5, .5);
+        robot.collector.restart(.4, .5);
 
 
         // run until the end of the match (driver presses STOP)
@@ -638,7 +658,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 11:
                 //turn to crater
-                if(robot.rotateIMU(310, 5)){
+                if(robot.rotateIMU(310, 1.5)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
@@ -1145,39 +1165,52 @@ public class Game_6832 extends LinearOpMode {
         }
 
         if(butA || butB || butX || butY) {
+            robot.collector.setElbowTargetPos(1000);
             if (robot.collector.beltMid()) {
                 if (butY) {//position for deposit
-                    robot.collector.setElbowTargetPos(robot.collector.posDeposit);
                     robot.superman.setTargetPosition(robot.superman.posDeposit);
-                    targetPos = robot.collector.posDeposit;
+                    targetPos = robot.superman.posDeposit;
                 }
                 if (butA) {  //position to collect minerals
-                    robot.collector.setElbowTargetPos(robot.collector.posIntake);
                     robot.superman.setTargetPosition(robot.superman.posIntake);
-                    targetPos = robot.collector.posIntake;
+                    targetPos = robot.superman.posIntake;
                 }
                 if (butX) { //target for pre-latching
-                    robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
                     robot.superman.setTargetPosition(robot.superman.posPreLatch);
-                    targetPos = robot.collector.posPreLatch;
+                    robot.collector.setExtendABobPwr((robot.collector.extendMid+robot.collector.extendMax)/2);
+                    targetPos = robot.superman.posPreLatch;
                 }
                 if (toggleAllowed(butB, b)) {
                     if (robot.collector.getElbowTargetPos() != robot.collector.posLatch) {
-                        robot.collector.setElbowTargetPos(robot.collector.posLatch);
                         robot.superman.setTargetPosition(robot.superman.posLatch);
-                        targetPos = robot.collector.posLatch;
+                        targetPos = robot.superman.posLatch;
                     } else {
-                        robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
                         robot.superman.setTargetPosition(robot.superman.posPostLatch);
-                        targetPos = robot.collector.posPostLatch;
+                        targetPos = robot.superman.posPostLatch;
                     }
                 }
 
-                if (robot.collector.getElbowCurrentPos() == targetPos) {
-                    butB = false;
-                    butA = false;
-                    butX = false;
-                    butY = false;
+                if (robot.superman.getTargetPosition() == targetPos && Math.abs(robot.collector.getElbowCurrentPos() - 1000) <20) {
+                    if (butY) {//position for deposit
+                        robot.collector.setElbowTargetPos(robot.collector.posDeposit);
+                        butY = false;
+                    }
+                    if (butA) {  //position to collect minerals
+                        robot.collector.setElbowTargetPos(robot.collector.posIntake);
+                        butA = false;
+                    }
+                    if (butX) { //target for pre-latching
+                        robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
+                        butX = false;
+                    }
+                    if (toggleAllowed(butB, b)) {
+                        if (robot.collector.getElbowTargetPos() != robot.collector.posLatch) {
+                            robot.collector.setElbowTargetPos(robot.collector.posLatch);
+                        } else {
+                            robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
+                        }
+                        butB = false;
+                    }
                 }
             }
         }
@@ -1228,20 +1261,28 @@ public class Game_6832 extends LinearOpMode {
         }
         if(gamepad1.right_bumper){
             //robot.resetIMU();
-            robot.collector.restart(.50, .5);
+            robot.collector.restart(.40, .5);
             robot.superman.restart(.75);
             robot.maintainHeading(gamepad1.right_bumper);
         }
 
-        double triggers = gamepad1.left_trigger;
-        telemetry.addData("trigger", triggers);
-        if(triggers > .75){
-            robot.collector.eject();
-        }else if (triggers > .1){
+        double triggers = gamepad1.left_trigger - gamepad1.right_trigger;
+//        telemetry.addData("trigger", triggers);
+//        if(triggers > .75){
+//            robot.collector.eject();
+//        }else if (triggers > .1){
+//            robot.collector.collect();
+//        }else{
+//            robot.collector.stopIntake();
+//        }
+
+        if (triggers > 0.1)
             robot.collector.collect();
-        }else{
+        else if (triggers < -0.1)
+            robot.collector.eject();
+        else
             robot.collector.stopIntake();
-        }
+
         /*
         if(!supermanTester){
             if(gamepad1.y) robot.collector.raise();
@@ -1264,75 +1305,8 @@ public class Game_6832 extends LinearOpMode {
             else robot.collector.stopIntake();
         }*/
 
-
-
-
-
-        if(false){//!relicMode) {
-
-            if(toggleAllowed(gamepad1.b, b)){
-                //robot.glyphSystem.toggleBottomGrip();
-            }
-
-
-
-            if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
-//                robot.glyphSystem.tiltPhoneUp();
-                if (direction == 1) {
-                    relicMode = false;
-                    pwrDamper = .5;
-                    direction = -1;
-                   // robot.ledSystem.pinkPos();
-                    liftVerticalDeposit = false;
-                    liftDeposit = true;
-                    liftHome = false;
-                    liftCollect = false;
-                } else {
-                    relicMode = false;
-                    relicMode = false;
-                    direction = 1;
-                    pwrDamper = 1.0;
-                    if (isBlue) {
-                        //robot.ledSystem.bluePos();
-                    } else
-                       // robot.ledSystem.redPos();
-                    liftVerticalDeposit = false;
-                    liftDeposit = false;
-                    liftHome = false;
-                    liftCollect = true;
-                }
-            }
-            if (toggleAllowed(gamepad1.a, a)) {
-                //robot.glyphSystem.toggleBelt(direction < 0);
-            }
-
-
-            if (toggleAllowed(gamepad1.x, x)) {
-                //robot.glyphSystem.toggleGrip();
-            }
-
-            if(gamepad1.dpad_up) {
-                if (direction > 0) {
-//                    if (gamepad1.dpad_up) {
-//                        robot.glyphSystem.tiltPhoneUp();
-                        //robot.glyphSystem.raiseLift2();
-//                    }
-                }
-                else {
-//                    robot.glyphSystem.tiltPhoneUp();
-                    liftVerticalDeposit = true;
-                    liftDeposit = false;
-                    liftHome = false;
-                    liftCollect = false;
-                }
-            }
-            else if (gamepad1.dpad_down) {
-//                robot.glyphSystem.tiltPhoneUp();
-                //robot.glyphSystem.lowerLift2();
-            }
-            else {
-                //robot.glyphSystem.stopBelt();
-            }
+        if (soundState == 1 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
+            SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, soundID);
         }
 
     }
