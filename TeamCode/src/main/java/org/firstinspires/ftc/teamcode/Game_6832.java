@@ -112,6 +112,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean bypassJoysticks = false;
     private long damperTimer = 0;
     private int direction = 1;  //-1 to reverse direction
+    int currTarget = 0;
 
     //staging and timer variables
     private int autoStage = 0;
@@ -258,7 +259,7 @@ public class Game_6832 extends LinearOpMode {
         vp.reset();
 
         robot.superman.restart(.75);
-        robot.superman.restart(.75);
+        robot.collector.restart(.5, .5);
 
 
         // run until the end of the match (driver presses STOP)
@@ -1003,76 +1004,22 @@ public class Game_6832 extends LinearOpMode {
             }
         }
 
-        /**
-        if(butY==true ||butB==true ||butX==true ||butA==true ){
-            switch(beltPos){
-                case 0:
-                    robot.collector.setExtendABobTargetPos(robot.collector.extendMin);
-                    break;
-                case 1:
-                    robot.collector.setExtendABobTargetPos(robot.collector.extendMid);
-                    if(robot.collector.getExtendABobCurrentPos()==robot.collector.extendMid){
-                        if(butY){//y is deposit
-                            robot.collector.setElbowTargetPos(robot.collector.posDeposit);
-                            robot.superman.setTargetPosition(robot.superman.posDeposit);
-                            targetPos = robot.collector.posDeposit;
-                        }
-                        if(butA){
-                            robot.collector.setElbowTargetPos(robot.collector.posIntake);
-                            robot.superman.setTargetPosition(robot.superman.posIntake);
-                            targetPos = robot.collector.posIntake;
-                        }
-                        if(butX){
-                            robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
-                            robot.superman.setTargetPosition(robot.superman.posPreLatch);
-                            targetPos = robot.collector.posPreLatch;
-                        }
-                        if(toggleAllowed(butB,b)){
-                            if(robot.collector.getElbowTargetPos()!=robot.collector.posLatch) {
-                                robot.collector.setElbowTargetPos(robot.collector.posLatch);
-                                robot.superman.setTargetPosition(robot.superman.posLatch);
-                                targetPos = robot.collector.posLatch;
-                            }
-                            else {
-                                robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
-                                robot.superman.setTargetPosition(robot.superman.posPostLatch);
-                                targetPos = robot.collector.posPostLatch;
-                            }
-                        }
-
-                        if(robot.collector.getElbowCurrentPos()==targetPos){
-                            beltPos++;
-                        }
-                    }
-                    break;
-                case 2:
-                    robot.collector.setExtendABobTargetPos(robot.collector.extendMin);
-                    if(robot.collector.getExtendABobCurrentPos()==robot.collector.extendMid) {
-                        butY = false;
-                        butX = false;
-                        butA = false;
-                        butB = false;
-                    }
-                    break;
-
-        }
-        }**/
 
 
-
-//        if(gamepad1.dpad_down){
-//            robot.superman.lower();
-//        }
-//        if(gamepad1.dpad_up){
-//            robot.superman.raise();
-//        }
 
         if(gamepad1.dpad_down){
+            robot.superman.lower();
+        }
+        if(gamepad1.dpad_up){
+            robot.superman.raise();
+        }
+
+        /*if(gamepad1.dpad_down){
             robot.collector.retract();
         }
         if(gamepad1.dpad_up){
             robot.collector.extend();
-        }
+        }*/
 
         if(gamepad1.dpad_right){
             robot.collector.open();
@@ -1088,13 +1035,22 @@ public class Game_6832 extends LinearOpMode {
         else if(gamepad1.left_trigger > .5){
             robot.collector.eject();
         }
+        currTarget = robot.collector.getExtendABobTargetPos();
+        if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
+            if(currTarget == robot.collector.extendMid) {
+                currTarget = robot.collector.extendMax;
+            }
+            else{
+                currTarget = robot.collector.extendMid;
+            }
 
-        if(gamepad1.left_bumper){
-            robot.collector.setExtendABobTargetPos(robot.collector.extendMid);
+        }
+        if(currTarget >= 10){
+            robot.collector.setExtendABobTargetPos(currTarget);
         }
         if(gamepad1.right_bumper){
             //robot.resetIMU();
-            robot.collector.restart(1, .5);
+            robot.collector.restart(.50, .5);
             robot.superman.restart(.75);
             robot.maintainHeading(gamepad1.right_bumper);
         }

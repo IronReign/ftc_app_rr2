@@ -41,9 +41,9 @@ public class Collector {
     public int posPostLatch = 20;
     public double intakePwr = .5;
 
-    public int extendMax = 3700;
-    public int extendMid= 2300;
-    public int extendMin = 10;
+    public static int extendMax = 3700;
+    public static int extendMid= 1750;
+    public static int extendMin = 10;
 
 
     //filler value; needs to be updated to reflect actual ratio
