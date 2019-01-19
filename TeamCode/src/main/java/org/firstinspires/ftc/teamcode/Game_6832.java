@@ -271,17 +271,14 @@ public class Game_6832 extends LinearOpMode {
                     case 0: //code for tele-op control
                         joystickDrive();
                         break;
-                    case 1: //this is the tertiaryAuto we use if our teamates can also go for the beacons more reliably than we can; scores 2 balls and pushes the cap ball, also parks on the center element
-                        autoSetup();
-                        //autonomous();
+                    case 1: //autonomous that only samples
+                        autoJustSample();
                         break;
-                    case 2:
-                        //if(testDistnace())active=false;
+                    case 2: //autonomous that geos to opponent's crater
                         auto1FromScratch();
                         break;
                     case 3:
-                        if(testIMU())active=false;
-                        //auto4();
+//                        auto1ButOurCrater();
                         break;
                     case 4: //IMU Following
                         demo();
@@ -332,6 +329,7 @@ public class Game_6832 extends LinearOpMode {
         telemetry.update();
         vp.shutdownVision();
         vp = null;
+        visionProviderFinalized = false;
     }
 
     private void initializeVisionProvider() {
@@ -449,8 +447,10 @@ public class Game_6832 extends LinearOpMode {
         switch(autoStage){
             case 0:
                 robot.setZeroHeading();
-                robot.resetMotors(true);
-                autoStage++;
+                if(robot.driveForward(true, .1,.5)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
                 break;
             case 1:
                 //Turn on camera to see which is gold
@@ -546,10 +546,10 @@ public class Game_6832 extends LinearOpMode {
             case 5://move to depot
                 switch(mineralState){
                     case 0://left
-                        if(robot.driveForward(true, .890,.65)){
+                        if(robot.driveForward(true, .880,.65)){
                             //start collector and timer to yeet ducky
                             autoTimer = futureTime(4);
-                            robot.collector.collect();
+                            robot.collector.eject();
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -558,7 +558,7 @@ public class Game_6832 extends LinearOpMode {
                         if(robot.driveForward(true, .762,.65)){
                             //start collector and timer to yeet ducky
                             autoTimer = futureTime(4);
-                            robot.collector.collect();
+                            robot.collector.eject();
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -567,7 +567,7 @@ public class Game_6832 extends LinearOpMode {
                         if(robot.driveForward(true, .890,.65)){
                             //start collector and timer to yeet ducky
                             autoTimer = futureTime(4);
-                            robot.collector.collect();
+                            robot.collector.eject();
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -584,9 +584,22 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 7:
                 //turn to wall
-                if(robot.rotateIMU(225, 4)){
-                    robot.resetMotors(true);
-                    autoStage++;
+                switch(mineralState){
+                    case 0:
+                        autoStage++;
+                        break;
+                    case 1:
+                        if(robot.rotateIMU(225, 4)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 2:
+                        if(robot.rotateIMU(225, 4)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
                 }
                 break;
             case 8:
@@ -611,14 +624,182 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 9:
                 //turn to crater
-                if(robot.rotateIMU(310, 5)){
+                if(robot.rotateIMU(303, 5)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
                 break;
             case 10:
                 //go to crater
-                if(robot.driveForward(false, 2.7, .6)) {
+                if(robot.driveForward(false, 1.05, .6)) {
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 11:
+                //turn to crater
+                if(robot.rotateIMU(310, 5)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 12:
+                //go to crater
+                if(robot.driveForward(false, .80, .6)) {
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 13:
+                robot.collector.setElbowTargetPos(robot.collector.posPreLatch+100);
+                if(robot.collector.getElbowTargetPos() == robot.collector.posPreLatch+100){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+            default:
+                robot.resetMotors(true);
+                autoStage = 0;
+                active = false;
+                state = 0;
+                break;
+        }
+    }
+
+    public void autoJustSample(){
+        switch(autoStage){
+            case 0:
+                robot.setZeroHeading();
+                if(robot.driveForward(true, .1,.5)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 1:
+                //Turn on camera to see which is gold
+                GoldPos gp = vp.detect();
+                // Hold state lets us know that we haven't finished looping through detection
+                if (gp != GoldPos.HOLD_STATE) {
+                    switch (gp) {
+                        case LEFT:
+                            mineralState = 0;
+                            break;
+                        case MIDDLE:
+                            mineralState = 1;
+                            break;
+                        case RIGHT:
+                            mineralState = 2;
+                            break;
+                        case NONE_FOUND:
+                        case ERROR1:
+                        case ERROR2:
+                        case ERROR3:
+                        default:
+                            mineralState = 0;
+                            break;
+                    }
+                    telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
+
+                    vp.shutdownVision();
+                    autoStage++;
+                } else {
+                    telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
+                }
+                break;
+            case 2://turn to mineral
+                switch(mineralState){
+                    case 0://left
+                        if(robot.rotateIMU(39,3)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 1://middle
+                        autoStage++;
+                        break;
+                    case 2://right
+                        if(robot.rotateIMU(321,3)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                }
+                break;
+            case 3://move to mineral
+                switch(mineralState){
+                    case 0://left
+                        if(robot.driveForward(true, .604,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 1://middle
+                        if(robot.driveForward(true, .47,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 2://right
+                        if(robot.driveForward(true, .604,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                }
+                break;
+            case 4://turn to depot
+                switch(mineralState){
+                    case 0://left
+                        if(robot.rotateIMU(345,3)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 1://middle
+                        autoStage++;
+                        break;
+                    case 2://right
+                        if(robot.rotateIMU(15,3)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                }
+                break;
+            case 5://move to depot
+                switch(mineralState){
+                    case 0://left
+                        if(robot.driveForward(true, .880,.65)){
+                            //start collector and timer to yeet ducky
+                            autoTimer = futureTime(4);
+                            robot.collector.eject();
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 1://middle
+                        if(robot.driveForward(true, .762,.65)){
+                            //start collector and timer to yeet ducky
+                            autoTimer = futureTime(4);
+                            robot.collector.eject();
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 2://right
+                        if(robot.driveForward(true, .890,.65)){
+                            //start collector and timer to yeet ducky
+                            autoTimer = futureTime(4);
+                            robot.collector.eject();
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                }
+                break;
+            case 6:
+                //yeet ducky
+                if(autoTimer<System.nanoTime()){
+                    robot.collector.stopIntake();
                     robot.resetMotors(true);
                     autoStage++;
                 }
@@ -631,9 +812,6 @@ public class Game_6832 extends LinearOpMode {
                 break;
         }
     }
-
-
-
 
     public boolean autoSetup(){
         switch(autoSetupStage) {
@@ -1055,7 +1233,15 @@ public class Game_6832 extends LinearOpMode {
             robot.maintainHeading(gamepad1.right_bumper);
         }
 
-
+        double triggers = gamepad1.left_trigger;
+        telemetry.addData("trigger", triggers);
+        if(triggers > .75){
+            robot.collector.eject();
+        }else if (triggers > .1){
+            robot.collector.collect();
+        }else{
+            robot.collector.stopIntake();
+        }
         /*
         if(!supermanTester){
             if(gamepad1.y) robot.collector.raise();
