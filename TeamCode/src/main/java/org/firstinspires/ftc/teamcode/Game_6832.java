@@ -38,7 +38,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Func;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -47,9 +46,6 @@ import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 import org.firstinspires.ftc.teamcode.vision.dogecv.DogeCVFinalStep;
-import org.firstinspires.ftc.teamcode.vision.dogecv.DogeCVIntegration;
-
-import java.util.Locale;
 
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
 
@@ -68,35 +64,18 @@ import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
 
 @TeleOp(name="Game_6832", group="Challenge")  // @Autonomous(...) is the other common choice
 //  @Autonomous
-
 public class Game_6832 extends LinearOpMode {
-
-    //hi im testing something
 
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
     private PoseBigWheel robot = new PoseBigWheel();
 
-    SoundPlayer deadShotSays = SoundPlayer.getInstance();
-
     private boolean active = true;
-    boolean joystickDriveStarted = false;
-    public boolean suppressJoysticks = false;
-    boolean balancing = false;
+    private boolean joystickDriveStarted = false;
 
     private int state = 0;
     private boolean isBlue = false;
-    private boolean relicMode = false;
-
-    private boolean liftDeposit = false;
-    private boolean liftVerticalDeposit = false;
-    private boolean liftHome = false;
-    private boolean liftCollect = false;
-
-    private boolean retractRelic = false;
-    private boolean extendRelic = false;
-    private boolean placeRelic = false;
 
     //drive train control variables
     private double pwrDamper = 1;
@@ -112,7 +91,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean bypassJoysticks = false;
     private long damperTimer = 0;
     private int direction = 1;  //-1 to reverse direction
-    int currTarget = 0;
+    private int currTarget = 0;
 
     //staging and timer variables
     private int autoStage = 0;
@@ -120,17 +99,15 @@ public class Game_6832 extends LinearOpMode {
     private long autoTimer = 0;
     private long elbowTimer = 0;
     private long autoDelay = 0;
-    public int codexFlashStage = 0;
 
     //sensors/sensing-related variables
-    Orientation angles;
-    boolean vuActive = false;
+    private Orientation angles;
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
-    double testableDouble = robot.kpDrive;
-    double testableHeading = 0;
-    boolean testableDirection = true;
+    private double testableDouble = robot.kpDrive;
+    private double testableHeading = 0;
+    private boolean testableDirection = true;
 
     //values associated with the buttons in the toggleAllowed method
     private boolean[] buttonSavedStates = new boolean[16];
@@ -153,11 +130,11 @@ public class Game_6832 extends LinearOpMode {
 
 
 
-    boolean butY = false;
-    boolean butA = false;
-    boolean butX = false;
-    boolean butB = false;
-    int targetPos = 0;
+    private boolean butY = false;
+    private boolean butA = false;
+    private boolean butX = false;
+    private boolean butB = false;
+    private int targetPos = 0;
 
 
     private VisionProvider vp;
@@ -221,9 +198,9 @@ public class Game_6832 extends LinearOpMode {
                 visionProviderState = (visionProviderState+1) % visionProviders.length; //switch vision provider
             }
             if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)){
-                initializeVisionProvider(); //this is blocking
+                initialization_initVisionProvider(); //this is blocking
             } else if (visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
-                deinitializeVisionProvider(); //also blocking, but should be very quick
+                initialization_deinitVisionProvider(); //also blocking, but should be very quick
             }
             if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)){
                 enableTelemetry = !enableTelemetry; //enable/disable FtcDashboard telemetry
@@ -242,14 +219,7 @@ public class Game_6832 extends LinearOpMode {
             }
 
             if(soundState == 0 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
-                telemetry.addData("Please wait", "Initializing Sound");
-                telemetry.update();
-                soundID = hardwareMap.appContext.getResources().getIdentifier("gracious", "raw", hardwareMap.appContext.getPackageName());
-                boolean success = SoundPlayer.getInstance().preload(hardwareMap.appContext, soundID);
-                if (success)
-                    soundState = 1;
-                else
-                    soundState = 2;
+                initialization_initSound();
             }
 
             telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
@@ -273,7 +243,7 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(vp == null) {
-            initializeVisionProvider(); //this is blocking
+            initialization_initDummyVisionProvider(); //this is blocking
         }
 
         vp.reset();
@@ -291,44 +261,28 @@ public class Game_6832 extends LinearOpMode {
                     case 0: //code for tele-op control
                         joystickDrive();
                         break;
-                    case 1: //autonomous that only samples
-                        autoJustSample();
+                    case 1: //autonomous that goes to opponent's crater
+                        auto_depotSide();
                         break;
-                    case 2: //autonomous that geos to opponent's crater
-                        auto1FromScratch();
+                    case 2: //autonomous that only samples
+                        auto_depotSample();
                         break;
                     case 3:
-//                        auto1ButOurCrater();
                         break;
-                    case 4: //IMU Following
+                    case 4:
+                        break;
+                    case 5:
+                        break;
+                    case 6:
+                        break;
+                    case 7:
+                        break;
+                    case 8: //turn to IMU
                         demo();
                         break;
-                    case 5: //provides data for forwards/backwards calibration
-                        joystickDriveStarted = false;
-                        if(robot.driveForward(true, .4, .35)) {
-                            state = 0;
-                            active = false;
-                        }
-                        break;
-                    case 6: //provides data for left/right calibration
-                        auto1();
-                        break;
-                    case 7: //IMU demo mode
-//                        if(robot.jewel.retractArm())
-//                            active = false;
-//                        robot.relicArm.openGrip();
-                        break;
-                    case 8: //servo testing mode
-//                        robot.servoTester(toggleAllowed(gamepad1.dpad_up, dpad_up), toggleAllowed(gamepad1.y, y), toggleAllowed(gamepad1.a,a), toggleAllowed(gamepad1.dpad_down, dpad_down));
-//                        robot.relicArm.closeGrip();
-                        if(gamepad1.x)
-                            robot.maintainHeading(gamepad1.x);
-                        break;
                     case 9:
-                        //autonomous3();
                         break;
-                    case 10: //vision testing
-//                        autonomous3();
+                    case 10:
                         break;
                     default:
                         robot.stopAll();
@@ -344,7 +298,18 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
-    private void deinitializeVisionProvider() {
+    private void initialization_initSound() {
+        telemetry.addData("Please wait", "Initializing Sound");
+        telemetry.update();
+        soundID = hardwareMap.appContext.getResources().getIdentifier("gracious", "raw", hardwareMap.appContext.getPackageName());
+        boolean success = SoundPlayer.getInstance().preload(hardwareMap.appContext, soundID);
+        if (success)
+            soundState = 1;
+        else
+            soundState = 2;
+    }
+
+    private void initialization_deinitVisionProvider() {
         telemetry.addData("Please wait","Deinitializing vision");
         telemetry.update();
         vp.shutdownVision();
@@ -352,118 +317,36 @@ public class Game_6832 extends LinearOpMode {
         visionProviderFinalized = false;
     }
 
-    private void initializeVisionProvider() {
+    private void initialization_initVisionProvider() {
         try {
             telemetry.addData("Please wait","Initializing vision");
             telemetry.update();
             vp = visionProviders[visionProviderState].newInstance();
             vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoints[viewpoint]);
-            if (vp instanceof DogeCVIntegration)
-                ((DogeCVIntegration) vp).setDogeCVFinalStep(dogeCvFinalSteps[dogeCvFinalStep]);
         } catch (IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
         visionProviderFinalized = true;
     }
 
+    private void initialization_initDummyVisionProvider() {
+        try {
+            telemetry.addData("Please wait","Initializing vision");
+            telemetry.update();
+            vp = VisionProviders.defaultProvider.newInstance();
+            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoints[viewpoint]);
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException(e);
+        }
+        visionProviderFinalized = true;
+    }
 
-    public void demo(){
-        //robot.glyphSystem.tiltPhoneDown();
-        if(gamepad1.x){
+    private void demo(){
+        if(gamepad1.x)
             robot.maintainHeading(gamepad1.x);
-        }
-        /*
-        if(gamepad1.y) {
-            robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, true, false);
-        }
-
-
-        if(gamepad1.a) {
-            robot.driveToTargetVu(beaconTarget, isBlue, 0, distance, .5, false, false);
-        }
-        */
     }
 
-    public boolean testDistnace(){
-        switch(autoSetupStage){
-            case 0:
-                robot.setZeroHeading();
-                robot.resetMotors(true);
-                autoSetupStage++;
-                break;
-            case 1:
-                if(robot.driveForward(false, .5, .5)){
-                    robot.resetMotors(true);
-                    autoSetupStage++;
-                    return  true;
-                }
-                break;
-            default:
-                robot.resetMotors(true);
-                autoSetupStage = 0;
-                return true;
-        }
-        return false;
-    }
-
-    public boolean testIMU(){
-        switch(autoSetupStage){
-            case 0:
-                robot.setZeroHeading();
-                robot.resetMotors(true);
-                autoSetupStage++;
-                break;
-            case 1:
-                if(robot.rotateIMU(90, 3 )){
-                    robot.resetMotors(true);
-                    autoSetupStage++;
-                    return  true;
-                }
-                break;
-            default:
-                robot.resetMotors(true);
-                autoSetupStage = 0;
-                return true;
-        }
-        return false;
-    }
-
-    public boolean turnMineral(){
-        switch(mineralState){
-            case 0:
-                if(robot.rotateIMU(30, 2)) return true;
-                break;
-            case 1:
-                if(robot.rotateIMU(0, 1.5)) return true;
-                break;
-            case 2:
-                if(robot.rotateIMU(330, 2)) return true;
-                break;
-            default:
-                return true;
-        }
-        return false;
-    }
-
-    public boolean turnDepot(){
-        switch(mineralState){
-            case 0:
-                if(robot.rotateIMU(-90, 3)) return true;
-                break;
-            case 1:
-                if(robot.rotateIMU(0, 1.5)) return true;
-                break;
-            case 2:
-                if(robot.rotateIMU(20, 3)) return true;
-                break;
-            default:
-                return true;
-        }
-        return false;
-
-    }
-
-    public void auto1FromScratch(){
+    private void auto_depotSide(){
         switch(autoStage){
             case 0:
                 robot.setZeroHeading();
@@ -473,35 +356,8 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 1:
-                //Turn on camera to see which is gold
-                GoldPos gp = vp.detect();
-                // Hold state lets us know that we haven't finished looping through detection
-                if (gp != GoldPos.HOLD_STATE) {
-                    switch (gp) {
-                        case LEFT:
-                            mineralState = 0;
-                            break;
-                        case MIDDLE:
-                            mineralState = 1;
-                            break;
-                        case RIGHT:
-                            mineralState = 2;
-                            break;
-                        case NONE_FOUND:
-                        case ERROR1:
-                        case ERROR2:
-                        case ERROR3:
-                        default:
-                            mineralState = 0;
-                            break;
-                    }
-                    telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
-
-                    vp.shutdownVision();
+                if (auto_sample())
                     autoStage++;
-                } else {
-                    telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
-                }
                 break;
             case 2://turn to mineral
                 switch(mineralState){
@@ -685,7 +541,7 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
-    public void autoJustSample(){
+    private void auto_depotSample(){
         switch(autoStage){
             case 0:
                 robot.setZeroHeading();
@@ -695,128 +551,10 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 1:
-                //Turn on camera to see which is gold
-                GoldPos gp = vp.detect();
-                // Hold state lets us know that we haven't finished looping through detection
-                if (gp != GoldPos.HOLD_STATE) {
-                    switch (gp) {
-                        case LEFT:
-                            mineralState = 0;
-                            break;
-                        case MIDDLE:
-                            mineralState = 1;
-                            break;
-                        case RIGHT:
-                            mineralState = 2;
-                            break;
-                        case NONE_FOUND:
-                        case ERROR1:
-                        case ERROR2:
-                        case ERROR3:
-                        default:
-                            mineralState = 0;
-                            break;
-                    }
-                    telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
-
-                    vp.shutdownVision();
+                if (auto_setup())
                     autoStage++;
-                } else {
-                    telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
-                }
                 break;
-            case 2://turn to mineral
-                switch(mineralState){
-                    case 0://left
-                        if(robot.rotateIMU(39,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        autoStage++;
-                        break;
-                    case 2://right
-                        if(robot.rotateIMU(321,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 3://move to mineral
-                switch(mineralState){
-                    case 0://left
-                        if(robot.driveForward(true, .604,.65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        if(robot.driveForward(true, .47,.65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 2://right
-                        if(robot.driveForward(true, .604,.65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 4://turn to depot
-                switch(mineralState){
-                    case 0://left
-                        if(robot.rotateIMU(345,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        autoStage++;
-                        break;
-                    case 2://right
-                        if(robot.rotateIMU(15,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 5://move to depot
-                switch(mineralState){
-                    case 0://left
-                        if(robot.driveForward(true, .880,.65)){
-                            //start collector and timer to yeet ducky
-                            autoTimer = futureTime(4);
-                            robot.collector.eject();
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        if(robot.driveForward(true, .762,.65)){
-                            //start collector and timer to yeet ducky
-                            autoTimer = futureTime(4);
-                            robot.collector.eject();
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 2://right
-                        if(robot.driveForward(true, .890,.65)){
-                            //start collector and timer to yeet ducky
-                            autoTimer = futureTime(4);
-                            robot.collector.eject();
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 6:
+            case 2:
                 //yeet ducky
                 if(autoTimer<System.nanoTime()){
                     robot.collector.stopIntake();
@@ -833,7 +571,39 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
-    public boolean autoSetup(){
+    private boolean auto_sample() {
+        //Turn on camera to see which is gold
+        GoldPos gp = vp.detect();
+        // Hold state lets us know that we haven't finished looping through detection
+        if (gp != GoldPos.HOLD_STATE) {
+            switch (gp) {
+                case LEFT:
+                    mineralState = 0;
+                    break;
+                case MIDDLE:
+                    mineralState = 1;
+                    break;
+                case RIGHT:
+                    mineralState = 2;
+                    break;
+                case NONE_FOUND:
+                case ERROR1:
+                case ERROR2:
+                case ERROR3:
+                default:
+                    mineralState = 0;
+                    break;
+            }
+            telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
+            vp.shutdownVision();
+            return true;
+        } else {
+            telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
+            return false;
+        }
+    }
+
+    private boolean auto_setup(){
         switch(autoSetupStage) {
             case 0:
                 robot.setZeroHeading();
@@ -845,97 +615,58 @@ public class Game_6832 extends LinearOpMode {
                 autoSetupStage++;
                 break;
             case 2:
-                //Turn on camera to see which is gold
-                GoldPos gp = vp.detect();
-                // Hold state lets us know that we haven't finished looping through detection
-                if (gp != GoldPos.HOLD_STATE) {
-                    switch (gp) {
-                        case LEFT:
-                            mineralState = 0;
-                            break;
-                        case MIDDLE:
-                            mineralState = 1;
-                            break;
-                        case RIGHT:
-                            mineralState = 2;
-                            break;
-                        case NONE_FOUND:
-                            mineralState = 1;
-                            break;
-                        case ERROR1:
-                        case ERROR2:
-                        case ERROR3:
-                        default:
-                            mineralState = 1;
-                            break;
-                    }
-                    telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
-                    vp.shutdownVision();
-                    autoSetupStage++;
-                } else {
-                    telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
-                }
                 autoSetupStage++;
                 break;
             case 3:
-                if(turnMineral()){
-                    robot.resetMotors(true);
+                if (auto_sample())
                     autoSetupStage++;
+                break;
+            case 4://turn to mineral
+                switch(mineralState){
+                    case 0://left
+                        if(robot.rotateIMU(39,3)){
+                            robot.resetMotors(true);
+                            autoSetupStage++;
+                        }
+                        break;
+                    case 1://middle
+                        autoSetupStage++;
+                        break;
+                    case 2://right
+                        if(robot.rotateIMU(321,3)){
+                            robot.resetMotors(true);
+                            autoSetupStage++;
+                        }
+                        break;
                 }
                 break;
-            case 4:
-                if(mineralState == 1) {
-                    if (robot.driveForward(true, .65, .65)) {
-                        robot.resetMotors(true);
-                        autoSetupStage++;
-                    }
-                }
-                else{
-                    if (robot.driveForward(true, .85, .65)) {
-                        robot.resetMotors(true);
-                        autoSetupStage++;
-                    }
-                }
-                break;
-            case 5:
-                /**Driving to remove gold off pedastal**/
-                if(turnDepot()){
-                    robot.resetMotors(true);
-                    autoSetupStage++;
+            case 5://move to mineral
+                switch(mineralState){
+                    case 0://left
+                        if(robot.driveForward(true, .604,.65)){
+                            robot.resetMotors(true);
+                            autoSetupStage++;
+                        }
+                        break;
+                    case 1://middle
+                        if(robot.driveForward(true, .47,.65)){
+                            robot.resetMotors(true);
+                            autoSetupStage++;
+                        }
+                        break;
+                    case 2://right
+                        if(robot.driveForward(true, .604,.65)){
+                            robot.resetMotors(true);
+                            autoSetupStage++;
+                        }
+                        break;
                 }
                 break;
             case 6:
-                if(mineralState == 1) {
-                    if (robot.driveForward(true, .85, .65)) {
-                        robot.resetMotors(true);
-                        autoSetupStage++;
-                    }
-                }
-                if(mineralState == 0) {
-                    if (robot.driveForward(true, .65, .65)) {
-                        robot.resetMotors(true);
-                        autoSetupStage++;
-                    }
-                }
-                else{
-                    if (robot.driveForward(true, .95, .65)) {
-                        robot.resetMotors(true);
-                        autoSetupStage++;
-                    }
-                }break;
-            case 7:
-                /**Correct appropriate distance to drive to approach center of the mineral**/
-                autoTimer = futureTime(1);
-                robot.collector.collect();
                 autoSetupStage++;
                 break;
-            case 8:
-                if(autoTimer < System.nanoTime()){
-                    robot.collector.stopIntake();
-                    autoSetupStage++;
-                }
-                /**Rotate to face forward**/
-//                autoSetupStage++;
+            case 7:
+                autoSetupStage++;
                 break;
             case 9:
                 autoSetupStage++;
@@ -966,138 +697,29 @@ public class Game_6832 extends LinearOpMode {
                 break;
             default:
                 robot.resetMotors(true);
-//                autoSetupStage = 0;
+                autoSetupStage = 0;
                 return true;
         }
         return false;
     }
 
-    private void auto1() { //Starts depot side and end opposite crater
-        switch (autoStage) {
-            case 0:
-                //robot.setZeroHeading();
-                //robot.resetMotors(true);
-                autoStage++;
-                break;
-            case 1:
-                if(autoSetup()){
-                    autoStage++;
-                }
-                break;
-            case 2:
-                //Drive into depot
-                if(robot.rotateIMU(135, 5)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 3:
-                //Drop ducky into depot
-                /*if(robot.collector.setElbowTargetPos()){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }*/
-                if(robot.driveForward(true, 2.7, .6))
-                autoStage++;
-                break;
-            case 4:
-                //Retract arm
-                /*if(robot.collector.moveTo(rest position)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }*/
-                autoStage++;
-                break;
-            /*case 5:
-                //Drive backward to safe distance from wall
-                if(robot.driveForward(true, .3, .7)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 6:
-                //rotate to be parallel with wall
-                if(robot.rotateIMU(-135, 3)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 7:
-                //drive to crater area
-                if(robot.driveForward(false, 1, .75)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 8:
-                //extend into depot to prepare for start of match and get parking points
-                /*if(robot.collector.moveTo(straightposition)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                autoStage++;
-                break;*/
-            default:
-                robot.resetMotors(true);
-                autoStage = 0;
-                active = false;
-                state = 0;
-                break;
-
-        }
-    }
-
-
-
-    public void joystickDrive(){
-
-        /*button indexes:
-        0  = a
-        1  = b
-        2  = x
-        3  = y
-        4  = dpad_down
-        5  = dpad_up
-        6  = dpad_left
-        7  = dpad_right
-        8  = left bumper
-        9  = right bumper
-        10 = start button
-        */
+    private void joystickDrive(){
 
         if (!joystickDriveStarted) {
             robot.resetMotors(true);
             joystickDriveStarted = true;
         }
 
-
-        if (balancing) { //balance with a simple drive forward from edge of stone
-
-            if(robot.driveForward(true, .42, .45)){
-                suppressJoysticks=false;
-                robot.resetMotors(true);
-                balancing = false;
-                }
-        }
-            else {
-                suppressJoysticks = false;
-
-            }
-
-
         pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
         pwrStf = direction * pwrDamper * gamepad1.left_stick_x;
         pwrRot = -pwrDamper * .75 * gamepad1.right_stick_x;
 
-
-//        pwrRot += .33 * (gamepad1.right_trigger - gamepad1.left_trigger);
 
         pwrFwdL = direction * pwrDamper * gamepad1.left_stick_y;
         pwrStfL = direction * pwrDamper * gamepad1.left_stick_x;
 
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
-
 
         if (robot.getPitch()>45) {
             if (pwrDamper != .33) {
@@ -1106,15 +728,8 @@ public class Game_6832 extends LinearOpMode {
                 pwrDamper = 1.0;
         }
 
-        if (!suppressJoysticks) {
-            robot.driveMixerTank(pwrFwd, pwrRot);
-        }
+        robot.driveMixerTank(pwrFwd, pwrRot);
 
-
-//        if(robot.glyphSystem.getMotorLiftPosition() <= 2500) {
-//            robot.glyphSystem.setMotorLeft(gamepad2.left_stick_y*beaterDamper);
-//            robot.glyphSystem.setMotorRight(-gamepad2.left_stick_y*beaterDamper);
-//        }
 
         int standposition = 0;
         int restposition = 0;
@@ -1131,11 +746,6 @@ public class Game_6832 extends LinearOpMode {
                 robot.supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.supermanMotor.setElbowPwr(-.80);
             }
-        }*/
-
-
-        /*if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
-            supermanTester = !supermanTester;
         }*/
 
 
@@ -1215,9 +825,6 @@ public class Game_6832 extends LinearOpMode {
             }
         }
 
-
-
-
         if(gamepad1.dpad_down){
             robot.superman.lower();
         }
@@ -1239,9 +846,9 @@ public class Game_6832 extends LinearOpMode {
             robot.collector.close();
         }
 
-       if(gamepad1.right_trigger > .5){
+        if(gamepad1.right_trigger > .5){
             robot.collector.collect();
-       }
+        }
 
         else if(gamepad1.left_trigger > .5){
             robot.collector.eject();
@@ -1267,14 +874,6 @@ public class Game_6832 extends LinearOpMode {
         }
 
         double triggers = gamepad1.left_trigger - gamepad1.right_trigger;
-//        telemetry.addData("trigger", triggers);
-//        if(triggers > .75){
-//            robot.collector.eject();
-//        }else if (triggers > .1){
-//            robot.collector.collect();
-//        }else{
-//            robot.collector.stopIntake();
-//        }
 
         if (triggers > 0.1)
             robot.collector.collect();
@@ -1283,59 +882,14 @@ public class Game_6832 extends LinearOpMode {
         else
             robot.collector.stopIntake();
 
-        /*
-        if(!supermanTester){
-            if(gamepad1.y) robot.collector.raise();
-            if(gamepad1.a) robot.collector.lower();
-            if(gamepad1.x) robot.collector.kill();
-            if(gamepad1.b) robot.collector.restart(.5);
-            if(gamepad1.dpad_up) robot.collector.setElbowTargetPos(robot.collector.posIntake);
-            if(gamepad1.dpad_down) robot.collector.setElbowTargetPos(robot.collector.posLatch);
-            if(gamepad1.right_bumper) tf.tfDisable();
-            if(gamepad1.dpad_right) telemetry.addData("TF Detection", "%s", tf.detect());
-        }else{
-            if(gamepad1.y) robot.superman.raise();
-            if(gamepad1.a) robot.superman.lower();
-            if(gamepad1.x) robot.superman.kill();
-            if(gamepad1.b) robot.superman.restart(.75);
-            if(gamepad1.dpad_up) robot.superman.setElbowTargetPos(robot.collector.posIntake);
-            if(gamepad1.dpad_down) robot.superman.setElbowTargetPos(robot.collector.posLatch);
-            if(Math.abs(gamepad1.left_trigger)>.5) robot.collector.collect();
-            else if(Math.abs(gamepad1.right_trigger)>.5) robot.collector.eject();
-            else robot.collector.stopIntake();
-        }*/
-
         if (soundState == 1 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
             SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, soundID);
         }
 
     }
 
- /**
-    public void resetAuto(){
-        autoStage = 0;
-        autoTimer = 0;
-        robot.resetTPM();
-    }
-**/
-
     //the method that controls the main state of the robot; must be called in the main loop outside of the main switch
-    public void stateSwitch() {
-
-        /*button indexes:
-        0  = a
-        1  = b
-        2  = x
-        3  = y
-        4  = dpad_down
-        5  = dpad_up
-        6  = dpad_left
-        7  = dpad_right
-        8  = left bumper
-        9  = right bumper
-        10 = start button
-        */
-
+    private void stateSwitch() {
         if(!active) {
             if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
 
@@ -1345,8 +899,6 @@ public class Game_6832 extends LinearOpMode {
                 }
                 robot.resetMotors(true);
                 active = false;
-                //resetAuto();
-                codexFlashStage = 0;
             }
 
             if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
@@ -1357,8 +909,6 @@ public class Game_6832 extends LinearOpMode {
                 }
                 robot.resetMotors(true);
                 active = false;
-                //resetAuto();
-                codexFlashStage = 0;
             }
 
         }
@@ -1366,35 +916,17 @@ public class Game_6832 extends LinearOpMode {
         if (toggleAllowed(gamepad1.start, startBtn)) {
             robot.resetMotors(true);
             active = !active;
-            codexFlashStage = 0;
         }
     }
 
 
     //checks to see if a specific button should allow a toggle at any given time; needs a rework
-    boolean toggleAllowed(boolean button, int buttonIndex)
-    {
-
-        /*button indexes:
-        0  = a
-        1  = b
-        2  = x
-        3  = y
-        4  = dpad_down
-        5  = dpad_up
-        6  = dpad_left
-        7  = dpad_right
-        8  = left bumper
-        9  = right bumper
-        10 = start button
-        */
-
+    private boolean toggleAllowed(boolean button, int buttonIndex) {
         if (button) {
             if (!buttonSavedStates[buttonIndex])  { //we just pushed the button, and when we last looked at it, it was not pressed
                 buttonSavedStates[buttonIndex] = true;
                 return true;
             }
-            //       else if(buttonCurrentState[buttonIndex] == buttonSavedStates[buttonIndex] && buttonCurrentState[buttonIndex]){
             else { //the button is pressed, but it was last time too - so ignore
 
                 return false;
@@ -1407,7 +939,7 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-    public String getAlliance(){
+    private String getAlliance(){
         if(isBlue)
             return "Blue";
         return "Red";
@@ -1417,7 +949,7 @@ public class Game_6832 extends LinearOpMode {
 
 
 
-    void configureDashboard() {
+    private void configureDashboard() {
         // Configure the dashboard.
 
         // At the beginning of each telemetry update, grab a bunch of data
@@ -1482,36 +1014,7 @@ public class Game_6832 extends LinearOpMode {
                     }
                 });
 
-//                .addData("Servo Tester", new Func<String>() {
-//                    @Override public String value() {
-//                        return Integer.toString(robot.servoTesterPos);
-//                    }
-//                })
-
-
-//                .addData("servoJewelExtender", new Func<String>() {
-//                    @Override public String value() {
-//                        return Integer.toString(robot.jewel.jewelPos);
-//                    }
-//                });
-//        telemetry.addLine()
-//                .addData("Kp", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.getKpDrive();
-//                    }
-//                })
-//                .addData("Kd", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.getKdDrive();
-//                    }
-//                });
-//
         telemetry.addLine()
-//                .addData("phone pos", new Func<String>() {
-//                    @Override public String value() {
-//                        return Integer.toString(robot.glyphSystem.maintainPhoneTilt());
-//                    }
-//                })
                 .addData("status", new Func<String>() {
                     @Override public String value() {
                         return robot.imu.getSystemStatus().toShortString();
@@ -1548,132 +1051,9 @@ public class Game_6832 extends LinearOpMode {
                         return mineralState;
                     }
                 });
-//                .addData("Jewel Red", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.colorJewel.red();
-//                    }
-//                })
-//
-//                .addData("Jewel Blue", new Func<String>() {
-//                    @Override public String value() {
-//                        return "" + robot.colorJewel.blue();
-//                    }
-//                })
-
-//                .addData("Relic Codex", new Func<String>() {
-//                    @Override public String value() {
-//                        return getRelicCodexStr();
-//                    }
-//                })
-//                .addData("Relic Codex", new Func<String>() {
-//                    @Override public String value() {
-//                        return Integer.toString(savedVuMarkCodex);
-//                    }
-//                });
-
-//        telemetry.addLine()
-//                .addData("heading", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(robot.getHeading());
-//                    }
-//                })
-//                .addData("pitch", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(robot.getPitch());
-//                    }
-//                })
-//                .addData("roll", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(robot.getRoll());
-//                    }
-//                });
-//                .addData("glyph roll", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Double.toString(robot.glyphSystem.roll);
-//                    }
-//                })
-//                .addData("glyph ticks", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.firstAngle);
-//                        return Integer.toString(robot.glyphSystem.getMotorLiftPosition());
-//                    }
-//                });
-//                .addData("headingRaw", new Func<String>() {
-//                    @Override public String value() {
-//                        return formatAngle(angles.angleUnit, angles.firstAngle);
-//
-//                    }
-//                })
-//                .addData("headingOffset", new Func<String>() {
-//                    @Override public String value() {
-//                        return Double.toString(robot.offsetHeading);
-//
-//                    }
-//                })
-//
-//                .addData("rollRaw", new Func<String>() {
-//                    @Override public String value() {
-//                        //return formatAngle(angles.angleUnit, angles.secondAngle);
-//                        return Double.toString(robot.getRoll());
-//                    }
-//                })
-//                .addData("pitchRaw", new Func<String>() {
-//                    @Override public String value() {
-//                        return formatAngle(angles.angleUnit, angles.thirdAngle);
-//                    }
-//                });
-//        telemetry.addLine()
-//                .addData("auto stage", new Func<String>() {
-//                    @Override public String value() {
-//                        return String.valueOf(autoStage);
-//                    }
-//                })
-                //.addData("glyph distance", new Func<String>() {
-                //    @Override public String value() {
-                //        return String.valueOf(robot.glyphUpper.getDistance(DistanceUnit.CM));
-                //    }
-                //})
-//                .addData("TicksFL", new Func<String>() {
-//                    @Override public String value() {
-//                        return Long.toString(robot.motorFront.getElbowCurrentPos());
-//                    }
-//                })
-//                .addData("TicksBL", new Func<String>() {
-//                    @Override public String value() {
-//                        return Long.toString(robot.motorBack.getElbowCurrentPos());
-//                    }
-//                })
-//                .addData("TicksAvg", new Func<String>() {
-//                    @Override public String value() {
-//                        return Long.toString(robot.getAverageTicks());
-//                    }
-//                });
-//        telemetry.addLine()
-//
-//                .addData("PID Calc", new Func<String>() {
-//                    @Override public String value() {
-//                        return Double.toString(robot.drivePID.performPID() );
-//                    }
-//                })
-//                .addData("PID Err", new Func<String>() {
-//                    @Override public String value() {
-//                        return Double.toString(robot.drivePID.getError());
-//                    }
-//                });
-    }
-    String formatAngle(AngleUnit angleUnit, double angle) {
-        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
     }
 
-    String formatDegrees(double degrees){
-        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
-    }
-
-    long futureTime(float seconds){
+    private long futureTime(float seconds){
         return System.nanoTime() + (long) (seconds * 1e9);
     }
 }
