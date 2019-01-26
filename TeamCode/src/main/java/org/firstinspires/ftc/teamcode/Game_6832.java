@@ -142,10 +142,7 @@ public class Game_6832 extends LinearOpMode {
     private boolean visionProviderFinalized;
     private boolean enableTelemetry = false;
     private static final Class<? extends VisionProvider>[] visionProviders = VisionProviders.visionProviders;
-    private int viewpoint = 2;
-    private static final Viewpoint[] viewpoints = Viewpoint.values();
-    private int dogeCvFinalStep = 1;
-    private static final DogeCVFinalStep[] dogeCvFinalSteps = DogeCVFinalStep.values();
+    private static final Viewpoint viewpoint = Viewpoint.WEBCAM;
     private GoldPos initGoldPosTest = null;
     private int mineralState = 0;
 
@@ -205,12 +202,6 @@ public class Game_6832 extends LinearOpMode {
             if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)){
                 enableTelemetry = !enableTelemetry; //enable/disable FtcDashboard telemetry
             }
-            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_right, dpad_right)) {
-                viewpoint = (viewpoint+1) % viewpoints.length; //switch viewpoint
-            }
-            if(!visionProviderFinalized && toggleAllowed(gamepad1.b, b)){
-                dogeCvFinalStep = (dogeCvFinalStep+1) % dogeCvFinalSteps.length; //switch dogecv final step
-            }
             if(visionProviderFinalized && gamepad1.left_trigger > 0.3){
                 GoldPos gp = vp.detect();
                 if (gp != GoldPos.HOLD_STATE)
@@ -224,8 +215,7 @@ public class Game_6832 extends LinearOpMode {
 
             telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
             telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
-            telemetry.addData("Vision", "Viewpoint: %s", viewpoints[viewpoint]);
-            telemetry.addData("Vision", "DogeCVFInalStep: %s", dogeCvFinalSteps[dogeCvFinalStep]);
+            telemetry.addData("Vision", "Viewpoint: %s", viewpoint);
 
             telemetry.addData("Sound", soundState == 0 ? "off" :
                                                soundState == 1 ? "on" :
@@ -322,7 +312,7 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Please wait","Initializing vision");
             telemetry.update();
             vp = visionProviders[visionProviderState].newInstance();
-            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoints[viewpoint]);
+            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
         } catch (IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
@@ -334,7 +324,7 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Please wait","Initializing vision");
             telemetry.update();
             vp = VisionProviders.defaultProvider.newInstance();
-            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoints[viewpoint]);
+            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
         } catch (IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
