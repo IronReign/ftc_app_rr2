@@ -336,6 +336,134 @@ public class Game_6832 extends LinearOpMode {
             robot.maintainHeading(gamepad1.x);
     }
 
+    private void auto_craterSide(){
+        switch(autoStage){
+            case 0:
+                robot.setZeroHeading();
+                if(robot.driveForward(true, .1,.5)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 1:
+                if (auto_setup())
+                    autoStage++;
+                break;
+            case 3://turn to crater
+                switch(mineralState){
+                    case 0://left
+                        if(robot.rotateIMU(345,3)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 1://middle
+                        autoStage++;
+                        break;
+                    case 2://right
+                        if(robot.rotateIMU(15,3)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                }
+                break;
+            case 4://move mineral
+                switch(mineralState){
+                    case 0://left
+                        if(robot.driveForward(true, .880,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 1://middle
+                        if(robot.driveForward(true, .762,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 2://right
+                        if(robot.driveForward(true, .890,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                }
+                break;
+            case 5://move back
+                switch(mineralState){
+                    case 0://left
+                        if(robot.driveForward(false, .880,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 1://middle
+                        if(robot.driveForward(false, .762,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                    case 2://right
+                        if(robot.driveForward(false, .890,.65)){
+                            robot.resetMotors(true);
+                            autoStage++;
+                        }
+                        break;
+                }
+                break;
+            case 6://turn parallel to minerals
+                if(robot.rotateIMU(270,3)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 7://move to wall
+                if(robot.driveForward(true, 1.3, .65)) {
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 8://turn to depot
+                if(robot.rotateIMU(225, 3)){
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 9://move to depot
+                if(robot.driveForward(true, 0.91, .65)) {
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 10://start yeeting ducky
+                //start collector and timer to yeet ducky
+                autoTimer = futureTime(4);
+                robot.collector.eject();
+                autoStage++;
+                break;
+            case 11://stop yeeting ducky
+                if(autoTimer<System.nanoTime()){
+                    robot.collector.stopIntake();
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+                break;
+            case 12://move backwards to crater
+                if(robot.driveForward(false, 2, .65)) {
+                    robot.collector.stopIntake();
+                    robot.resetMotors(true);
+                    autoStage++;
+                }
+            default:
+                robot.resetMotors(true);
+                autoStage = 0;
+                active = false;
+                state = 0;
+                break;
+        }
+    }
+
     private void auto_depotSide(){
         switch(autoStage){
             case 0:
