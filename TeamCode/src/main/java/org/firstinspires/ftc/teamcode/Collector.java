@@ -41,6 +41,10 @@ public class Collector {
     public int posPostLatch = 20;
     public double intakePwr = .5;
 
+    public int pos_prelatch = 1870;
+    public int pos_latched = 2950;
+    public int pos_postlatch = 560;
+
     public static int extendMax = 3700;
     public static int extendMid= 1750;
     public static int extendMin = 10;
