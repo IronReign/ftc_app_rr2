@@ -766,7 +766,7 @@ public class FtcRobotControllerActivity extends Activity
 
     controllerService.setCallback(callback);
     controllerService.setupRobot(eventLoop, idleLoop, runOnComplete);
-
+    FtcDashboard.attachEventLoop(eventLoop);
     passReceivedUsbAttachmentsToEventLoop();
   }
 
