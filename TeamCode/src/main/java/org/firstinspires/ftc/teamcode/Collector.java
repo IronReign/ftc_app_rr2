@@ -39,6 +39,7 @@ public class Collector {
     public int posPreLatch = 2025;
     public int posLatch    = 2718;
     public int posPostLatch = 20;
+    public int posSafeDrive = 794;
     public double intakePwr = .5;
 
     public static int extendMax = 3700;
