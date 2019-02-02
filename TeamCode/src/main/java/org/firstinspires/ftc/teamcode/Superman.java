@@ -14,6 +14,12 @@ public class Superman {
     public int posPreLatch = 10;
     public int posLatch = 297;
     public int posPostLatch=10;
+
+    public int pos_prelatch = 0;
+    public int pos_latched = 360;
+    public int pos_postlatch = 0;
+
+
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
     public boolean active = true;
