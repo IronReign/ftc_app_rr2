@@ -1063,7 +1063,7 @@ public class Game_6832 extends LinearOpMode {
         }
 
 
-        //imu demo code
+        //endgame mode
         if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
             isEndGame = !isEndGame;
         }
@@ -1078,7 +1078,7 @@ public class Game_6832 extends LinearOpMode {
         else
             robot.collector.stopIntake();
 
-        //uhhh idk what this is but makes stuff work
+        //Gracious Professionalism!
         if (soundState == 1 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
             SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, soundID);
         }
