@@ -135,7 +135,7 @@ public class Game_6832 extends LinearOpMode {
 
 
     private int latchStage = 0;
-    int posLatched = 0;
+    int posLatched = -1;
     private boolean goLatch = false;
     private boolean isEndGame = false;
     boolean isIntakeClosed = true;
