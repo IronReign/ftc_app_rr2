@@ -32,8 +32,8 @@ public class Collector {
     double extendABobPwr = .90;
 
 
-    int servoHooked = 0;
-    int servoUnhooked = 0;
+    int servoHooked = 900;
+    int servoUnhooked = 2100;
 
 
     public int pos_Intake   = 4200;
