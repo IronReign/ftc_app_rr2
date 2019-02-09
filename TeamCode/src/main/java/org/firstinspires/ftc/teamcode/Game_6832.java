@@ -956,6 +956,9 @@ public class Game_6832 extends LinearOpMode {
             if(toggleAllowed(gamepad1.b,b)){
                 robot.collector.hookOff();
             }
+            if(gamepad1.y){
+                robot.maintainHeading(gamepad1.right_bumper);
+            }
         }
         else{
             if(toggleAllowed(gamepad1.x,x)){
@@ -1061,9 +1064,8 @@ public class Game_6832 extends LinearOpMode {
 
 
         //imu demo code
-        if(gamepad1.right_bumper){
+        if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
             isEndGame = !isEndGame;
-            robot.maintainHeading(gamepad1.right_bumper);
         }
 
 
