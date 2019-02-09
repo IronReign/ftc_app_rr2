@@ -22,6 +22,7 @@ public class Collector {
     Servo intakeRight = null;
     Servo intakeLeft = null;
     Servo hook = null;
+    Servo intakeGate = null;
 
     int elbowPosInternal = 0;
     int elbowPos = 0;
@@ -34,6 +35,9 @@ public class Collector {
 
     int servoHooked = 900;
     int servoUnhooked = 2100;
+
+    int servoGateOpen = 900;
+    int servoGateClosed = 1495;
 
 
     public int pos_Intake   = 4200;
@@ -55,7 +59,7 @@ public class Collector {
 
     public boolean active = true;
 
-    public Collector(DcMotor elbowLeft, DcMotor elbowRight, DcMotor extendABobLeft, DcMotor extendABobRight, Servo intakeRight, Servo intakeLeft, Servo hook){
+    public Collector(DcMotor elbowLeft, DcMotor elbowRight, DcMotor extendABobLeft, DcMotor extendABobRight, Servo intakeRight, Servo intakeLeft, Servo hook, Servo intakeGate){
 
         elbowLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elbowRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -74,6 +78,7 @@ public class Collector {
         this.intakeRight = intakeRight;
         this.intakeLeft = intakeLeft;
         this.hook = hook;
+        this.intakeGate = intakeGate;
         intakeLeft.setDirection(Servo.Direction.REVERSE);
 
     }
@@ -100,6 +105,12 @@ public class Collector {
     }
     public void hookOff(){
         hook.setPosition(servoNormalize(servoUnhooked));
+    }
+    public void openGate(){
+        intakeGate.setPosition(servoNormalize(servoGateOpen));
+    }
+    public void closeGate(){
+        intakeGate.setPosition(servoNormalize(servoGateClosed));
     }
 
 

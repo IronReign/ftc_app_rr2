@@ -137,6 +137,8 @@ public class Game_6832 extends LinearOpMode {
     private int latchStage = 0;
     private boolean goLatch = false;
     private boolean isEndGame = false;
+    boolean isIntakeClosed = true;
+    boolean isHooked = false;
 
     private VisionProvider vp;
     private int visionProviderState;
@@ -900,7 +902,7 @@ public class Game_6832 extends LinearOpMode {
         if(butA || butB || butX || butY) {
             robot.collector.setElbowTargetPos(1000);
             if (robot.collector.beltMid()) {
-                if (butY) {//position for deposit
+                if (butY) {//position for intakeGate
                     robot.superman.setTargetPosition(robot.superman.posDeposit);
                     targetPos = robot.superman.posDeposit;
                 }
@@ -924,7 +926,7 @@ public class Game_6832 extends LinearOpMode {
                 }
 
                 if (robot.superman.getTargetPosition() == targetPos && Math.abs(robot.collector.getElbowCurrentPos() - 1000) <20) {
-                    if (butY) {//position for deposit
+                    if (butY) {//position for intakeGate
                         robot.collector.setElbowTargetPos(robot.collector.posDeposit);
                         butY = false;
                     }
@@ -949,15 +951,28 @@ public class Game_6832 extends LinearOpMode {
         }*/
 
 
+
         if(!isEndGame){
             if(toggleAllowed(gamepad1.x,x)){
-                robot.collector.hookOn();
-            }
-            if(toggleAllowed(gamepad1.b,b)){
-                robot.collector.hookOff();
+                isHooked = !isHooked;
             }
             if(gamepad1.y){
                 robot.maintainHeading(gamepad1.right_bumper);
+            }
+            if(toggleAllowed(gamepad1.a,a)){
+                isIntakeClosed = !isIntakeClosed;
+            }
+
+            if(isHooked){
+                robot.collector.hookOn();
+            }else{
+                robot.collector.hookOff();
+            }
+
+            if(isIntakeClosed){
+                robot.collector.closeGate();
+            }else{
+                robot.collector.openGate();
             }
         }
         else{
@@ -1237,7 +1252,7 @@ public class Game_6832 extends LinearOpMode {
                 })
                 .addData("servcPos", new Func<String>() {
                     @Override public String value() {
-                        return robot.deposit.getPosition() + "";
+                        return robot.intakeGate.getPosition() + "";
                     }
                 }).addData("autoStage", new Func<Integer>() {
                     @Override public Integer value() {

@@ -1327,7 +1327,7 @@ public class KrakenFinal extends LinearOpMode {
                 //drive forward
                 break;
             case 19:
-                //deposit
+                //intakeGate
                 break;
             case 20:
                 //backup
@@ -1488,7 +1488,7 @@ public class KrakenFinal extends LinearOpMode {
                         break;
                 }
                 break;
-            case 13: //deposit glyph
+            case 13: //intakeGate glyph
 
                 if(isBlue){
                     if(robot.rotateIMU(335, 1.5)){
@@ -1523,7 +1523,7 @@ public class KrakenFinal extends LinearOpMode {
 //                }
 //                autoStage++;
 //                break;
-            case 15: //deposit glyph
+            case 15: //intakeGate glyph
                 if(robot.driveForward(true, .5, .50)) {
                     robot.resetMotors(true);
 //                    robot.glyphSystem.releaseGrip();
@@ -1736,7 +1736,7 @@ public class KrakenFinal extends LinearOpMode {
 //                }
 //                autoStage++;
 //                break;
-            case 13: //deposit glyph
+            case 13: //intakeGate glyph
                 if(robot.driveForward(false, .75, .50)) {
                     robot.resetMotors(true);
 //                    robot.glyphSystem.releaseGrip();

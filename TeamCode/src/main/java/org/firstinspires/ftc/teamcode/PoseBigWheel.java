@@ -49,7 +49,7 @@ public class PoseBigWheel
     Servo intakeRight = null;
     Servo intakeLeft = null;
     Servo hook = null;
-    Servo deposit = null;
+    Servo intakeGate = null;
 
 
 
@@ -235,14 +235,14 @@ public class PoseBigWheel
         this.intakeLeft = this.hwMap.servo.get("intakeLeft");
         this.supermanMotor = this.hwMap.dcMotor.get("supermanMotor");
         this.hook = this.hwMap.servo.get("hook");
-        this.deposit = this.hwMap.servo.get("deposit");
+        this.intakeGate = this.hwMap.servo.get("intakeGate");
 
         driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
         driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        collector = new Collector(elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook);
+        collector = new Collector(elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook, intakeGate);
         collector.setElbowPwr(.5);
         superman = new Superman(supermanMotor);
 
