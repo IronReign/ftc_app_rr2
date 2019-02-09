@@ -378,7 +378,7 @@ public class Game_6832 extends LinearOpMode {
                         }
                         break;
                     case 1://middle
-                        if(robot.driveForward(true, .762,.65)){
+                        if(robot.driveForward(true, .35,.65)){
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -400,7 +400,7 @@ public class Game_6832 extends LinearOpMode {
                         }
                         break;
                     case 1://middle
-                        if(robot.driveForward(false, .762,.65)){
+                        if(robot.driveForward(false, .35,.65)){
                             robot.resetMotors(true);
                             autoStage++;
                         }
@@ -476,16 +476,16 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.rotateIMU(39,3)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                     case 1://middle
-                        autoSetupStage++;
+                        autoStage++;
                         break;
                     case 2://right
                         if(robot.rotateIMU(321,3)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                 }
@@ -495,19 +495,19 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.driveForward(true, .604,.65)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                     case 1://middle
                         if(robot.driveForward(true, .47,.65)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                     case 2://right
                         if(robot.driveForward(true, .604,.65)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                 }
@@ -657,16 +657,16 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.rotateIMU(39,3)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                     case 1://middle
-                        autoSetupStage++;
+                        autoStage++;
                         break;
                     case 2://right
                         if(robot.rotateIMU(321,3)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                 }
@@ -676,19 +676,19 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.driveForward(true, .604,.65)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                     case 1://middle
                         if(robot.driveForward(true, .47,.65)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                     case 2://right
                         if(robot.driveForward(true, .604,.65)){
                             robot.resetMotors(true);
-                            autoSetupStage++;
+                            autoStage++;
                         }
                         break;
                 }
