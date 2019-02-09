@@ -13,7 +13,7 @@ public class Superman {
     public int pos_Deposit = 585;
 
     public int pos_prelatch = 0;
-    public int pos_latched = 360;
+    public int pos_latched = 500;
     public int pos_postlatch = 0;
 
 

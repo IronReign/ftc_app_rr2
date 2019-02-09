@@ -135,6 +135,7 @@ public class Game_6832 extends LinearOpMode {
 
 
     private int latchStage = 0;
+    int posLatched = 0;
     private boolean goLatch = false;
     private boolean isEndGame = false;
     boolean isIntakeClosed = true;
@@ -167,6 +168,8 @@ public class Game_6832 extends LinearOpMode {
         // functions that waitForStart() normally does, but needed to customize it.
 
         robot.resetMotors(true);
+        robot.collector.hookOff();
+        robot.collector.closeGate();
 
         visionProviderFinalized = false;
 
@@ -976,14 +979,31 @@ public class Game_6832 extends LinearOpMode {
             }
         }
         else{
+
             if(toggleAllowed(gamepad1.x,x)){
-                robot.goToPreLatch();
+                posLatched++;
+                if(posLatched==3)posLatched=0;
+                switch (posLatched) {
+                    case 0:
+                        robot.goToPreLatch();
+                        break;
+                    case 1:
+                        robot.goToLatch();
+                        break;
+                    case 2:
+                        robot.goToPostLatch();
+                        break;
+                }
             }
-            if(toggleAllowed(gamepad1.y,y)){
-                robot.goToLatch();
-            }
+
             if(toggleAllowed(gamepad1.a,a)){
-                robot.goToPostLatch();
+                isHooked = !isHooked;
+            }
+
+            if(isHooked){
+                robot.collector.hookOn();
+            }else{
+                robot.collector.hookOff();
             }
 
             if(toggleAllowed(gamepad1.b,b)){
