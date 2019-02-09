@@ -9,11 +9,8 @@ public class Superman {
     int supermanPos = 0;
     double supermanPwr = 0;
     //all filler values; need to be updated to reflect actual positions
-    public int posIntake = 10;
-    public int posDeposit = 585;
-    public int posPreLatch = 10;
-    public int posLatch = 297;
-    public int posPostLatch=10;
+    public int pos_Intake = 10;
+    public int pos_Deposit = 585;
 
     public int pos_prelatch = 0;
     public int pos_latched = 360;
@@ -70,7 +67,7 @@ public class Superman {
     }
 
     public void raise() {
-        setTargetPosition(Math.min(getCurrentPosition() + 30, posDeposit));
+        setTargetPosition(Math.min(getCurrentPosition() + 30, pos_Deposit));
     }
 
     public void lower() {

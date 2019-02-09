@@ -48,7 +48,7 @@ public class PoseBigWheel
     DcMotor supermanMotor = null;
     Servo intakeRight = null;
     Servo intakeLeft = null;
-
+    Servo hook = null;
     Servo deposit = null;
 
 
@@ -234,6 +234,7 @@ public class PoseBigWheel
         this.intakeRight = this.hwMap.servo.get("intakeRight");
         this.intakeLeft = this.hwMap.servo.get("intakeLeft");
         this.supermanMotor = this.hwMap.dcMotor.get("supermanMotor");
+        this.hook = this.hwMap.servo.get("hook");
         this.deposit = this.hwMap.servo.get("deposit");
 
         driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -241,7 +242,7 @@ public class PoseBigWheel
         driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        collector = new Collector(elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft);
+        collector = new Collector(elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook);
         collector.setElbowPwr(.5);
         superman = new Superman(supermanMotor);
 
@@ -589,6 +590,75 @@ public class PoseBigWheel
         }
         return false;
     }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                                                                  ////
+    ////                        Superman/Elbow control functions                          ////
+    ////                                                                                  ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    public boolean goToPreLatch(){
+        collector.restart(.40, .5);
+        superman.restart(.75);
+        superman.setTargetPosition(superman.pos_prelatch);
+        collector.setElbowTargetPos(collector.pos_prelatch);
+
+        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+    public boolean goToLatch(){
+        superman.restart(.60);
+        collector.restart(.30,.75);
+        superman.setTargetPosition(superman.pos_latched);
+        collector.setElbowTargetPos(collector.pos_latched);
+
+        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+    public boolean goToPostLatch(){
+        collector.restart(.40, .5);
+        superman.restart(.75);
+        superman.setTargetPosition(superman.pos_postlatch);
+        collector.setElbowTargetPos(collector.pos_postlatch);
+
+        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+    public boolean goToIntake(){
+        collector.restart(.40, .5);
+        superman.restart(.75);
+        superman.setTargetPosition(superman.pos_Intake);
+        collector.setElbowTargetPos(collector.pos_Intake);
+
+        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+    public boolean goToSafeDrive(){
+        collector.restart(.40, .5);
+        superman.restart(.75);
+        superman.setTargetPosition(0);
+        collector.setElbowTargetPos(collector.pos_SafeDrive);
+
+        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+
+
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////

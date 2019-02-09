@@ -45,7 +45,6 @@ import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
-import org.firstinspires.ftc.teamcode.vision.dogecv.DogeCVFinalStep;
 
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
 
@@ -137,6 +136,7 @@ public class Game_6832 extends LinearOpMode {
 
     private int latchStage = 0;
     private boolean goLatch = false;
+    private boolean isEndGame = false;
 
     private VisionProvider vp;
     private int visionProviderState;
@@ -626,8 +626,8 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 12: //extend elbow to park
-                robot.collector.setElbowTargetPos(robot.collector.posPreLatch+100);
-                if(robot.collector.getElbowTargetPos() == robot.collector.posPreLatch+100){
+                robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100);
+                if(robot.collector.getElbowTargetPos() == robot.collector.pos_prelatch+100){
                     robot.resetMotors(true);
                     autoStage++;
                 }
@@ -895,46 +895,8 @@ public class Game_6832 extends LinearOpMode {
         int standposition = 0;
         int restposition = 0;
 
-        /*if(toggleAllowed(gamepad1.y, y)){
-            if (robot.supermanMotor.getElbowCurrentPos() < standposition && robot.supermanMotor.getElbowTargetPos() < standposition) {
-                robot.supermanMotor.setElbowTargetPos((int) Math.min(robot.supermanMotor.getElbowCurrentPos(), standposition));
-                robot.supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.supermanMotor.setElbowPwr(.80);
-            }
-        }else{
-            if (robot.supermanMotor.getElbowCurrentPos() > restposition && robot.supermanMotor.getElbowTargetPos() > restposition) {
-                robot.supermanMotor.setElbowTargetPos((int) Math.min(robot.supermanMotor.getElbowCurrentPos(), restposition));
-                robot.supermanMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.supermanMotor.setElbowPwr(-.80);
-            }
-        }*/
 
-
-        /*if(gamepad1.y){
-            butY=true;
-            butA = false;
-            butX = false;
-            butB = false;
-        }
-        if(gamepad1.a){
-            butA=true;
-            butY = false;
-            butX = false;
-            butB = false;
-        }
-        if(gamepad1.x){
-            butX=true;
-            butA = false;
-            butY = false;
-            butB = false;
-        }
-        if(gamepad1.b){
-            butB=true;
-            butA = false;
-            butX = false;
-            butY = false;
-        }
-
+/*
         if(butA || butB || butX || butY) {
             robot.collector.setElbowTargetPos(1000);
             if (robot.collector.beltMid()) {
@@ -986,85 +948,67 @@ public class Game_6832 extends LinearOpMode {
             }
         }*/
 
-        if(toggleAllowed(gamepad1.x,x)){
-            robot.collector.restart(.40, .5);
-            robot.superman.restart(.75);
-            robot.superman.setTargetPosition(robot.superman.pos_prelatch);
-            robot.collector.setElbowTargetPos(robot.collector.pos_prelatch);
-            goLatch = false;
+
+        if(!isEndGame){
+            if(toggleAllowed(gamepad1.x,x)){
+                robot.collector.hookOn();
+            }
+            if(toggleAllowed(gamepad1.b,b)){
+                robot.collector.hookOff();
+            }
         }
-        if(toggleAllowed(gamepad1.y,y)){
-            robot.superman.restart(.60);
-            robot.collector.restart(.30,.75);
-            robot.superman.setTargetPosition(robot.superman.pos_latched);
-            robot.collector.setElbowTargetPos(robot.collector.pos_latched);
-            goLatch = false;
-        }
-        if(toggleAllowed(gamepad1.a,a)){
-            robot.collector.restart(.40, .5);
-            robot.superman.restart(.75);
-            robot.superman.setTargetPosition(robot.superman.pos_postlatch);
-            robot.collector.setElbowTargetPos(robot.collector.pos_postlatch);
-            goLatch = false;
-        }
+        else{
+            if(toggleAllowed(gamepad1.x,x)){
+                robot.goToPreLatch();
+            }
+            if(toggleAllowed(gamepad1.y,y)){
+                robot.goToLatch();
+            }
+            if(toggleAllowed(gamepad1.a,a)){
+                robot.goToPostLatch();
+            }
 
-
-
-
-        if(toggleAllowed(gamepad1.b,b)){
-            goLatch = true;
-        }
-
-
-        if(goLatch){
-            switch(latchStage){
-                case 0:
-                    robot.collector.restart(.40, .5);
-                    robot.superman.restart(.75);
-                    robot.superman.setTargetPosition(robot.superman.pos_prelatch);
-                    robot.collector.setElbowTargetPos(robot.collector.pos_prelatch);
-                    latchStage++;
-                    break;
-                case 1:
-                    if((Math.abs(robot.collector.pos_prelatch)-robot.collector.getElbowCurrentPos())<= 20 &&(Math.abs(robot.superman.pos_prelatch)-robot.superman.getCurrentPosition())<= 20){
+            if(toggleAllowed(gamepad1.b,b)){
+                goLatch = true;
+            }
+            if(goLatch){
+                switch(latchStage){
+                    case 0:
+                        if(robot.goToPreLatch())
+                            latchStage++;
+                        break;
+                    case 1:
                         autoTimer = futureTime(1);
                         latchStage++;
-                    }
-                    break;
-                case 2:
-                    if(System.nanoTime()>autoTimer){
+                        break;
+                    case 2:
+                        if(System.nanoTime()>autoTimer){
+                            latchStage++;
+                        }
+                        break;
+                    case 3:
+                        if(robot.driveForward(true, .1, .75)){
+                            latchStage++;
+                        }
+                        break;
+                    case 4:
+                        autoTimer = futureTime(3);
                         latchStage++;
-                    }
-                    break;
-                case 3:
-                    if(robot.driveForward(true, .1, .75)){
+                        break;
+                    case 5:
+                        robot.driveMixerTank(-.5, 0);
+                        if (robot.goToLatch()||System.nanoTime()>autoTimer) {
+                            latchStage++;
+                        }
+                        break;
+                    case 6:
+                        robot.goToPostLatch();
                         latchStage++;
-                    }
-                    break;
-                case 4:
-                    robot.superman.restart(.60);
-                    robot.collector.restart(.30,.75);
-                    robot.superman.setTargetPosition(robot.superman.pos_latched);
-                    robot.collector.setElbowTargetPos(robot.collector.pos_latched);
-                    autoTimer = futureTime(3);
-                    latchStage++;
-                    break;
-                case 5:
-                    robot.driveMixerTank(-.5, 0);
-                    if (((Math.abs(robot.collector.pos_latched)-robot.collector.getElbowCurrentPos())<= 20 && (Math.abs(robot.superman.pos_latched)-robot.superman.getCurrentPosition())<= 20)||System.nanoTime()>autoTimer) {
-                        latchStage++;
-                    }
-                    break;
-                case 6:
-                    robot.collector.restart(.40, .5);
-                    robot.superman.restart(.75);
-                    robot.superman.setTargetPosition(robot.superman.pos_postlatch);
-                    robot.collector.setElbowTargetPos(robot.collector.pos_postlatch);
-                    latchStage++;
-                    break;
-                default:
-                    latchStage = 0;
-                    goLatch = false;
+                        break;
+                    default:
+                        latchStage = 0;
+                        goLatch = false;
+                }
             }
         }
 
@@ -1074,6 +1018,10 @@ public class Game_6832 extends LinearOpMode {
 
 
 
+
+
+
+        //manual control
         if(gamepad1.dpad_down){
             robot.superman.lower();
         }
@@ -1095,13 +1043,8 @@ public class Game_6832 extends LinearOpMode {
             robot.collector.close();
         }
 
-        if(gamepad1.right_trigger > .5){
-            robot.collector.collect();
-        }
 
-        else if(gamepad1.left_trigger > .5){
-            robot.collector.eject();
-        }
+        //elbow control
         currTarget = robot.collector.getExtendABobTargetPos();
         if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
             if(currTarget == robot.collector.extendMid) {
@@ -1115,15 +1058,17 @@ public class Game_6832 extends LinearOpMode {
         if(currTarget >= 10){
             robot.collector.setExtendABobTargetPos(currTarget);
         }
+
+
+        //imu demo code
         if(gamepad1.right_bumper){
-            //robot.resetIMU();
-            robot.collector.restart(.40, .5);
-            robot.superman.restart(.75);
+            isEndGame = !isEndGame;
             robot.maintainHeading(gamepad1.right_bumper);
         }
 
-        double triggers = gamepad1.left_trigger - gamepad1.right_trigger;
 
+        //intake code
+        double triggers = gamepad1.left_trigger - gamepad1.right_trigger;
         if (triggers > 0.1)
             robot.collector.collect();
         else if (triggers < -0.1)
@@ -1131,6 +1076,7 @@ public class Game_6832 extends LinearOpMode {
         else
             robot.collector.stopIntake();
 
+        //uhhh idk what this is but makes stuff work
         if (soundState == 1 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
             SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, soundID);
         }

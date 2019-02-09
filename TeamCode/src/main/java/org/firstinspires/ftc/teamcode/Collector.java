@@ -21,6 +21,7 @@ public class Collector {
     DcMotor extendABobRight = null;
     Servo intakeRight = null;
     Servo intakeLeft = null;
+    Servo hook = null;
 
     int elbowPosInternal = 0;
     int elbowPos = 0;
@@ -31,15 +32,13 @@ public class Collector {
     double extendABobPwr = .90;
 
 
+    int servoHooked = 0;
+    int servoUnhooked = 0;
 
-    //all filler values; need to be updated to reflect actual positions
 
-    public int posIntake   = 4200;
-    public int posDeposit  = 3231;
-    public int posPreLatch = 2025;
-    public int posLatch    = 2718;
-    public int posPostLatch = 20;
-    public int posSafeDrive = 794;
+    public int pos_Intake   = 4200;
+    public int pos_Deposit  = 3231;
+    public int pos_SafeDrive = 794;
     public double intakePwr = .5;
 
     public int pos_prelatch = 1870;
@@ -56,7 +55,7 @@ public class Collector {
 
     public boolean active = true;
 
-    public Collector(DcMotor elbowLeft, DcMotor elbowRight, DcMotor extendABobLeft, DcMotor extendABobRight, Servo intakeRight, Servo intakeLeft){
+    public Collector(DcMotor elbowLeft, DcMotor elbowRight, DcMotor extendABobLeft, DcMotor extendABobRight, Servo intakeRight, Servo intakeLeft, Servo hook){
 
         elbowLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elbowRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -74,6 +73,7 @@ public class Collector {
         this.extendABobRight = extendABobRight;
         this.intakeRight = intakeRight;
         this.intakeLeft = intakeLeft;
+        this.hook = hook;
         intakeLeft.setDirection(Servo.Direction.REVERSE);
 
     }
@@ -93,6 +93,13 @@ public class Collector {
             extendABobLeft.setPower(extendABobPwr);
             extendABobRight.setPower(extendABobPwr);
         }
+    }
+
+    public void hookOn(){
+        hook.setPosition(servoNormalize(servoHooked));
+    }
+    public void hookOff(){
+        hook.setPosition(servoNormalize(servoUnhooked));
     }
 
 
@@ -172,12 +179,35 @@ public class Collector {
         return false;
     }
 
+    public boolean extendToMin(){
+        setExtendABobTargetPos(extendMin);
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+    public boolean extendToMid(){
+        setExtendABobTargetPos(extendMid);
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+    public boolean extendToMax(){
+        setExtendABobTargetPos(extendMax);
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
+
+
 
 
 
 
     public void open(){
-        setElbowTargetPos(Math.min(getElbowCurrentPos() + 100, posIntake));
+        setElbowTargetPos(Math.min(getElbowCurrentPos() + 100, pos_Intake));
     }
 
     public void retract(){
@@ -189,7 +219,7 @@ public class Collector {
     }
 
     public void close(){
-        setElbowTargetPos(Math.max(getElbowCurrentPos() - 100, posPostLatch));
+        setElbowTargetPos(Math.max(getElbowCurrentPos() - 100, pos_postlatch));
     }
 
 
