@@ -40,9 +40,10 @@ public class Collector {
     int servoGateClosed = 1495;
 
 
-    public int pos_Intake   = 4200;
+    public int pos_Intake   = 3850;
     public int pos_Deposit  = 3231;
     public int pos_SafeDrive = 794;
+    public int pos_scoring = 1416;
     public double intakePwr = .5;
 
     public int pos_prelatch = 1570;
@@ -50,7 +51,7 @@ public class Collector {
     public int pos_postlatch = 260;
 
     public static int extendMax = 3700;
-    public static int extendMid= 1750;
+    public static int extendMid= 1470;
     public static int extendMin = 10;
 
 

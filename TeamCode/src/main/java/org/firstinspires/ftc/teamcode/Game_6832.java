@@ -136,6 +136,7 @@ public class Game_6832 extends LinearOpMode {
 
     private int latchStage = 0;
     int posLatched = -1;
+    int posIntake = -1;
     private boolean goLatch = false;
     private boolean isEndGame = false;
     boolean isIntakeClosed = true;
@@ -413,7 +414,7 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
             case 4://turn parallel to minerals
-                if(robot.rotateIMU(-90,3)){
+                if(robot.rotateIMU(270,3)){
                     robot.resetMotors(true);
                     autoStage++;
                 }
@@ -956,20 +957,22 @@ public class Game_6832 extends LinearOpMode {
 
 
         if(!isEndGame){
-            if(toggleAllowed(gamepad1.x,x)){
-                isHooked = !isHooked;
-            }
             if(gamepad1.y){
                 robot.maintainHeading(gamepad1.right_bumper);
             }
             if(toggleAllowed(gamepad1.a,a)){
                 isIntakeClosed = !isIntakeClosed;
             }
-
-            if(isHooked){
-                robot.collector.hookOn();
-            }else{
-                robot.collector.hookOff();
+            if (toggleAllowed(gamepad1.b, b)) {
+                if(posIntake==2) posIntake=0;
+                switch (posIntake) {
+                    case 0:
+                        robot.goToIntake();
+                        break;
+                    case 1:
+                        robot.goToDeposit();
+                        break;
+                }
             }
 
             if(isIntakeClosed){

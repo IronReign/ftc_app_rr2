@@ -657,6 +657,18 @@ public class PoseBigWheel
         }
         return false;
     }
+    public boolean goToDeposit(){
+        collector.restart(.40, .5);
+        superman.restart(.75);
+        superman.setTargetPosition(0);
+        collector.setElbowTargetPos(collector.pos_scoring);
+        collector.extendToMid();
+
+        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
+            return true;
+        }
+        return false;
+    }
 
 
 
