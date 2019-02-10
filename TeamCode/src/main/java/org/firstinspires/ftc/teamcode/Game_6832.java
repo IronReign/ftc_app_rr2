@@ -153,13 +153,15 @@ public class Game_6832 extends LinearOpMode {
     private static final Viewpoint viewpoint = Viewpoint.WEBCAM;
     private GoldPos initGoldPosTest = null;
     private int mineralState = 0;
-    private MineralStateProvider mineralStateProvider = () -> mineralState;
+
 
     private int soundState = 0;
     private int soundID = -1;
 
+    /*
     private Stage testStage = new Stage();
 
+    private MineralStateProvider mineralStateProvider = () -> mineralState;
     private StateMachine testStateMachine = getStateMachine(testStage)
             .addState(() -> robot.driveForward(true, 2, 0.65))   // will move to next state when lambda returns true
             .addState(() -> robot.driveForward(false, 2, 0.65))
@@ -177,7 +179,7 @@ public class Game_6832 extends LinearOpMode {
             })
             .addState(() -> System.currentTimeMillis() >= autoTimer) // states don't just have to be robot.blah()
             .build(); // end with .build();
-
+*/
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -297,7 +299,7 @@ public class Game_6832 extends LinearOpMode {
                     case 5:
                         break;
                     case 6:
-                        testStateMachine.execute();
+                        //testStateMachine.execute();
                         break;
                     case 7:
                         break;
@@ -927,61 +929,6 @@ public class Game_6832 extends LinearOpMode {
         int standposition = 0;
         int restposition = 0;
 
-
-/*
-        if(butA || butB || butX || butY) {
-            robot.collector.setElbowTargetPos(1000);
-            if (robot.collector.beltMid()) {
-                if (butY) {//position for intakeGate
-                    robot.superman.setTargetPosition(robot.superman.posDeposit);
-                    targetPos = robot.superman.posDeposit;
-                }
-                if (butA) {  //position to collect minerals
-                    robot.superman.setTargetPosition(robot.superman.posIntake);
-                    targetPos = robot.superman.posIntake;
-                }
-                if (butX) { //target for pre-latching
-                    robot.superman.setTargetPosition(robot.superman.posPreLatch);
-                    robot.collector.setExtendABobPwr((robot.collector.extendMid+robot.collector.extendMax)/2);
-                    targetPos = robot.superman.posPreLatch;
-                }
-                if (toggleAllowed(butB, b)) {
-                    if (robot.collector.getElbowTargetPos() != robot.collector.posLatch) {
-                        robot.superman.setTargetPosition(robot.superman.posLatch);
-                        targetPos = robot.superman.posLatch;
-                    } else {
-                        robot.superman.setTargetPosition(robot.superman.posPostLatch);
-                        targetPos = robot.superman.posPostLatch;
-                    }
-                }
-
-                if (robot.superman.getTargetPosition() == targetPos && Math.abs(robot.collector.getElbowCurrentPos() - 1000) <20) {
-                    if (butY) {//position for intakeGate
-                        robot.collector.setElbowTargetPos(robot.collector.posDeposit);
-                        butY = false;
-                    }
-                    if (butA) {  //position to collect minerals
-                        robot.collector.setElbowTargetPos(robot.collector.posIntake);
-                        butA = false;
-                    }
-                    if (butX) { //target for pre-latching
-                        robot.collector.setElbowTargetPos(robot.collector.posPreLatch);
-                        butX = false;
-                    }
-                    if (toggleAllowed(butB, b)) {
-                        if (robot.collector.getElbowTargetPos() != robot.collector.posLatch) {
-                            robot.collector.setElbowTargetPos(robot.collector.posLatch);
-                        } else {
-                            robot.collector.setElbowTargetPos(robot.collector.posPostLatch);
-                        }
-                        butB = false;
-                    }
-                }
-            }
-        }*/
-
-
-
         if(!isEndGame){
             if(gamepad1.y){
                 robot.maintainHeading(gamepad1.right_bumper);
@@ -989,7 +936,16 @@ public class Game_6832 extends LinearOpMode {
             if(toggleAllowed(gamepad1.a,a)){
                 isIntakeClosed = !isIntakeClosed;
             }
-            if (toggleAllowed(gamepad1.b, b)) {
+            if(toggleAllowed(gamepad1.b,b)){
+                robot.goToSafeDrive();
+            }
+            if(isIntakeClosed){
+                robot.collector.closeGate();
+            }else{
+                robot.collector.openGate();
+            }
+            if (toggleAllowed(gamepad1.x, x)) {
+                posIntake++;
                 if(posIntake==2) posIntake=0;
                 switch (posIntake) {
                     case 0:
@@ -999,12 +955,6 @@ public class Game_6832 extends LinearOpMode {
                         robot.goToDeposit();
                         break;
                 }
-            }
-
-            if(isIntakeClosed){
-                robot.collector.closeGate();
-            }else{
-                robot.collector.openGate();
             }
         }
         else{
@@ -1314,12 +1264,12 @@ public class Game_6832 extends LinearOpMode {
                 });
     }
 
-    private StateMachine.Builder getStateMachine(Stage stage) {
+    /*private StateMachine.Builder getStateMachine(Stage stage) {
         return StateMachine.builder()
                            .stateSwitchAction(() -> robot.resetMotors(true))
                            .stateEndAction(() -> active = false)
                            .stage(stage);
-    }
+    }*/
 
     private long futureTime(float seconds){
         return System.nanoTime() + (long) (seconds * 1e9);
