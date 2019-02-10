@@ -925,10 +925,6 @@ public class Game_6832 extends LinearOpMode {
 
         robot.driveMixerTank(pwrFwd, pwrRot);
 
-
-        int standposition = 0;
-        int restposition = 0;
-
         if(!isEndGame){
             if(gamepad1.y){
                 robot.maintainHeading(gamepad1.right_bumper);
