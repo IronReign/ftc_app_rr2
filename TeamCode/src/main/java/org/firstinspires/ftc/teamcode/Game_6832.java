@@ -41,6 +41,9 @@ import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
+import org.firstinspires.ftc.teamcode.statemachine.Stage;
+import org.firstinspires.ftc.teamcode.statemachine.StateMachine;
 import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
@@ -150,9 +153,31 @@ public class Game_6832 extends LinearOpMode {
     private static final Viewpoint viewpoint = Viewpoint.WEBCAM;
     private GoldPos initGoldPosTest = null;
     private int mineralState = 0;
+    private MineralStateProvider mineralStateProvider = () -> mineralState;
 
     private int soundState = 0;
     private int soundID = -1;
+
+    private Stage testStage = new Stage();
+
+    private StateMachine testStateMachine = getStateMachine(testStage)
+            .addState(() -> robot.driveForward(true, 2, 0.65))   // will move to next state when lambda returns true
+            .addState(() -> robot.driveForward(false, 2, 0.65))
+            .addState(() -> robot.rotateIMU(90, 3))
+            .addSingleState(() -> robot.collector.collect())   // addSingleState() will move to the next state immediately after executing once
+            .addMineralState(mineralStateProvider,   // will run three different things based on the mineral stated - make sure to pass in mineralStateProvider, which lazily evaluates stuff
+                    () -> robot.rotateIMU(345, 3),   // left
+                    () -> true,  // "() -> true" will just skip the state  // middle
+                    () -> robot.rotateIMU(15, 3))    // right
+            .addState(() -> robot.driveForward(true, 1, 0.65))   // more states
+            .addState(() -> robot.driveForward(false, 1, 0.65))
+            .addSingleState(() -> {   // more complicated states use {...code....}. Don't forget to use return true/false if not addSingleState;
+                autoTimer = futureTime(4);
+                robot.collector.eject();
+            })
+            .addState(() -> System.currentTimeMillis() >= autoTimer) // states don't just have to be robot.blah()
+            .build(); // end with .build();
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -272,6 +297,7 @@ public class Game_6832 extends LinearOpMode {
                     case 5:
                         break;
                     case 6:
+                        testStateMachine.execute();
                         break;
                     case 7:
                         break;
@@ -1286,6 +1312,13 @@ public class Game_6832 extends LinearOpMode {
                         return mineralState;
                     }
                 });
+    }
+
+    private StateMachine.Builder getStateMachine(Stage stage) {
+        return StateMachine.builder()
+                           .stateSwitchAction(() -> robot.resetMotors(true))
+                           .stateEndAction(() -> active = false)
+                           .stage(stage);
     }
 
     private long futureTime(float seconds){
