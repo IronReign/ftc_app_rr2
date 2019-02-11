@@ -24,4 +24,9 @@ public class Stage {
         stage = 0;
     }
 
+    @Override
+    public String toString() {
+        return Integer.toString(stage);
+    }
+
 }
