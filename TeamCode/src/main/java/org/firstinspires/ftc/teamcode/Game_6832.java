@@ -916,8 +916,11 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
-        if (robot.getPitch()>45) {
-            if (pwrDamper != .33) {
+        if ((robot.getRoll()>45) && robot.getRoll()< 65) {
+            //todo - needs improvement - should be enabling slowmo mode, not setting the damper directly
+            //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
+
+            if (pwrDamper != .33) { //not sure why this check is here
                 pwrDamper = .33;
             } else
                 pwrDamper = 1.0;
@@ -955,9 +958,27 @@ public class Game_6832 extends LinearOpMode {
         }
         else{
 
-            if(toggleAllowed(gamepad1.x,x)){
+            if(toggleAllowed(gamepad1.x,x)){ //x advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
                 posLatched++;
                 if(posLatched==3)posLatched=0;
+                //todo ughh. this switch should only be called if we just hit x or b - this is not a great way to do this
+                switch (posLatched) {
+                    case 0:
+                        robot.goToPreLatch();
+                        break;
+                    case 1:
+                        robot.goToLatch();
+                        break;
+                    case 2:
+                        robot.goToPostLatch();
+                        break;
+                }
+            }
+
+            if(toggleAllowed(gamepad1.b,b)){ //b allows us to back out of latching stages
+                posLatched--;
+                if(posLatched==-1)posLatched=0;
+                //todo ughh. this switch should only be called if we just hit x or b - duplicating this is not a great way to do this
                 switch (posLatched) {
                     case 0:
                         robot.goToPreLatch();
@@ -981,56 +1002,49 @@ public class Game_6832 extends LinearOpMode {
                 robot.collector.hookOff();
             }
 
-            if(toggleAllowed(gamepad1.b,b)){
-                goLatch = true;
-            }
-            if(goLatch){
-                switch(latchStage){
-                    case 0:
-                        if(robot.goToPreLatch())
-                            latchStage++;
-                        break;
-                    case 1:
-                        autoTimer = futureTime(1);
-                        latchStage++;
-                        break;
-                    case 2:
-                        if(System.nanoTime()>autoTimer){
-                            latchStage++;
-                        }
-                        break;
-                    case 3:
-                        if(robot.driveForward(true, .1, .75)){
-                            latchStage++;
-                        }
-                        break;
-                    case 4:
-                        autoTimer = futureTime(3);
-                        latchStage++;
-                        break;
-                    case 5:
-                        robot.driveMixerTank(-.5, 0);
-                        if (robot.goToLatch()||System.nanoTime()>autoTimer) {
-                            latchStage++;
-                        }
-                        break;
-                    case 6:
-                        robot.goToPostLatch();
-                        latchStage++;
-                        break;
-                    default:
-                        latchStage = 0;
-                        goLatch = false;
-                }
-            }
+//            if(toggleAllowed(gamepad1.b,b)){
+//                goLatch = true;
+//            }
+//            if(goLatch){
+//                switch(latchStage){
+//                    case 0:
+//                        if(robot.goToPreLatch())
+//                            latchStage++;
+//                        break;
+//                    case 1:
+//                        autoTimer = futureTime(1);
+//                        latchStage++;
+//                        break;
+//                    case 2:
+//                        if(System.nanoTime()>autoTimer){
+//                            latchStage++;
+//                        }
+//                        break;
+//                    case 3:
+//                        if(robot.driveForward(true, .1, .75)){
+//                            latchStage++;
+//                        }
+//                        break;
+//                    case 4:
+//                        autoTimer = futureTime(3);
+//                        latchStage++;
+//                        break;
+//                    case 5:
+//                        robot.driveMixerTank(-.5, 0);
+//                        if (robot.goToLatch()||System.nanoTime()>autoTimer) {
+//                            latchStage++;
+//                        }
+//                        break;
+//                    case 6:
+//                        robot.goToPostLatch();
+//                        latchStage++;
+//                        break;
+//                    default:
+//                        latchStage = 0;
+//                        goLatch = false;
+//                }
+//            }
         }
-
-
-
-
-
-
-
 
 
 
@@ -1042,12 +1056,12 @@ public class Game_6832 extends LinearOpMode {
             robot.superman.raise();
         }
 
-        /*if(gamepad1.dpad_down){
+        if(gamepad1.right_stick_y>0.5){
             robot.collector.retract();
         }
-        if(gamepad1.dpad_up){
+        if(gamepad1.right_stick_y<-0.5){
             robot.collector.extend();
-        }*/
+        }
 
         if(gamepad1.dpad_right){
             robot.collector.open();
@@ -1260,12 +1274,12 @@ public class Game_6832 extends LinearOpMode {
                 });
     }
 
-    /*private StateMachine.Builder getStateMachine(Stage stage) {
+    private StateMachine.Builder getStateMachine(Stage stage) {
         return StateMachine.builder()
                            .stateSwitchAction(() -> robot.resetMotors(true))
                            .stateEndAction(() -> active = false)
                            .stage(stage);
-    }*/
+    }
 
     private long futureTime(float seconds){
         return System.nanoTime() + (long) (seconds * 1e9);

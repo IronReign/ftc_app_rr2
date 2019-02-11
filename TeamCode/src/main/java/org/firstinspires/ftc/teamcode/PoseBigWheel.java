@@ -128,7 +128,23 @@ public class PoseBigWheel
 
     protected MoveMode moveMode;
 
+    public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
+        manual, //target positions are all being manually overridden
+        driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
+        hanging, //auton initial hang at the beginning of a match
+        deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
+        deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
+        cratered, //auton arm extended over the crater - this might end up being the same as preIntake
+        preIntake, //teleop mostly - collector retracted and open to almost ground level
+        intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
+        deposit, //teleop mostly - transition from intake to deposit - retract collector to low position waiting on completion, close elbow to deposit position, superman up to deposit position, extend collector to deposit position
+        latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
+        latchPrep, //teleop endgame - make sure hook is open, set drivespeed slow, extend lift to max, finalize elbow angle for latch, elbow overrideable
+        latchSet, //teleop endgame - close the latch
+        latchHang; //teleop endgame - close collector elbow to final position, set locks if implemented
+    }
 
+    protected Articulation articulation;
 
     Orientation imuAngles; //pitch, roll and yaw from the IMU
     protected boolean targetAngleInitialized = false;
@@ -600,7 +616,8 @@ public class PoseBigWheel
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
 
-
+//todo these all need to be redone - they don't take into account the current positions of related systems
+    //todo they also seem meant to be called until they return false but aren't used that way and further
 
     public boolean goToPreLatch(){
         collector.restart(.40, .5);
@@ -661,7 +678,7 @@ public class PoseBigWheel
         collector.restart(.40, .5);
         superman.restart(.75);
         superman.setTargetPosition(0);
-        collector.setElbowTargetPos(collector.pos_scoring);
+        collector.setElbowTargetPos(collector.pos_Deposit);
         collector.extendToMid();
 
         if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
@@ -1000,84 +1017,6 @@ public class PoseBigWheel
     }
 
 
-    /**public double strafeBeacon(VuforiaTrackableDefaultListener beacon, double offsetDistance, double pwrMax, double iWishForThisToBeOurHeading) {
-
-        //double vuDepth = 0;
-        double pwr = 0;
-
-        if (beacon.getPose() != null) {
-            vuTrans = beacon.getRawPose().getTranslation();
-
-            //todo - add a new transform that will shift our target left or right depending on beacon analysis
-
-            vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
-            vuXOffset = vuTrans.get(0);
-
-                            // this is a very simple proportional on the distance to target - todo - convert to PID control
-            pwr = clampDouble(-pwrMax, pwrMax, ((vuXOffset - offsetDistance)/1200.0));//but this should be equivalent
-            Log.i("Beacon Angle", String.valueOf(vuAngle));
-            driveIMU(kpDrive, kiDrive, kdDrive, pwr, iWishForThisToBeOurHeading, true);
-
-        } else { //disable motors if given target not visible
-            vuDepth = 0;
-            driveMixerMec(0,0,0);
-        }//else
-
-        return vuDepth - offsetDistance; // 0 indicates there was no good vuforia pose - target likely not visible
-    }//getJewelConfig
-
-    public double driveToTargetVu(VuforiaTrackableDefaultListener beacon, boolean isBlue, int beaconConfig, double bufferDistance, double maxSpeed, boolean turnOnly, boolean offset) {
-
-        //double vuDepth = 0;
-        double pwr = 0;
-
-        if (beacon.getPose() != null) {
-            vuTrans = beacon.getRawPose().getTranslation();
-
-            //todo - add a new transform that will shift our target left or right depending on beacon analysis
-
-            if(offset){vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0) + getBeaconOffset(isBlue, beaconConfig), vuTrans.get(2)));}
-            else vuAngle = Math.toDegrees(Math.atan2(vuTrans.get(0), vuTrans.get(2)));
-            vuDepth = vuTrans.get(2);
-
-            if (turnOnly)
-                pwr = 0; //(vuDepth - bufferDistance/1200.0);
-            else
-                // this is a very simple proportional on the distance to target - todo - convert to PID control
-                pwr = clampDouble(-maxSpeed, maxSpeed, ((vuDepth - bufferDistance)/1200.0));//but this should be equivalent
-            Log.i("Beacon Angle", String.valueOf(vuAngle));
-            movePID(kpDrive, kiDrive, kdDrive, pwr, -vuAngle, 0, false);
-
-        } else { //disable motors if given target not visible
-            vuDepth = 0;
-            driveMixerMec(0, 0, 0);
-        }//else
-
-        return vuDepth; // 0 indicates there was no good vuforia pose - target likely not visible
-    }//driveToTargetVu
-
-
-    public double getBeaconOffset(boolean isBlue, int beaconConfig){
-        double offset = 0;
-        if((isBlue && beaconConfig == 1) || (!isBlue && beaconConfig == 2)){
-            offset = -80;
-        }
-        else {
-            offset = 80;
-        }
-        return offset;
-    }
-
-    public double getVuAngle(){
-        return vuAngle;
-    }
-    public double getVuDepth(){
-        return vuDepth;
-    }
-    public double getVuXOffset(){
-        return vuXOffset;
-    }
-    **/
 
     public double getBatteryVoltage(){
         return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();

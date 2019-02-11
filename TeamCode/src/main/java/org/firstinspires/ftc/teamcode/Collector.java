@@ -30,7 +30,7 @@ public class Collector {
 
     int extendABobPosInternal = 0;
     int extendABobPos = 0;
-    double extendABobPwr = .90;
+    double extendABobPwr = 1;
 
 
     int servoHooked = 900;
@@ -39,21 +39,20 @@ public class Collector {
     int servoGateOpen = 900;
     int servoGateClosed = 1495;
 
-
-    public int pos_Intake   = 3850;
-    public int pos_Deposit  = 3231;
-    public int pos_SafeDrive = 794;
-    public int pos_scoring = 1416;
     public double intakePwr = .5;
 
-    public int pos_prelatch = 1570;
-    public int pos_latched = 3065;
-    public int pos_postlatch = 260;
+    public int pos_Intake   = 3850;
+    public int pos_Deposit  = 1337;
+    public int pos_SafeDrive = 794;
+    public int pos_prelatch = 3558;
+    public int pos_latched = 3065; //todo - likely needs to be same as prelatch
+    public int pos_postlatch = 260; //todo - check for safety - but might work
 
-    public static int extendMax = 3700;
-    public static int extendMid= 1470;
+    public static int extendMax = 2500;
+    public static int extendMid= 980;
+    public static int extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
     public static int extendMin = 10;
-
+    public static int extendPreLatch = extendMax;
 
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
@@ -170,52 +169,52 @@ public class Collector {
         setExtendABobPwr(extendABobPwr);
         active = true;
     }
-
-
-    public boolean beltMin(){
-        setExtendABobTargetPos(extendMin);
-        if(getExtendABobCurrentPos() == extendMin)
-            return true;
-        return false;
-    }
-    public boolean beltMid(){
-        setExtendABobTargetPos(extendMid);
-        if(getExtendABobCurrentPos() == extendMid)
-            return true;
-        return false;
-    }
-    public boolean beltMax(){
-        setExtendABobTargetPos(extendMax);
-        if(getExtendABobCurrentPos() == extendMax)
-            return true;
-        return false;
-    }
-
     public boolean extendToMin(){
+        return extendToMin(extendABobPwr, 15);
+    }
+
+    public boolean extendToMin(double speed, int range){
         setExtendABobTargetPos(extendMin);
-        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<15){
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
             return true;
         }
         return false;
     }
+    public boolean extendToLow(){
+        return extendToLow(extendABobPwr, 15);
+    }
+
+    public boolean extendToLow(double speed, int range){
+        setExtendABobTargetPos(extendLow);
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
+            return true;
+        }
+        return false;
+    }
+
     public boolean extendToMid(){
+        return extendToMid(extendABobPwr, 15);
+    }
+
+    public boolean extendToMid(double speed, int range){
         setExtendABobTargetPos(extendMid);
-        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<15){
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
             return true;
         }
         return false;
     }
+
     public boolean extendToMax(){
+        return extendToMax(extendABobPwr, 15);
+    }
+
+    public boolean extendToMax(double speed, int range){
         setExtendABobTargetPos(extendMax);
-        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<15){
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
             return true;
         }
         return false;
     }
-
-
-
-
 
 
     public void open(){
