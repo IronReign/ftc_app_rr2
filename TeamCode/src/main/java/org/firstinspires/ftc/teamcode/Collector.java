@@ -41,7 +41,8 @@ public class Collector {
 
     public double intakePwr = .5;
 
-    public int pos_Intake   = 3850;
+    public int pos_preIntake = 3600;
+    public int pos_Intake   = 3900;
     public int pos_Deposit  = 1337;
     public int pos_SafeDrive = 794;
     public int pos_prelatch = 3558;
