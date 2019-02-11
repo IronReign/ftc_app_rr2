@@ -96,11 +96,12 @@ public class Game_6832 extends LinearOpMode {
     private int currTarget = 0;
 
     //staging and timer variables
-    private int autoStage = 0;
+    private int autoStageOld = 0;
     private int autoSetupStage = 0;
     private long autoTimer = 0;
     private long elbowTimer = 0;
     private long autoDelay = 0;
+    private Stage autoStage = new Stage();
 
     //sensors/sensing-related variables
     private Orientation angles;
@@ -136,7 +137,6 @@ public class Game_6832 extends LinearOpMode {
     private boolean butB = false;
     private int targetPos = 0;
 
-
     private int latchStage = 0;
     int posLatched = -1;
     int posIntake = -1;
@@ -145,6 +145,7 @@ public class Game_6832 extends LinearOpMode {
     boolean isIntakeClosed = true;
     boolean isHooked = false;
 
+    //vision-related configuration
     private VisionProvider vp;
     private int visionProviderState;
     private boolean visionProviderFinalized;
@@ -154,7 +155,7 @@ public class Game_6832 extends LinearOpMode {
     private GoldPos initGoldPosTest = null;
     private int mineralState = 0;
 
-
+    //sound related configuration
     private int soundState = 0;
     private int soundID = -1;
 
@@ -166,7 +167,6 @@ public class Game_6832 extends LinearOpMode {
             .addState(() -> true)
             .addState(() -> true)
             .build();
-
     private StateMachine testStateMachine = getStateMachine(testStage)
             .addState(() -> robot.driveForward(true, 2, 0.65))   // will move to next state when lambda returns true
             .addState(() -> robot.driveForward(false, 2, 0.65))
@@ -380,26 +380,26 @@ public class Game_6832 extends LinearOpMode {
     }
 
     private void auto_craterSide(){
-        switch(autoStage){
+        switch(autoStageOld){
             case 0:
                 if (auto_setup())
-                    autoStage++;
+                    autoStageOld++;
                 break;
             case 1://turn to mineral
                 switch(mineralState){
                     case 0://left
                         if(robot.rotateIMU(345,3)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 1://middle
-                        autoStage++;
+                        autoStageOld++;
                         break;
                     case 2://right
                         if(robot.rotateIMU(15,3)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                 }
@@ -409,19 +409,19 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.driveForward(true, .880,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 1://middle
                         if(robot.driveForward(true, .35,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 2://right
                         if(robot.driveForward(true, .890,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                 }
@@ -431,19 +431,19 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.driveForward(false, .880,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 1://middle
                         if(robot.driveForward(false, .35,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 2://right
                         if(robot.driveForward(false, .890,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                 }
@@ -451,49 +451,49 @@ public class Game_6832 extends LinearOpMode {
             case 4://turn parallel to minerals
                 if(robot.rotateIMU(270,3)){
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoStageOld++;
                 }
                 break;
             case 5://move to wall
                 if(robot.driveForward(true, 1.3, .65)) {
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoStageOld++;
                 }
                 break;
             case 6://turn to depot
                 if(robot.rotateIMU(225, 3)){
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoStageOld++;
                 }
                 break;
             case 7://move to depot
                 if(robot.driveForward(true, 0.91, .65)) {
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoStageOld++;
                 }
                 break;
             case 8://start yeeting ducky
                 //start collector and timer to yeet ducky
                 autoTimer = futureTime(4);
                 robot.collector.eject();
-                autoStage++;
+                autoStageOld++;
                 break;
             case 9://stop yeeting ducky
                 if(autoTimer<System.nanoTime()){
                     robot.collector.stopIntake();
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoStageOld++;
                 }
                 break;
             case 10://move backwards to crater
                 if(robot.driveForward(false, 2, .65)) {
                     robot.collector.stopIntake();
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoStageOld++;
                 }
             default:
                 robot.resetMotors(true);
-                autoStage = 0;
+                autoStageOld = 0;
                 active = false;
                 state = 0;
                 break;
@@ -539,26 +539,26 @@ public class Game_6832 extends LinearOpMode {
             .build();
 
     private void auto_depotSample(){
-        switch(autoStage){
+        switch(autoStageOld){
             case 0:
                 if (auto_setup())
-                    autoStage++;
+                    autoStageOld++;
                 break;
             case 1://turn to mineral
                 switch(mineralState){
                     case 0://left
                         if(robot.rotateIMU(39,3)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 1://middle
-                        autoStage++;
+                        autoStageOld++;
                         break;
                     case 2://right
                         if(robot.rotateIMU(321,3)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                 }
@@ -568,19 +568,19 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.driveForward(true, .604,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 1://middle
                         if(robot.driveForward(true, .47,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 2://right
                         if(robot.driveForward(true, .604,.65)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                 }
@@ -590,16 +590,16 @@ public class Game_6832 extends LinearOpMode {
                     case 0://left
                         if(robot.rotateIMU(345,3)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 1://middle
-                        autoStage++;
+                        autoStageOld++;
                         break;
                     case 2://right
                         if(robot.rotateIMU(15,3)){
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                 }
@@ -612,7 +612,7 @@ public class Game_6832 extends LinearOpMode {
                             autoTimer = futureTime(4);
                             robot.collector.eject();
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 1://middle
@@ -621,7 +621,7 @@ public class Game_6832 extends LinearOpMode {
                             autoTimer = futureTime(4);
                             robot.collector.eject();
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                     case 2://right
@@ -630,7 +630,7 @@ public class Game_6832 extends LinearOpMode {
                             autoTimer = futureTime(4);
                             robot.collector.eject();
                             robot.resetMotors(true);
-                            autoStage++;
+                            autoStageOld++;
                         }
                         break;
                 }
@@ -639,12 +639,12 @@ public class Game_6832 extends LinearOpMode {
                 if(autoTimer<System.nanoTime()){
                     robot.collector.stopIntake();
                     robot.resetMotors(true);
-                    autoStage++;
+                    autoStageOld++;
                 }
                 break;
             default:
                 robot.resetMotors(true);
-                autoStage = 0;
+                autoStageOld = 0;
                 active = false;
                 state = 0;
                 break;
@@ -1025,103 +1025,33 @@ public class Game_6832 extends LinearOpMode {
 
         // At the beginning of each telemetry update, grab a bunch of data
         // from the IMU that we will then display in separate lines.
-        telemetry.addAction(new Runnable() {
-            @Override
-            public void run() {
+        telemetry.addAction(() ->
                 // Acquiring the angles is relatively expensive; we don't want
                 // to do that in each of the three items that need that info, as that's
                 // three times the necessary expense.
-                angles = robot.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
-            }
-        });
+                angles = robot.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX)
 
+        );
         telemetry.addLine()
-                .addData("elbowA", new Func<String>() {
-                    @Override public String value() {
-                        return Boolean.toString(robot.collector.isActive());
-                    }
-                })
-                .addData("elbowC", new Func<String>() {
-                    @Override public String value() {
-                        return Integer.toString(robot.collector.getElbowCurrentPos());
-                    }
-                })
-                .addData("elbowC2", new Func<String>() {
-                    @Override public String value() {
-                        return Integer.toString(robot.collector.getElbowCurrentPos2());
-                    }
-                })
-                .addData("elbowT", new Func<String>() {
-                    @Override public String value() {
-                        return Integer.toString(robot.collector.getElbowTargetPos());
-                    }
-                });
-
+                .addData("elbowA", () -> robot.collector.isActive())
+                .addData("elbowC", () -> robot.collector.getElbowCurrentPos())
+                .addData("elbowC2", () -> robot.collector.getElbowCurrentPos2())
+                .addData("elbowT", () -> robot.collector.getElbowTargetPos());
         telemetry.addLine()
-                .addData("active", new Func<String>() {
-                    @Override public String value() {
-                        return Boolean.toString(active);
-                    }
-                })
-                .addData("state", new Func<String>() {
-                    @Override public String value() {
-                        return Integer.toString(state);
-                    }
-                });
+                .addData("active", () -> active)
+                .addData("state", () -> state);
         telemetry.addLine()
-                .addData("roll", new Func<String>() {
-                    @Override public String value() {
-                        return robot.getRoll()+"";
-                    }
-                })
-                .addData("pitch", new Func<String>() {
-                    @Override public String value() {
-                        return robot.getPitch()+"";
-                    }
-                })
-                .addData("yaw", new Func<String>() {
-                    @Override public String value() {
-                        return robot.getHeading()+"";
-                    }
-                });
-
+                .addData("roll", () -> robot.getRoll())
+                .addData("pitch", () -> robot.getPitch())
+                .addData("yaw", () -> robot.getHeading());
         telemetry.addLine()
-                .addData("status", new Func<String>() {
-                    @Override public String value() {
-                        return robot.imu.getSystemStatus().toShortString();
-                    }
-                })
-
-                .addData("supermanPosition", new Func<String>(){
-                    @Override public String value(){
-                        return ""+robot.superman.getCurrentPosition();
-                    }
-                })
-
-                .addData("extendABobPosition", new Func<String>(){
-                    @Override public String value(){
-                        return ""+robot.collector.getExtendABobCurrentPos();
-                    }
-                })
-
-                .addData("calib", new Func<String>() {
-                    @Override public String value() {
-                        return robot.imu.getCalibrationStatus().toString();
-                    }
-                })
-                .addData("servcPos", new Func<String>() {
-                    @Override public String value() {
-                        return robot.intakeGate.getPosition() + "";
-                    }
-                }).addData("autoStage", new Func<Integer>() {
-                    @Override public Integer value() {
-                        return autoStage;
-                    }
-                }).addData("mineratState", new Func<Integer>() {
-                    @Override public Integer value() {
-                        return mineralState;
-                    }
-                });
+                .addData("status", () -> robot.imu.getSystemStatus().toShortString())
+                .addData("supermanPosition", () -> robot.superman.getCurrentPosition())
+                .addData("extendABobPosition", () -> robot.collector.getExtendABobCurrentPos())
+                .addData("calib", () -> robot.imu.getCalibrationStatus().toString())
+                .addData("servoPos", () -> robot.intakeGate.getPosition())
+                .addData("autoStage", () -> autoStage)
+                .addData("mineralState", () -> mineralState);
     }
 
     private StateMachine.Builder getStateMachine(Stage stage) {
