@@ -158,10 +158,15 @@ public class Game_6832 extends LinearOpMode {
     private int soundState = 0;
     private int soundID = -1;
 
-    /*
     private Stage testStage = new Stage();
-
     private MineralStateProvider mineralStateProvider = () -> mineralState;
+    private StateMachine nested = getStateMachine(new Stage())
+            .addState(() -> true)
+            .addState(() -> true)
+            .addState(() -> true)
+            .addState(() -> true)
+            .build();
+
     private StateMachine testStateMachine = getStateMachine(testStage)
             .addState(() -> robot.driveForward(true, 2, 0.65))   // will move to next state when lambda returns true
             .addState(() -> robot.driveForward(false, 2, 0.65))
@@ -178,8 +183,10 @@ public class Game_6832 extends LinearOpMode {
                 robot.collector.eject();
             })
             .addState(() -> System.currentTimeMillis() >= autoTimer) // states don't just have to be robot.blah()
+            .addState(() -> nested.execute()) // nested state machines
             .build(); // end with .build();
-*/
+
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -286,7 +293,7 @@ public class Game_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 1: //autonomous that goes to opponent's crater
-                        auto_depotSide();
+                        if(auto_depotSide.execute()) active=false;
                         break;
                     case 2: //autonomous that only samples
                         auto_depotSample();
@@ -299,7 +306,7 @@ public class Game_6832 extends LinearOpMode {
                     case 5:
                         break;
                     case 6:
-                        //testStateMachine.execute();
+                        if (testStateMachine.execute()) active=false;
                         break;
                     case 7:
                         break;
@@ -493,186 +500,43 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
-    private void auto_depotSide(){
-        switch(autoStage){
-            case 0:
-                if (auto_setup())
-                    autoStage++;
-                break;
-            case 1://turn to mineral
-                switch(mineralState){
-                    case 0://left
-                        if(robot.rotateIMU(39,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        autoStage++;
-                        break;
-                    case 2://right
-                        if(robot.rotateIMU(321,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 2://move to mineral
-                switch(mineralState){
-                    case 0://left
-                        if(robot.driveForward(true, .604,.65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        if(robot.driveForward(true, .47,.65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 2://right
-                        if(robot.driveForward(true, .604,.65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 3://turn to depot
-                switch(mineralState){
-                    case 0://left
-                        if(robot.rotateIMU(345,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        autoStage++;
-                        break;
-                    case 2://right
-                        if(robot.rotateIMU(15,3)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 4://move to depot
-                switch(mineralState){
-                    case 0://left
-                        if(robot.driveForward(true, .880,.65)){
-                            //start collector and timer to yeet ducky
-                            autoTimer = futureTime(4);
-                            robot.collector.eject();
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 1://middle
-                        if(robot.driveForward(true, .762,.65)){
-                            //start collector and timer to yeet ducky
-                            autoTimer = futureTime(4);
-                            robot.collector.eject();
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 2://right
-                        if(robot.driveForward(true, .890,.65)){
-                            //start collector and timer to yeet ducky
-                            autoTimer = futureTime(4);
-                            robot.collector.eject();
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 5: //yeet ducky
-                if(autoTimer<System.nanoTime()){
-                    robot.collector.stopIntake();
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 6: //turn to wall
-                switch(mineralState){
-                    case 0:
-                        autoStage++;
-                        break;
-                    case 1:
-                        if(robot.rotateIMU(225, 4)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 2:
-                        if(robot.rotateIMU(225, 4)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 7: //move forward a lil
-                switch(mineralState){
-                    case 0://left
-                        autoStage++;
-                        break;
-                    case 1://middle
-                        if(robot.driveForward(false, .090, .65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                    case 2://right
-                        if(robot.driveForward(false, .160,.65)){
-                            robot.resetMotors(true);
-                            autoStage++;
-                        }
-                        break;
-                }
-                break;
-            case 8: //turn to crater
-                if(robot.rotateIMU(303, 5)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 9: //go to crater
-                if(robot.driveForward(false, 1.05, .6)) {
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 10: //turn to crater
-                if(robot.rotateIMU(310, 1.5)){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 11: //go to crater
-                if(robot.driveForward(false, .80, .6)) {
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-                break;
-            case 12: //extend elbow to park
-                robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100);
-                if(robot.collector.getElbowTargetPos() == robot.collector.pos_prelatch+100){
-                    robot.resetMotors(true);
-                    autoStage++;
-                }
-            default:
-                robot.resetMotors(true);
-                autoStage = 0;
-                active = false;
-                state = 0;
-                break;
-        }
-    }
+    private StateMachine auto_depotSide = getStateMachine(new Stage())
+            .addState(() -> auto_setup())
+            .addMineralState(mineralStateProvider, //turn to mineral
+                    () -> robot.rotateIMU(39, 3),
+                    () -> true,
+                    () -> robot.rotateIMU(321, 3))
+            .addMineralState(mineralStateProvider, //move to mineral
+                    () -> robot.driveForward(true, .604, .65),
+                    () -> robot.driveForward(true, .47, .65),
+                    () -> robot.driveForward(true, .604, .65))
+            .addMineralState(mineralStateProvider, //turn to depot
+                    () -> robot.rotateIMU(345, 3),
+                    () -> true,
+                    () -> robot.rotateIMU(15, 3))
+            .addMineralState(mineralStateProvider, //move to depot
+                    () -> robot.driveForward(true, .880, .65),
+                    () -> robot.driveForward(true, .762, .65),
+                    () -> robot.driveForward(true, .890, .65))
+            .addSingleState(() -> autoTimer = futureTime(4))
+            .addSingleState(() -> robot.collector.eject()) // yeet ducky
+            .addState(() -> System.nanoTime() >= autoTimer)
+            .addSingleState(() -> robot.collector.stopIntake())
+            .addMineralState(mineralStateProvider, //turn to wall
+                    () -> true,
+                    () -> robot.rotateIMU(225, 4),
+                    () -> robot.rotateIMU(225, 4))
+            .addMineralState(mineralStateProvider, //move forward a little
+                    () -> true,
+                    () -> robot.driveForward(false, .090, .65),
+                    () -> robot.driveForward(false, .160, .65))
+            .addState(() -> robot.rotateIMU(303, 5)) //turn to crater
+            .addState(() -> robot.driveForward(false, 1.05, .65)) //go to crater
+            .addState(() -> robot.rotateIMU(310, 1.5)) //turn to crater
+            .addState(() -> robot.driveForward(false, .80, .65)) //go to grater
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
+            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - (robot.collector.pos_prelatch+100)) < 20)
+            .build();
 
     private void auto_depotSample(){
         switch(autoStage){
@@ -1260,12 +1124,12 @@ public class Game_6832 extends LinearOpMode {
                 });
     }
 
-    /*private StateMachine.Builder getStateMachine(Stage stage) {
+    private StateMachine.Builder getStateMachine(Stage stage) {
         return StateMachine.builder()
                            .stateSwitchAction(() -> robot.resetMotors(true))
-                           .stateEndAction(() -> active = false)
+                           .stateEndAction(() -> {})
                            .stage(stage);
-    }*/
+    }
 
     private long futureTime(float seconds){
         return System.nanoTime() + (long) (seconds * 1e9);

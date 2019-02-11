@@ -66,6 +66,11 @@ public class StateMachine {
             return this;
         }
 
+        public Builder addNestedStateMachine(final StateMachine stateMachine) {
+            states.add(() -> stateMachine.execute());
+            return this;
+        }
+
         public StateMachine build() {
             if (stage == null)
                 throw new NullPointerException("stage can not be null");
@@ -84,16 +89,18 @@ public class StateMachine {
         this.states = states;
     }
 
-    public void execute() {
+    public boolean execute() {
         if (stage.getStage() == states.size()) {
             stateEndAction.onStateEnd();
             stage.resetStage();
+            return true;
         } else {
             State state = states.get(stage.getStage());
             if (state.runState()) {
                 stateSwitchAction.onStateSwitch();
                 stage.incrementStage();
             }
+            return false;
         }
     }
 
