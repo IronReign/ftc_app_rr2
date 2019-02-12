@@ -218,6 +218,18 @@ public class Collector {
         return false;
     }
 
+    public boolean nearTargetExtend(){
+        if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<15) return true;
+        else return false;
+    }
+    public boolean nearTargetElbow(){
+        if ((Math.abs( getElbowCurrentPos())-getElbowTargetPos())<15) return true;
+        else return false;
+    }
+    public boolean nearTarget(){
+        if (nearTargetElbow() && nearTargetExtend()) return true;
+        else return false;
+    }
 
     public void open(){
         setElbowTargetPos(Math.min(getElbowCurrentPos() + 100, pos_Intake));

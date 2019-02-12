@@ -640,7 +640,7 @@ public class PoseBigWheel
    public Articulation articulate(Articulation target) {
        switch (target) {
            case manual:
-               break;
+               break; //do nothing here - likely we are directly overriding articulations in game
            case driving:
                 if (goToSafeDrive()) return target;
                break;
@@ -696,10 +696,13 @@ public class PoseBigWheel
            case cratered:
                break;
            case preIntake:
+               goToPreIntake();
                break;
            case intake:
+               goToIntake();
                break;
            case deposit:
+               goToDeposit();
                break;
            case latchApproach:
                break;
@@ -734,66 +737,73 @@ public class PoseBigWheel
         superman.setTargetPosition(superman.pos_prelatch);
         collector.setElbowTargetPos(collector.pos_prelatch);
 
-        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
-            return true;
-        }
-        return false;
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
     }
+
     public boolean goToLatch(){
         superman.restart(.60);
         collector.restart(.30,.75);
         superman.setTargetPosition(superman.pos_latched);
         collector.setElbowTargetPos(collector.pos_latched);
 
-        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
-            return true;
-        }
-        return false;
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
     }
+
     public boolean goToPostLatch(){
         collector.restart(.40, .5);
         superman.restart(.75);
         superman.setTargetPosition(superman.pos_postlatch);
         collector.setElbowTargetPos(collector.pos_postlatch);
 
-        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
-            return true;
-        }
-        return false;
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
     }
+
+    public boolean goToPreIntake(){  //should usually be called from deposit position
+                                    //todo: needs time to retract lift before moving elbow - slow elbow speed may not be good enough
+        collector.restart(.25, 1);
+        superman.restart(.75);
+        superman.setTargetPosition(superman.pos_Intake);
+        collector.setElbowTargetPos(collector.pos_preIntake);
+        collector.setExtendABobTargetPos(collector.pos_preIntake);
+
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
+    }
+
     public boolean goToIntake(){
         collector.restart(.40, .5);
         superman.restart(.75);
         superman.setTargetPosition(superman.pos_Intake);
         collector.setElbowTargetPos(collector.pos_Intake);
+        collector.setExtendABobTargetPos(collector.pos_Intake);
 
-        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
-            return true;
-        }
-        return false;
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
     }
+
     public boolean goToSafeDrive(){
         collector.restart(.40, .5);
         superman.restart(.75);
-        superman.setTargetPosition(0);
+        superman.setTargetPosition(superman.pos_driving);
         collector.setElbowTargetPos(collector.pos_SafeDrive);
+        collector.extendToLow(); //set arm extension to preset for intake which helps move COG over drive wheels a bit
 
-        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
-            return true;
-        }
-        return false;
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
     }
-    public boolean goToDeposit(){
-        collector.restart(.40, .5);
-        superman.restart(.75);
-        superman.setTargetPosition(0);
-        collector.setElbowTargetPos(collector.pos_Deposit);
-        collector.extendToMid();
 
-        if((Math.abs(superman.getCurrentPosition())-superman.getTargetPosition())<15 && (Math.abs(collector.getElbowCurrentPos())-collector.getElbowTargetPos())<15){
-            return true;
-        }
-        return false;
+    public boolean goToDeposit(){
+        collector.restart(.40, 1);
+        superman.restart(.75);
+        superman.setTargetPosition(superman.pos_Deposit);
+        collector.setElbowTargetPos(collector.pos_Deposit);
+        collector.extendToMax();
+
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
     }
 
 

@@ -15,7 +15,8 @@ public class Superman {
     public int pos_prelatch = 217;
     public int pos_latched = 500;
     public int pos_postlatch = 0;
-    public int pos_ground = 0;
+    public int pos_stowed = 0;
+    public int pos_driving = 0; //todo - experiment with driving with superman set around 100 (slightly angled) to see if it is more responsive - higher battery drain because superman is straining, but less actual downforce on omni
 
 
     //filler value; needs to be updated to reflect actual ratio
@@ -50,6 +51,11 @@ public class Superman {
 
     public int getCurrentPosition() {
         return superman.getCurrentPosition();
+    }
+
+    public boolean nearTarget(){
+        if ((Math.abs( getCurrentPosition())-getTargetPosition())<15) return true;
+        else return false;
     }
 
     public void setPower(double pwr) {
