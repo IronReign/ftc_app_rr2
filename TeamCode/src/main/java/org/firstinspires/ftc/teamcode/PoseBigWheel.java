@@ -145,6 +145,7 @@ public class PoseBigWheel
     }
 
     protected Articulation articulation;
+    double articulationTimer = 0;
 
     Orientation imuAngles; //pitch, roll and yaw from the IMU
     protected boolean targetAngleInitialized = false;
@@ -611,6 +612,114 @@ public class PoseBigWheel
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
     ////                                                                                  ////
+    ////                        Articulations                                             ////
+    ////                                                                                  ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+   /*
+       public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
+        manual, //target positions are all being manually overridden
+        driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
+        hanging, //auton initial hang at the beginning of a match
+        deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
+        deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
+        cratered, //auton arm extended over the crater - this might end up being the same as preIntake
+        preIntake, //teleop mostly - collector retracted and open to almost ground level
+        intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
+        deposit, //teleop mostly - transition from intake to deposit - retract collector to low position waiting on completion, close elbow to deposit position, superman up to deposit position, extend collector to deposit position
+        latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
+        latchPrep, //teleop endgame - make sure hook is open, set drivespeed slow, extend lift to max, finalize elbow angle for latch, elbow overrideable
+        latchSet, //teleop endgame - close the latch
+        latchHang; //teleop endgame - close collector elbow to final position, set locks if implemented
+    }
+    */
+   double miniTimer;
+   int miniState = 0;
+
+   public Articulation articulate(Articulation target) {
+       switch (target) {
+           case manual:
+               break;
+           case driving:
+                if (goToSafeDrive()) return target;
+               break;
+           case hanging:
+               //auton initial hang at the beginning of a match
+                collector.hookOn();
+                collector.setElbowTargetPos(collector.pos_latched);
+               break;
+           case deploying:
+               //auton unfolding after initial hang - should only be called from the hanging position during auton
+               // ends when wheels should be on the ground, including superman, and pressure is off of the hook
+
+               collector.setElbowTargetPos(collector.pos_Deployed);
+               superman.setTargetPosition(superman.pos_postlatch); //lower superman so it barely pushes up on hook
+               //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
+               //for now we wait on elapsed time to complete sequence
+               articulationTimer = futureTime(1); //setup wait for completion
+               miniState = 0; //reset nested state counter for next use
+               return Articulation.deployed; //progress to the deployed stage
+           case deployed:
+               //auton settled on ground - involves retracting the hook,
+               // moving forward a bit to clear lander and then
+               // lowering superman to driving position
+               if (System.nanoTime() >= articulationTimer) {
+                   switch (miniState) {
+                       case 0:  //push lightly into lander to relieve pressure on hook
+                           driveForward(true, .1, .2);
+                           miniTimer = futureTime(1); //setup wait for completion
+                           miniState++;
+                       case 1:  //retract lander hook
+                           if (System.nanoTime() >= miniTimer) {
+                               collector.hookOff(); //retract hook
+                               miniTimer = futureTime(1); //setup wait for completion
+                               miniState++;
+                           }
+                           break;
+
+                       case 2://pull away from lander
+                           if (System.nanoTime() >= miniTimer) {
+                               driveForward(true, .25, .4);
+                               miniTimer = futureTime(1); //setup wait for completion
+                               miniState++;
+                           }
+                           break;
+                       case 3:  //automatically transition to driving articulation
+                           if (System.nanoTime() >= miniTimer) {
+                               return Articulation.driving;
+                           }
+                           break;
+                   }
+               }
+                   else break;
+           case cratered:
+               break;
+           case preIntake:
+               break;
+           case intake:
+               break;
+           case deposit:
+               break;
+           case latchApproach:
+               break;
+           case latchPrep:
+               break;
+           case latchSet:
+               break;
+           case latchHang:
+               break;
+           default:
+               return target;
+
+       }
+       return target;
+   }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                                                                  ////
     ////                        Superman/Elbow control functions                          ////
     ////                                                                                  ////
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -1022,6 +1131,8 @@ public class PoseBigWheel
         return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();
     }
 
-
+    private long futureTime(float seconds){
+        return System.nanoTime() + (long) (seconds * 1e9);
+    }
 }
 

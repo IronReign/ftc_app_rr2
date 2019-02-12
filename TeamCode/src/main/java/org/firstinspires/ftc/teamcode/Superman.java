@@ -15,6 +15,7 @@ public class Superman {
     public int pos_prelatch = 217;
     public int pos_latched = 500;
     public int pos_postlatch = 0;
+    public int pos_ground = 0;
 
 
     //filler value; needs to be updated to reflect actual ratio

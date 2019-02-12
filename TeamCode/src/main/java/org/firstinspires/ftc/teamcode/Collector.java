@@ -48,6 +48,7 @@ public class Collector {
     public int pos_prelatch = 3558;
     public int pos_latched = 3065; //todo - likely needs to be same as prelatch
     public int pos_postlatch = 260; //todo - check for safety - but might work
+    public int pos_Deployed = 0; //todo - what is this value?
 
     public static int extendMax = 2500;
     public static int extendMid= 980;
