@@ -44,7 +44,7 @@ public class Collector {
     public int pos_preIntake = 3600;
     public int pos_Intake   = 3900;
     public int pos_Deposit  = 1337;
-    public int pos_SafeDrive = 794;
+    public int pos_SafeDrive = 1000;
     public int pos_prelatch = 3558;
     public int pos_latched = 3065; //todo - likely needs to be same as prelatch
     public int pos_postlatch = 260; //todo - check for safety - but might work
@@ -146,6 +146,12 @@ public class Collector {
     public void setElbowTargetPos(int pos){
         elbowPos = pos;
     }
+    public boolean setElbowTargetPos(int pos, double speed){
+        setElbowTargetPos(pos);
+        setElbowPwr(speed);
+        if (nearTargetElbow()) return true;
+        else return false;
+    }
     public int getElbowTargetPos(){
         return elbowPos;
     }
@@ -176,6 +182,7 @@ public class Collector {
     }
 
     public boolean extendToMin(double speed, int range){
+        setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMin);
         if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
             return true;
@@ -187,6 +194,7 @@ public class Collector {
     }
 
     public boolean extendToLow(double speed, int range){
+        setExtendABobPwr(speed);
         setExtendABobTargetPos(extendLow);
         if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
             return true;
@@ -199,6 +207,7 @@ public class Collector {
     }
 
     public boolean extendToMid(double speed, int range){
+        setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMid);
         if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
             return true;
@@ -211,6 +220,7 @@ public class Collector {
     }
 
     public boolean extendToMax(double speed, int range){
+        setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMax);
         if((Math.abs(getExtendABobCurrentPos())-getExtendABobTargetPos())<range){
             return true;

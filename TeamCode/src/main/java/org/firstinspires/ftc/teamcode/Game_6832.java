@@ -124,8 +124,8 @@ public class Game_6832 extends LinearOpMode {
     private int targetPos = 0;
 
     private int latchStage = 0;
-    int posLatched = -1;
-    int posIntake = -1;
+    int stateLatched = -1;
+    int stateIntake = -1;
     private boolean goLatch = false;
     private boolean isEndGame = false;
     boolean isIntakeClosed = true;
@@ -495,39 +495,59 @@ public class Game_6832 extends LinearOpMode {
 
         if(!isEndGame){
             if(gamepad1.y){
-                robot.maintainHeading(gamepad1.right_bumper);
+                robot.goToSafeDrive();
             }
             if(toggleAllowed(gamepad1.a,a)){
                 isIntakeClosed = !isIntakeClosed;
             }
-            if(toggleAllowed(gamepad1.b,b)){
-                robot.goToSafeDrive();
-            }
+
             if(isIntakeClosed){
                 robot.collector.closeGate();
             }else{
                 robot.collector.openGate();
             }
-            if (toggleAllowed(gamepad1.x, x)) {
-                posIntake++;
-                if(posIntake==2) posIntake=0;
-                switch (posIntake) {
+            if (toggleAllowed(gamepad1.b, b)) {
+                stateIntake++;
+                if(stateIntake >3) stateIntake =0;
+                switch (stateIntake) {
                     case 0:
-                        robot.goToIntake();
+                        robot.articulate(PoseBigWheel.Articulation.preIntake);
                         break;
                     case 1:
-                        robot.goToDeposit();
+                        robot.articulate(PoseBigWheel.Articulation.intake);
                         break;
+                    case 2:
+                        robot.articulate(PoseBigWheel.Articulation.deposit);
+                        break;
+                    case 3:
+                        robot.articulate(PoseBigWheel.Articulation.driving);
+                }
+            }
+            if (toggleAllowed(gamepad1.x, x)) {
+                stateIntake--;
+                if(stateIntake <0) stateIntake =3;
+                switch (stateIntake) {
+                    case 0:
+                        robot.articulate(PoseBigWheel.Articulation.preIntake);
+                        break;
+                    case 1:
+                        robot.articulate(PoseBigWheel.Articulation.intake);
+                        break;
+                    case 2:
+                        robot.articulate(PoseBigWheel.Articulation.deposit);
+                        break;
+                    case 3:
+                        robot.articulate(PoseBigWheel.Articulation.driving);
                 }
             }
         }
         else{
 
-            if(toggleAllowed(gamepad1.x,x)){ //x advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
-                posLatched++;
-                if(posLatched==3)posLatched=0;
+            if(toggleAllowed(gamepad1.b,b)){ //x advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
+                stateLatched++;
+                if(stateLatched>2)stateLatched=0;
                 //todo ughh. this switch should only be called if we just hit x or b - this is not a great way to do this
-                switch (posLatched) {
+                switch (stateLatched) {
                     case 0:
                         robot.goToPreLatch();
                         break;
@@ -540,11 +560,11 @@ public class Game_6832 extends LinearOpMode {
                 }
             }
 
-            if(toggleAllowed(gamepad1.b,b)){ //b allows us to back out of latching stages
-                posLatched--;
-                if(posLatched==-1)posLatched=0;
+            if(toggleAllowed(gamepad1.x,x)){ //b allows us to back out of latching stages
+                stateLatched--;
+                if(stateLatched<0)stateLatched=0;
                 //todo ughh. this switch should only be called if we just hit x or b - duplicating this is not a great way to do this
-                switch (posLatched) {
+                switch (stateLatched) {
                     case 0:
                         robot.goToPreLatch();
                         break;
