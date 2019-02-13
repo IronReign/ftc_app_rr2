@@ -129,6 +129,7 @@ public class PoseBigWheel
     protected MoveMode moveMode;
 
     public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
+        inprogress, //currently in progress to a final articulation
         manual, //target positions are all being manually overridden
         driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
         hanging, //auton initial hang at the beginning of a match
@@ -144,7 +145,7 @@ public class PoseBigWheel
         latchHang; //teleop endgame - close collector elbow to final position, set locks if implemented
     }
 
-    protected Articulation articulation;
+    protected Articulation articulation = Articulation.manual;
     double articulationTimer = 0;
 
     Orientation imuAngles; //pitch, roll and yaw from the IMU
@@ -339,8 +340,10 @@ public class PoseBigWheel
             superman.restart(.6);
         }
 
+        articulate(articulation); //call the most recently requested articulation
         collector.update();
         superman.update();
+
 
 
 
@@ -638,7 +641,12 @@ public class PoseBigWheel
    int miniState = 0;
 
    public Articulation articulate(Articulation target) {
-       switch (target) {
+       articulation = target; //store the most recent explict articulation request as our target, allows us to keep calling incomplete multi-step transitions
+       if (target == Articulation.manual) {
+           miniState = 0; //reset ministate - it should only be used in the context of a multi-step transition, so safe to reset it here
+       }
+
+       switch (articulation) {
            case manual:
                break; //do nothing here - likely we are directly overriding articulations in game
            case driving:
@@ -652,14 +660,13 @@ public class PoseBigWheel
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
                // ends when wheels should be on the ground, including superman, and pressure is off of the hook
-
                collector.setElbowTargetPos(collector.pos_Deployed);
                superman.setTargetPosition(superman.pos_postlatch); //lower superman so it barely pushes up on hook
                //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
                //for now we wait on elapsed time to complete sequence
                articulationTimer = futureTime(1); //setup wait for completion
                miniState = 0; //reset nested state counter for next use
-               return Articulation.deployed; //progress to the deployed stage
+               return Articulation.deployed; // signal advance to the deployed stage
            case deployed:
                //auton settled on ground - involves retracting the hook,
                // moving forward a bit to clear lander and then
@@ -687,10 +694,13 @@ public class PoseBigWheel
                            break;
                        case 3:  //automatically transition to driving articulation
                            if (System.nanoTime() >= miniTimer) {
-                               return Articulation.driving;
+                               miniState = 0; //just being a good citizen for next user of miniState
+                               return Articulation.driving; //force transition to driving articulation
                            }
+
                            break;
                    }
+
                }
                    else break;
            case cratered:
@@ -702,11 +712,27 @@ public class PoseBigWheel
                goToIntake();
                break;
            case deposit:
-               goToDeposit();
+               //goToDeposit();
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive close of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+                   case 0: //set basic speeds and start closing elbow to manage COG
+                       collector.restart(.25, 1);
+                       superman.restart(.25);
+                       if (collector.setElbowTargetPos(collector.pos_Deposit, 1)) miniState++; //close elbow as fast as possible and hold state until completion
+                       break;
+                   case 1: //rise up
+                       superman.setTargetPosition(superman.pos_Deposit);
+                       collector.extendToMax(.5,15);
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       return Articulation.manual;
+               }
+
                break;
-           case latchApproach:
+           case latchApproach://teleop endgame - driving approach for latching,
+               // expected safe to be called from manual, driving, deposit -
+               // set collector elbow for drive balance, extended to mid and superman up
                break;
-           case latchPrep:
+           case latchPrep://teleop endgame - make sure hook is open,
+               // set drivespeed slow, extend lift to max, finalize elbow angle for latch, elbow overrideable
                break;
            case latchSet:
                break;
@@ -767,7 +793,7 @@ public class PoseBigWheel
         superman.restart(.75);
         superman.setTargetPosition(superman.pos_Intake);
         collector.setElbowTargetPos(collector.pos_preIntake);
-        collector.setExtendABobTargetPos(collector.pos_preIntake);
+        collector.extendToLow(1,15);
 
         if(collector.nearTarget() && superman.nearTarget())  return true;
         else return false;
@@ -778,7 +804,7 @@ public class PoseBigWheel
         superman.restart(.75);
         superman.setTargetPosition(superman.pos_Intake);
         collector.setElbowTargetPos(collector.pos_Intake);
-        collector.setExtendABobTargetPos(collector.pos_Intake);
+        collector.extendToLow(1,15);
 
         if(collector.nearTarget() && superman.nearTarget())  return true;
         else return false;
@@ -796,11 +822,11 @@ public class PoseBigWheel
     }
 
     public boolean goToDeposit(){
-        collector.restart(.40, 1);
-        superman.restart(.75);
+        collector.restart(1, 1);
+        superman.restart(.25);
         superman.setTargetPosition(superman.pos_Deposit);
         collector.setElbowTargetPos(collector.pos_Deposit);
-        collector.extendToMax();
+        collector.extendToMax(.25,15);
 
         if(collector.nearTarget() && superman.nearTarget())  return true;
         else return false;
