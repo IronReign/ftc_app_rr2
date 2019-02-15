@@ -10,7 +10,8 @@ public class Superman {
     double supermanPwr = 0;
     //all filler values; need to be updated to reflect actual positions
     public int pos_Intake = 10;
-    public int pos_Deposit = 585;
+    public int pos_Deposit = 530;
+    public int pos_DepositPartial = 400;
 
     public int pos_prelatch = 217;
     public int pos_latched = 500;
@@ -45,6 +46,14 @@ public class Superman {
         supermanPos = pos;
     }
 
+
+    public boolean setTargetPosition(int pos, double speed) {
+        setPower(speed);
+        setTargetPosition(pos);
+        if (nearTarget()) return true;
+        else return false;
+    }
+
     public int getTargetPosition() {
         return supermanPos;
     }
@@ -54,7 +63,7 @@ public class Superman {
     }
 
     public boolean nearTarget(){
-        if ((Math.abs( getCurrentPosition())-getTargetPosition())<15) return true;
+        if ((Math.abs(getCurrentPosition()-getTargetPosition()))<15) return true;
         else return false;
     }
 

@@ -481,7 +481,7 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
-        if ((robot.getRoll()>45) && robot.getRoll()< 65) {
+        if ((robot.getRoll()>280) && robot.getRoll()< 330) {
             //todo - needs improvement - should be enabling slowmo mode, not setting the damper directly
             //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
 
@@ -635,23 +635,29 @@ public class Game_6832 extends LinearOpMode {
 
         //manual control
         if(gamepad1.dpad_down){
+            robot.articulate(PoseBigWheel.Articulation.manual);
             robot.superman.lower();
         }
         if(gamepad1.dpad_up){
+            robot.articulate(PoseBigWheel.Articulation.manual);
             robot.superman.raise();
         }
 
         if(gamepad1.right_stick_y>0.5){
+            robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.retract();
         }
         if(gamepad1.right_stick_y<-0.5){
+            robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.extend();
         }
 
         if(gamepad1.dpad_right){
+            robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.open();
         }
         if(gamepad1.dpad_left){
+            robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.close();
         }
 
@@ -767,25 +773,30 @@ public class Game_6832 extends LinearOpMode {
                 angles = robot.imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX)
 
         );
+
+        telemetry.addLine()
+                .addData("active", () -> active)
+                .addData("state", () -> state)
+                .addData("autoStage", () -> autoStage);
         telemetry.addLine()
                 .addData("elbowA", () -> robot.collector.isActive())
                 .addData("elbowC", () -> robot.collector.getElbowCurrentPos())
                 .addData("elbowC2", () -> robot.collector.getElbowCurrentPos2())
                 .addData("elbowT", () -> robot.collector.getElbowTargetPos());
         telemetry.addLine()
-                .addData("active", () -> active)
-                .addData("state", () -> state);
+                .addData("supermanPos", () -> robot.superman.getCurrentPosition())
+                .addData("liftPos", () -> robot.collector.getExtendABobCurrentPos());
+
         telemetry.addLine()
                 .addData("roll", () -> robot.getRoll())
                 .addData("pitch", () -> robot.getPitch())
                 .addData("yaw", () -> robot.getHeading());
         telemetry.addLine()
+                .addData("calib", () -> robot.imu.getCalibrationStatus().toString());
+
+        telemetry.addLine()
                 .addData("status", () -> robot.imu.getSystemStatus().toShortString())
-                .addData("supermanPosition", () -> robot.superman.getCurrentPosition())
-                .addData("extendABobPosition", () -> robot.collector.getExtendABobCurrentPos())
-                .addData("calib", () -> robot.imu.getCalibrationStatus().toString())
                 .addData("servoPos", () -> robot.intakeGate.getPosition())
-                .addData("autoStage", () -> autoStage)
                 .addData("mineralState", () -> mineralState);
     }
 

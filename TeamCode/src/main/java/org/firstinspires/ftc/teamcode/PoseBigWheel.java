@@ -709,6 +709,7 @@ public class PoseBigWheel
                goToPreIntake();
                break;
            case intake:
+               collector.closeGate();
                goToIntake();
                break;
            case deposit:
@@ -716,14 +717,30 @@ public class PoseBigWheel
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive close of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        collector.restart(.25, 1);
-                       superman.restart(.25);
-                       if (collector.setElbowTargetPos(collector.pos_Deposit, 1)) miniState++; //close elbow as fast as possible and hold state until completion
+                       superman.restart(.75);
+                       if (collector.setElbowTargetPos(collector.pos_SafeDrive, 1)) miniState++; //close elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up
-                       superman.setTargetPosition(superman.pos_Deposit);
-                       collector.extendToMax(.5,15);
-                       miniState = 0; //just being a good citizen for next user of miniState
-                       return Articulation.manual;
+                       collector.extendToMid(1,15);
+                       if (superman.setTargetPosition(superman.pos_DepositPartial, 1)) miniState++; //start going really fast to interim position
+                       break;
+                   case 2:
+                       //if (collector.extendToMid(1,15))
+                       miniState++;
+                       break;
+                   case 3:
+                       if (collector.setElbowTargetPos(collector.pos_Deposit, 1)) {  //elbow back out to deposit position
+                           miniState++;
+                       }
+                       break;
+                   case 4:
+                       superman.setTargetPosition(superman.pos_Deposit, .4); //slow on remaining rotation to minimize overshoot
+                       if (collector.extendToMax(1,15)) {
+                           miniState = 0; //just being a good citizen for next user of miniState
+                           articulation = Articulation.manual; //force end of articulation by switching to manual
+                           return Articulation.manual;
+                       }
+                       break;
                }
 
                break;
@@ -754,8 +771,7 @@ public class PoseBigWheel
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
 
-//todo these all need to be redone - they don't take into account the current positions of related systems
-    //todo they also seem meant to be called until they return false but aren't used that way and further
+//todo these need to be tested - those that are used in articulate() have probably been fixed up by now
 
     public boolean goToPreLatch(){
         collector.restart(.40, .5);
