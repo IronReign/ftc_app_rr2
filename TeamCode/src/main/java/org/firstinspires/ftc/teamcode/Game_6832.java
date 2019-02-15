@@ -496,16 +496,13 @@ public class Game_6832 extends LinearOpMode {
         if(!isEndGame){
             if(gamepad1.y){
                 robot.goToSafeDrive();
+                isIntakeClosed = true;
             }
             if(toggleAllowed(gamepad1.a,a)){
                 isIntakeClosed = !isIntakeClosed;
             }
 
-            if(isIntakeClosed){
-                robot.collector.closeGate();
-            }else{
-                robot.collector.openGate();
-            }
+
             if (toggleAllowed(gamepad1.b, b)) {
                 stateIntake++;
                 if(stateIntake >3) stateIntake =0;
@@ -521,7 +518,14 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 3:
                         robot.articulate(PoseBigWheel.Articulation.driving);
+                        isIntakeClosed = true;
                 }
+            }
+
+            if(isIntakeClosed){
+                robot.collector.closeGate();
+            }else{
+                robot.collector.openGate();
             }
             if (toggleAllowed(gamepad1.x, x)) {
                 stateIntake--;

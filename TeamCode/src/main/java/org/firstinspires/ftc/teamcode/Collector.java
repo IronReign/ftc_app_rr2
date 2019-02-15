@@ -43,9 +43,10 @@ public class Collector {
 
     public int pos_preIntake = 3600;
     public int pos_Intake   = 3900;
-    public int pos_Deposit  = 2600;
+    public int pos_Deposit  = 1450;
+    public int pos_PartialDeposit = 1700;
     public int pos_SafeDrive = 800;
-    public int pos_prelatch = 3558;
+    public int pos_prelatch = 2558;
     public int pos_latched = 3065; //todo - likely needs to be same as prelatch
     public int pos_postlatch = 260; //todo - check for safety - but might work
     public int pos_Deployed = 0; //todo - what is this value?

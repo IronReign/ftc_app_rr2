@@ -10,8 +10,8 @@ public class Superman {
     double supermanPwr = 0;
     //all filler values; need to be updated to reflect actual positions
     public int pos_Intake = 10;
-    public int pos_Deposit = 530;
-    public int pos_DepositPartial = 400;
+    public int pos_Deposit = 354;
+    public int pos_DepositPartial = 350;
 
     public int pos_prelatch = 217;
     public int pos_latched = 500;

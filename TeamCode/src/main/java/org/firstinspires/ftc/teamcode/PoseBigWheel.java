@@ -718,7 +718,8 @@ public class PoseBigWheel
                    case 0: //set basic speeds and start closing elbow to manage COG
                        collector.restart(.25, 1);
                        superman.restart(.75);
-                       if (collector.setElbowTargetPos(collector.pos_SafeDrive, 1)) miniState++; //close elbow as fast as possible and hold state until completion
+                       if (collector.setElbowTargetPos(collector.pos_PartialDeposit,1))
+                       miniState++; //close elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up
                        collector.extendToMid(1,15);
@@ -832,6 +833,7 @@ public class PoseBigWheel
         superman.setTargetPosition(superman.pos_driving);
         collector.setElbowTargetPos(collector.pos_SafeDrive);
         collector.extendToLow(); //set arm extension to preset for intake which helps move COG over drive wheels a bit
+        collector.closeGate();
 
         if(collector.nearTarget() && superman.nearTarget())  return true;
         else return false;
