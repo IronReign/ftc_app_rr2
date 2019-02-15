@@ -146,6 +146,11 @@ public class Game_6832 extends LinearOpMode {
     private int soundState = 0;
     private int soundID = -1;
 
+    //auto constants
+    private static final double DRIVE_POWER = .8;
+    private static final int TURN_TIME = 3;
+    private static final int DUCKY_TIME = 2;
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -179,7 +184,7 @@ public class Game_6832 extends LinearOpMode {
             stateSwitch();
 
             if(toggleAllowed(gamepad1.x,x)) {
-                    isBlue = !isBlue;
+                isBlue = !isBlue;
             }
             if(toggleAllowed(gamepad1.a,a)){
                 autoDelay--;
@@ -217,9 +222,9 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Vision", "Viewpoint: %s", viewpoint);
 
             telemetry.addData("Sound", soundState == 0 ? "off" :
-                                               soundState == 1 ? "on" :
-                                               soundState == 2 ? "file not found" :
-                                                                 "other");
+                    soundState == 1 ? "on" :
+                            soundState == 2 ? "file not found" :
+                                    "other");
 
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
@@ -260,6 +265,7 @@ public class Game_6832 extends LinearOpMode {
                         if(auto_craterSide.execute()) active=false;
                         break;
                     case 4:
+                        if(auto_driveStraight.execute()) active=false;
                         break;
                     case 5:
                         break;
@@ -345,21 +351,21 @@ public class Game_6832 extends LinearOpMode {
     private StateMachine auto_depotSide = getStateMachine(autoStage)
             .addNestedStateMachine(auto_setup)
             .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotateIMU(39, 3),
+                    () -> robot.rotateIMU(39, TURN_TIME),
                     () -> true,
-                    () -> robot.rotateIMU(321, 3))
+                    () -> robot.rotateIMU(321, TURN_TIME))
             .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .604, .65),
-                    () -> robot.driveForward(true, .47, .65),
-                    () -> robot.driveForward(true, .604, .65))
+                    () -> robot.driveForward(true, .604, DRIVE_POWER),
+                    () -> robot.driveForward(true, .47, DRIVE_POWER),
+                    () -> robot.driveForward(true, .604, DRIVE_POWER))
             .addMineralState(mineralStateProvider, //turn to depot
-                    () -> robot.rotateIMU(345, 3),
+                    () -> robot.rotateIMU(345, TURN_TIME),
                     () -> true,
-                    () -> robot.rotateIMU(15, 3))
+                    () -> robot.rotateIMU(15, TURN_TIME))
             .addMineralState(mineralStateProvider, //move to depot
-                    () -> robot.driveForward(true, .880, .65),
-                    () -> robot.driveForward(true, .762, .65),
-                    () -> robot.driveForward(true, .890, .65))
+                    () -> robot.driveForward(true, .880, DRIVE_POWER),
+                    () -> robot.driveForward(true, .762, DRIVE_POWER),
+                    () -> robot.driveForward(true, .890, DRIVE_POWER))
             .addSingleState(() -> autoTimer = futureTime(4))
             .addSingleState(() -> robot.collector.eject()) // yeet ducky
             .addState(() -> System.nanoTime() >= autoTimer)
@@ -370,12 +376,12 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.rotateIMU(225, 4))
             .addMineralState(mineralStateProvider, //move forward a little
                     () -> true,
-                    () -> robot.driveForward(false, .090, .65),
-                    () -> robot.driveForward(false, .160, .65))
+                    () -> robot.driveForward(false, .090, DRIVE_POWER),
+                    () -> robot.driveForward(false, .160, DRIVE_POWER))
             .addState(() -> robot.rotateIMU(303, 5)) //turn to crater
-            .addState(() -> robot.driveForward(false, 1.05, .65)) //go to crater
+            .addState(() -> robot.driveForward(false, 1.05, DRIVE_POWER)) //go to crater
             .addState(() -> robot.rotateIMU(310, 1.5)) //turn to crater
-            .addState(() -> robot.driveForward(false, .80, .65)) //go to grater
+            .addState(() -> robot.driveForward(false, .80, DRIVE_POWER)) //go to grater
             .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
             .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - (robot.collector.pos_prelatch+100)) < 20)
             .build();
@@ -383,22 +389,22 @@ public class Game_6832 extends LinearOpMode {
     private StateMachine auto_depotSample = getStateMachine(autoStage)
             .addNestedStateMachine(auto_setup)
             .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotateIMU(39, 3),
+                    () -> robot.rotateIMU(39, TURN_TIME),
                     () -> true,
-                    () -> robot.rotateIMU(321, 3))
+                    () -> robot.rotateIMU(321, TURN_TIME))
             .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .604, .65),
-                    () -> robot.driveForward(true, .47, .65),
-                    () -> robot.driveForward(true, .604, .65))
+                    () -> robot.driveForward(true, .604, DRIVE_POWER),
+                    () -> robot.driveForward(true, .47, DRIVE_POWER),
+                    () -> robot.driveForward(true, .604, DRIVE_POWER))
             .addMineralState(mineralStateProvider, //turn to depot
-                    () -> robot.rotateIMU(345, 3),
+                    () -> robot.rotateIMU(345, TURN_TIME),
                     () -> true,
-                    () -> robot.rotateIMU(15, 3))
+                    () -> robot.rotateIMU(15, TURN_TIME))
             .addMineralState(mineralStateProvider, //move to depot
-                    () -> robot.driveForward(true, .880, .65),
-                    () -> robot.driveForward(true, .762, .65),
-                    () -> robot.driveForward(true, .890, .65))
-            .addSingleState(() -> autoTimer = futureTime(4))
+                    () -> robot.driveForward(true, .880, DRIVE_POWER),
+                    () -> robot.driveForward(true, .762, DRIVE_POWER),
+                    () -> robot.driveForward(true, .890, DRIVE_POWER))
+            .addSingleState(() -> autoTimer = futureTime(DUCKY_TIME))
             .addSingleState(() -> robot.collector.eject()) // yeet ducky
             .addState(() -> System.nanoTime() >= autoTimer)
             .addSingleState(() -> robot.collector.stopIntake())
@@ -407,26 +413,35 @@ public class Game_6832 extends LinearOpMode {
     private StateMachine auto_craterSide = getStateMachine(autoStage)
             .addNestedStateMachine(auto_setup)
             .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotateIMU(345, 3),
+                    () -> robot.rotateIMU(39, TURN_TIME),
                     () -> true,
-                    () -> robot.rotateIMU(15, 3))
+                    () -> robot.rotateIMU(321, TURN_TIME))
             .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .880, .65),
-                    () -> robot.driveForward(true, .35, .65),
-                    () -> robot.driveForward(true, .890, .65))
+                    () -> robot.driveForward(true, .880, DRIVE_POWER),
+                    () -> robot.driveForward(true, .70, DRIVE_POWER),
+                    () -> robot.driveForward(true, .890, DRIVE_POWER))
             .addMineralState(mineralStateProvider, //move back
-                    () -> robot.driveForward(false, .880, .65),
-                    () -> robot.driveForward(false, .35, .65),
-                    () -> robot.driveForward(false, .890, .65))
-            .addState(() -> robot.rotateIMU(90, 3)) //turn parallel to minerals
-            .addState(() -> robot.driveForward(true, 1.3, .65)) //move to wall
-            .addState(() -> robot.rotateIMU(135, 3)) //turn to depot
-            .addState(() -> robot.driveForward(true, .91, .65)) //move to depot
-            .addSingleState(() -> autoTimer = futureTime(4))
+                    () -> robot.driveForward(false, .440, DRIVE_POWER),
+                    () -> robot.driveForward(false, .35, DRIVE_POWER),
+                    () -> robot.driveForward(false, .445, DRIVE_POWER))
+            .addState(() -> robot.rotateIMU(90, TURN_TIME)) //turn parallel to minerals
+            .addMineralState(mineralStateProvider, //move to wall
+                    () -> robot.driveForward(true, 1.4, DRIVE_POWER),
+                    () -> robot.driveForward(true, 1.5, DRIVE_POWER),
+                    () -> robot.driveForward(true, 1.9, DRIVE_POWER))
+            .addState(() -> robot.rotateIMU(135, TURN_TIME)) //turn to depot
+            .addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
+            .addSingleState(() -> autoTimer = futureTime(DUCKY_TIME))
             .addSingleState(() -> robot.collector.eject()) // yeet ducky
             .addState(() -> System.nanoTime() >= autoTimer)
             .addSingleState(() -> robot.collector.stopIntake())
-            .addState(() -> robot.driveForward(false, 2, .65))
+            .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
+            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - (robot.collector.pos_prelatch+100)) < 20)
+            .build();
+
+    private StateMachine auto_driveStraight = getStateMachine(autoStage)
+            .addState(() -> robot.driveForward(false, 4, DRIVE_POWER))
             .build();
 
     private boolean auto_sample() {
@@ -806,9 +821,9 @@ public class Game_6832 extends LinearOpMode {
 
     private StateMachine.Builder getStateMachine(Stage stage) {
         return StateMachine.builder()
-                           .stateSwitchAction(() -> robot.resetMotors(true))
-                           .stateEndAction(() -> {})
-                           .stage(stage);
+                .stateSwitchAction(() -> robot.resetMotors(true))
+                .stateEndAction(() -> {})
+                .stage(stage);
     }
 
     private long futureTime(float seconds){
