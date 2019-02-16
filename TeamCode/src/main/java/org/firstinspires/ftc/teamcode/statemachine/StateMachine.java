@@ -66,6 +66,40 @@ public class StateMachine {
             return this;
         }
 
+        public Builder addTimedState(final float seconds, final SingleState start, final SingleState stop) {
+            states.add(new State() {
+                private float seconds;
+                private long timer;
+                private boolean started = false;
+
+                @Override
+                public boolean runState() {
+                    if (!started) {
+                        timer = futureTime(seconds);
+                        start.runState();
+                        started = true;
+                        return false;
+                    } else {
+                        if (System.nanoTime() >= timer) {
+                            stop.runState();
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+
+                public State setTime(float seconds) {
+                    this.seconds = seconds;
+                    return this;
+                }
+
+            }.setTime(seconds));
+            return this;
+        }
+
+        private static long futureTime(float seconds){ return System.nanoTime() + (long) (seconds * 1e9); }
+
         public Builder addNestedStateMachine(final StateMachine stateMachine) {
             states.add(() -> stateMachine.execute());
             return this;
@@ -80,6 +114,7 @@ public class StateMachine {
                 throw new NullPointerException("stateEndAction can not be null");
             return new StateMachine(stage, stateSwitchAction, stateEndAction, states);
         }
+
     }
 
     private StateMachine(final Stage stage, final StateSwitchAction stateSwitchAction, final StateEndAction stateEndAction, final List<State> states) {
