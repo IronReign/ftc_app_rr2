@@ -366,10 +366,9 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, .880, DRIVE_POWER),
                     () -> robot.driveForward(true, .762, DRIVE_POWER),
                     () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addSingleState(() -> autoTimer = futureTime(4))
-            .addSingleState(() -> robot.collector.eject()) // yeet ducky
-            .addState(() -> System.nanoTime() >= autoTimer)
-            .addSingleState(() -> robot.collector.stopIntake())
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
             .addMineralState(mineralStateProvider, //turn to wall
                     () -> true,
                     () -> robot.rotateIMU(225, 4),
@@ -404,10 +403,9 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, .880, DRIVE_POWER),
                     () -> robot.driveForward(true, .762, DRIVE_POWER),
                     () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addSingleState(() -> autoTimer = futureTime(DUCKY_TIME))
-            .addSingleState(() -> robot.collector.eject()) // yeet ducky
-            .addState(() -> System.nanoTime() >= autoTimer)
-            .addSingleState(() -> robot.collector.stopIntake())
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
             .build();
 
     private StateMachine auto_craterSide = getStateMachine(autoStage)
@@ -431,10 +429,9 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, 1.9, DRIVE_POWER))
             .addState(() -> robot.rotateIMU(135, TURN_TIME)) //turn to depot
             .addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
-            .addSingleState(() -> autoTimer = futureTime(DUCKY_TIME))
-            .addSingleState(() -> robot.collector.eject()) // yeet ducky
-            .addState(() -> System.nanoTime() >= autoTimer)
-            .addSingleState(() -> robot.collector.stopIntake())
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
             .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
             .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
             .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - (robot.collector.pos_prelatch+100)) < 20)
