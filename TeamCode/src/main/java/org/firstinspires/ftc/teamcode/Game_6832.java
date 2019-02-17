@@ -146,6 +146,8 @@ public class Game_6832 extends LinearOpMode {
     private int soundState = 0;
     private int soundID = -1;
 
+    private int
+
     //auto constants
     private static final double DRIVE_POWER = .8;
     private static final int TURN_TIME = 3;
@@ -493,15 +495,12 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
-        if ((robot.getRoll()>280) && robot.getRoll()< 330) {
+        if ((robot.getRoll()>280) && robot.getRoll()< 350)
             //todo - needs improvement - should be enabling slowmo mode, not setting the damper directly
             //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
-
-            if (pwrDamper != .33) { //not sure why this check is here
-                pwrDamper = .33;
-            } else
-                pwrDamper = 1.0;
-        }
+            pwrDamper = .33;
+        else
+            pwrDamper = 1.0;
 
         robot.driveMixerTank(pwrFwd, pwrRot);
 

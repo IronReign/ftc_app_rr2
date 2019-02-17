@@ -43,7 +43,7 @@ public class Collector {
 
     public int pos_preIntake = 3600;
     public int pos_Intake   = 3900;
-    public int pos_Deposit  = 1450;
+    public int pos_Deposit  = 1520;
     public int pos_PartialDeposit = 1700;
     public int pos_SafeDrive = 800;
     public int pos_prelatch = 2558;

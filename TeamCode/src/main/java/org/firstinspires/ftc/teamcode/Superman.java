@@ -11,7 +11,7 @@ public class Superman {
     //all filler values; need to be updated to reflect actual positions
     public int pos_Intake = 10;
     public int pos_Deposit = 354;
-    public int pos_DepositPartial = 350;
+    public int pos_DepositPartial = 250;
 
     public int pos_prelatch = 217;
     public int pos_latched = 500;
