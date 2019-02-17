@@ -748,9 +748,46 @@ public class PoseBigWheel
            case latchApproach://teleop endgame - driving approach for latching,
                // expected safe to be called from manual, driving, deposit -
                // set collector elbow for drive balance, extended to mid and superman up
+               switch (miniState) {
+                   case 0: //set superman
+                       collector.restart(.40, .5);
+                       superman.restart(.4);
+                       superman.setTargetPosition(superman.pos_prelatch);
+                       if(superman.nearTarget()) miniState++;
+                       break;
+                   case 1: //set collector
+                       collector.restart(.40, .5);
+                       superman.restart(.75);
+                       collector.setElbowTargetPos(collector.pos_prelatch);
+                       collector.extendToMid(1, 15);
+                       if(collector.nearTarget()) {
+                           miniState = 0;
+                           articulation = Articulation.manual;
+                           return Articulation.manual;
+                       }
+                       break;
+               }
                break;
            case latchPrep://teleop endgame - make sure hook is open,
-               // set drivespeed slow, extend lift to max, finalize elbow angle for latch, elbow overrideable
+               // set drivespeed slow, extend lift to mid, finalize elbow angle for latch, elbow overrideable
+               switch (miniState) {
+                   case 0:
+                       superman.restart(.60);
+                       collector.restart(.30,.75);
+                       superman.setTargetPosition(superman.pos_latched);
+                       if(superman.nearTarget()) miniState++;
+                       break;
+                   case 1:
+                       superman.restart(.60);
+                       collector.restart(.30,.75);
+                       collector.setElbowTargetPos(collector.pos_latched);
+                       if(collector.nearTarget()) {
+                           miniState = 0;
+                           articulation = Articulation.manual;
+                           return Articulation.manual;
+                       }
+                       break;
+               }
                break;
            case latchSet:
                break;
@@ -779,18 +816,24 @@ public class PoseBigWheel
         superman.restart(.75);
         superman.setTargetPosition(superman.pos_prelatch);
         collector.setElbowTargetPos(collector.pos_prelatch);
-
+        collector.extendToMid(1, 15);
         if(collector.nearTarget() && superman.nearTarget())  return true;
         else return false;
     }
 
-    public boolean goToLatch(){
+    public boolean goToLatchSuperman(){
         superman.restart(.60);
         collector.restart(.30,.75);
         superman.setTargetPosition(superman.pos_latched);
-        collector.setElbowTargetPos(collector.pos_latched);
+        if(superman.nearTarget())  return true;
+        else return false;
+    }
 
-        if(collector.nearTarget() && superman.nearTarget())  return true;
+    public boolean goToLatchElbow(){
+        superman.restart(.60);
+        collector.restart(.30,.75);
+        collector.setElbowTargetPos(collector.pos_latched);
+        if(collector.nearTarget())  return true;
         else return false;
     }
 

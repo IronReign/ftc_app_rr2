@@ -12,8 +12,9 @@ public class Superman {
     public int pos_Intake = 10;
     public int pos_Deposit = 354;
     public int pos_DepositPartial = 250;
+    public int pos_Maximum = 500;
 
-    public int pos_prelatch = 217;
+    public int pos_prelatch = 500;
     public int pos_latched = 500;
     public int pos_postlatch = 0;
     public int pos_stowed = 0;
@@ -83,7 +84,7 @@ public class Superman {
     }
 
     public void raise() {
-        setTargetPosition(Math.min(getCurrentPosition() + 30, pos_Deposit));
+        setTargetPosition(Math.min(getCurrentPosition() + 30, pos_Maximum));
     }
 
     public void lower() {

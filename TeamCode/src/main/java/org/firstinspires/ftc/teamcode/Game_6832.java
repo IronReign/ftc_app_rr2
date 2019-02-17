@@ -123,13 +123,16 @@ public class Game_6832 extends LinearOpMode {
     private boolean butB = false;
     private int targetPos = 0;
 
-    private int latchStage = 0;
     int stateLatched = -1;
     int stateIntake = -1;
-    private boolean goLatch = false;
-    private boolean isEndGame = false;
+    int stateDelatch = -1;
     boolean isIntakeClosed = true;
     boolean isHooked = false;
+
+    //game mode configuration
+    private int gameMode = 0;
+    private static final int NUM_MODES = 3;
+    private static final String[] GAME_MODES = {"REGULAR", "ENDGAME", "PRE-GAME"};
 
     //vision-related configuration
     private VisionProvider vp;
@@ -145,8 +148,6 @@ public class Game_6832 extends LinearOpMode {
     //sound related configuration
     private int soundState = 0;
     private int soundID = -1;
-
-    private int
 
     //auto constants
     private static final double DRIVE_POWER = .8;
@@ -223,10 +224,7 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
             telemetry.addData("Vision", "Viewpoint: %s", viewpoint);
 
-            telemetry.addData("Sound", soundState == 0 ? "off" :
-                    soundState == 1 ? "on" :
-                            soundState == 2 ? "file not found" :
-                                    "other");
+            telemetry.addData("Sound", soundState == 0 ? "off" : soundState == 1 ? "on" : soundState == 2 ? "file not found" : "other");
 
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
@@ -504,146 +502,120 @@ public class Game_6832 extends LinearOpMode {
 
         robot.driveMixerTank(pwrFwd, pwrRot);
 
-        if(!isEndGame){
-            if(gamepad1.y){
-                robot.goToSafeDrive();
-                isIntakeClosed = true;
-            }
-            if(toggleAllowed(gamepad1.a,a)){
-                isIntakeClosed = !isIntakeClosed;
-            }
-
-
-            if (toggleAllowed(gamepad1.b, b)) {
-                stateIntake++;
-                if(stateIntake >3) stateIntake =0;
-                switch (stateIntake) {
-                    case 0:
-                        robot.articulate(PoseBigWheel.Articulation.preIntake);
-                        break;
-                    case 1:
-                        robot.articulate(PoseBigWheel.Articulation.intake);
-                        break;
-                    case 2:
-                        robot.articulate(PoseBigWheel.Articulation.deposit);
-                        break;
-                    case 3:
-                        robot.articulate(PoseBigWheel.Articulation.driving);
-                        isIntakeClosed = true;
+        switch(gameMode) {
+            case 0: //regular
+                boolean doIntake = false;
+                if(gamepad1.y){
+                    robot.goToSafeDrive();
+                    isIntakeClosed = true;
                 }
-            }
-
-            if(isIntakeClosed){
-                robot.collector.closeGate();
-            }else{
-                robot.collector.openGate();
-            }
-            if (toggleAllowed(gamepad1.x, x)) {
-                stateIntake--;
-                if(stateIntake <0) stateIntake =3;
-                switch (stateIntake) {
-                    case 0:
-                        robot.articulate(PoseBigWheel.Articulation.preIntake);
-                        break;
-                    case 1:
-                        robot.articulate(PoseBigWheel.Articulation.intake);
-                        break;
-                    case 2:
-                        robot.articulate(PoseBigWheel.Articulation.deposit);
-                        break;
-                    case 3:
-                        robot.articulate(PoseBigWheel.Articulation.driving);
+                if(toggleAllowed(gamepad1.a,a)){
+                    isIntakeClosed = !isIntakeClosed;
                 }
-            }
-        }
-        else{
 
-            if(toggleAllowed(gamepad1.b,b)){ //x advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
-                stateLatched++;
-                if(stateLatched>2)stateLatched=0;
-                //todo ughh. this switch should only be called if we just hit x or b - this is not a great way to do this
-                switch (stateLatched) {
-                    case 0:
-                        robot.goToPreLatch();
-                        break;
-                    case 1:
-                        robot.goToLatch();
-                        break;
-                    case 2:
-                        robot.goToPostLatch();
-                        break;
+
+                if (toggleAllowed(gamepad1.b, b)) {
+                    stateIntake++;
+                    if (stateIntake > 3) stateIntake = 0;
+                    doIntake = true;
                 }
-            }
 
-            if(toggleAllowed(gamepad1.x,x)){ //b allows us to back out of latching stages
-                stateLatched--;
-                if(stateLatched<0)stateLatched=0;
-                //todo ughh. this switch should only be called if we just hit x or b - duplicating this is not a great way to do this
-                switch (stateLatched) {
-                    case 0:
-                        robot.goToPreLatch();
-                        break;
-                    case 1:
-                        robot.goToLatch();
-                        break;
-                    case 2:
-                        robot.goToPostLatch();
-                        break;
+                if (toggleAllowed(gamepad1.x, x)) {
+                    stateIntake--;
+                    if (stateIntake < 0) stateIntake = 3;
+                    doIntake = true;
                 }
-            }
 
-            if(toggleAllowed(gamepad1.a,a)){
-                isHooked = !isHooked;
-            }
+                if(doIntake) {
+                    switch (stateIntake) {
+                        case 0:
+                            robot.articulate(PoseBigWheel.Articulation.preIntake);
+                            break;
+                        case 1:
+                            robot.articulate(PoseBigWheel.Articulation.intake);
+                            break;
+                        case 2:
+                            robot.articulate(PoseBigWheel.Articulation.deposit);
+                            break;
+                        case 3:
+                            robot.articulate(PoseBigWheel.Articulation.driving);
+                    }
+                }
 
-            if(isHooked){
-                robot.collector.hookOn();
-            }else{
-                robot.collector.hookOff();
-            }
 
-//            if(toggleAllowed(gamepad1.b,b)){
-//                goLatch = true;
-//            }
-//            if(goLatch){
-//                switch(latchStage){
-//                    case 0:
-//                        if(robot.goToPreLatch())
-//                            latchStage++;
-//                        break;
-//                    case 1:
-//                        autoTimer = futureTime(1);
-//                        latchStage++;
-//                        break;
-//                    case 2:
-//                        if(System.nanoTime()>autoTimer){
-//                            latchStage++;
-//                        }
-//                        break;
-//                    case 3:
-//                        if(robot.driveForward(true, .1, .75)){
-//                            latchStage++;
-//                        }
-//                        break;
-//                    case 4:
-//                        autoTimer = futureTime(3);
-//                        latchStage++;
-//                        break;
-//                    case 5:
-//                        robot.driveMixerTank(-.5, 0);
-//                        if (robot.goToLatch()||System.nanoTime()>autoTimer) {
-//                            latchStage++;
-//                        }
-//                        break;
-//                    case 6:
-//                        robot.goToPostLatch();
-//                        latchStage++;
-//                        break;
-//                    default:
-//                        latchStage = 0;
-//                        goLatch = false;
-//                }
-//            }
+                if(isIntakeClosed){
+                    robot.collector.closeGate();
+                }else{
+                    robot.collector.openGate();
+                }
+
+                break;
+            case 1: //endgame mode
+                boolean doLatchStage = false;
+                if(toggleAllowed(gamepad1.b,b)) { //b advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
+                    stateLatched++;
+                    if (stateLatched > 2) stateLatched = 0;
+                    doLatchStage = true;
+                }
+
+                if(toggleAllowed(gamepad1.x,x)) { //x allows us to back out of latching stages
+                    stateLatched--;
+                    if (stateLatched < 0) stateLatched = 0;
+                    doLatchStage = true;
+                }
+
+                if(doLatchStage) {
+                    switch (stateLatched) {
+                        case 0:
+                            robot.articulate(PoseBigWheel.Articulation.latchApproach);
+                            break;
+                        case 1:
+                            robot.articulate(PoseBigWheel.Articulation.latchPrep);
+                            break;
+                        case 2:
+                            robot.goToPostLatch();
+                            break;
+                    }
+                }
+
+                if(toggleAllowed(gamepad1.a,a)){
+                    isHooked = !isHooked;
+                }
+
+                if(isHooked){
+                    robot.collector.hookOn();
+                }else{
+                    robot.collector.hookOff();
+                }
+                break;
+            case 2: //pregame mode
+                boolean doDelatch = false;
+                if (toggleAllowed(gamepad1.b, b)) {
+                    stateDelatch++;
+                    if (stateIntake > 2) stateIntake = 0;
+                    doDelatch = true;
+                }
+
+                if (toggleAllowed(gamepad1.x, x)) {
+                    stateIntake--;
+                    if (stateIntake < 0) stateIntake = 2;
+                    doDelatch = true;
+                }
+
+                if(doDelatch) {
+                    switch (stateDelatch) {
+                        case 0:
+                            robot.articulate(PoseBigWheel.Articulation.hanging);
+                            break;
+                        case 1:
+                            robot.articulate(PoseBigWheel.Articulation.deploying);
+                            break;
+                        case 2:
+                            robot.articulate(PoseBigWheel.Articulation.deployed);
+                            break;
+                    }
+                }
+                break;
         }
 
 
@@ -695,7 +667,7 @@ public class Game_6832 extends LinearOpMode {
 
         //endgame mode
         if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
-            isEndGame = !isEndGame;
+            gameMode = (gameMode+1) % NUM_MODES;
         }
 
 
@@ -812,7 +784,8 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("status", () -> robot.imu.getSystemStatus().toShortString())
                 .addData("servoPos", () -> robot.intakeGate.getPosition())
-                .addData("mineralState", () -> mineralState);
+                .addData("mineralState", () -> mineralState)
+                .addData("Game Mode", () -> GAME_MODES[gameMode]);
     }
 
     private StateMachine.Builder getStateMachine(Stage stage) {
