@@ -82,6 +82,7 @@ public class StateMachine {
                     } else {
                         if (System.nanoTime() >= timer) {
                             stop.runState();
+                            started = false;
                             return true;
                         } else {
                             return false;
