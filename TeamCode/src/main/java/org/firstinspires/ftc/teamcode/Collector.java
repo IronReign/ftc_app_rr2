@@ -54,7 +54,7 @@ public class Collector {
     public static int extendMax = 2500;
     public static int extendMid= 980;
     public static int extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
-    public static int extendMin = 10;
+    public static int extendMin = 300;  //prevent crunching collector tray
     public static int extendPreLatch = extendMax;
 
     //filler value; needs to be updated to reflect actual ratio
@@ -177,6 +177,18 @@ public class Collector {
         setElbowPwr(elbowPwr);
         setExtendABobPwr(extendABobPwr);
         active = true;
+    }
+
+    public void resetEncoders() {
+        //just encoders - only safe to call if we know collector is in normal starting position
+        elbowLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elbowRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extendABobLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extendABobRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elbowLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        elbowRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        extendABobRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        extendABobLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
     public boolean extendToMin(){
         return extendToMin(extendABobPwr, 15);

@@ -301,6 +301,10 @@ public class PoseBigWheel
         imu.initialize(parametersIMU);
     }
 
+    public void resetEncoders(){
+        superman.resetEncoders();
+        collector.resetEncoders();
+    }
 
     /**
      * update the current location of the robot. This implementation gets heading and orientation
@@ -773,9 +777,12 @@ public class PoseBigWheel
                switch (miniState) {
                    case 0:
                        superman.restart(.60);
-                       collector.restart(.30,.75);
+                       collector.restart(.30, .75);
                        superman.setTargetPosition(superman.pos_latched);
-                       if(superman.nearTarget()) miniState++;
+                       if (superman.nearTarget()){
+                           //beep();
+                           miniState++;
+               }
                        break;
                    case 1:
                        superman.restart(.60);

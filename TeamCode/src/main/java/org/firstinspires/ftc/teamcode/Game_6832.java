@@ -186,6 +186,9 @@ public class Game_6832 extends LinearOpMode {
 
             stateSwitch();
 
+
+            if(toggleAllowed(gamepad1.right_stick_button, right_stick_button)) robot.resetEncoders();
+
             if(toggleAllowed(gamepad1.x,x)) {
                 isBlue = !isBlue;
             }
