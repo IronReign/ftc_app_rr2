@@ -13,6 +13,7 @@
 			<Servo name="hook" port="3" />
 
 			<LynxEmbeddedIMU name="imu" port="0" bus="0" />
+			<REV_VL53L0X_RANGE_SENSOR name="distRight" port="0" bus="2"/>
 		</LynxModule>
 
 		<LynxModule name="Expansion Hub 2" port="2">
@@ -22,6 +23,8 @@
 			<RevRobotics40HDHexMotor name="elbowRight" port="3" />
 
 			<LynxEmbeddedIMU name="imu 1" port="0" bus="0" />
+			<REV_VL53L0X_RANGE_SENSOR name="distLeft" port="0" bus="2"/>
+			<REV_VL53L0X_RANGE_SENSOR name="distForward" port="0" bus="3"/>
 		</LynxModule>
 	</LynxUsbDevice>
 	

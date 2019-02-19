@@ -39,6 +39,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
 import org.firstinspires.ftc.teamcode.statemachine.Stage;
@@ -788,7 +789,12 @@ public class Game_6832 extends LinearOpMode {
                 .addData("status", () -> robot.imu.getSystemStatus().toShortString())
                 .addData("servoPos", () -> robot.intakeGate.getPosition())
                 .addData("mineralState", () -> mineralState)
-                .addData("Game Mode", () -> GAME_MODES[gameMode]);
+                .addData("Game Mode", () -> GAME_MODES[gameMode])
+                .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))
+                .addData("distLeft",  () -> robot.distLeft.getDistance(DistanceUnit.METER))
+                .addData("distRight",  () -> robot.distRight.getDistance(DistanceUnit.METER));
+//        telemetry.addData("TOFID", String.format("%x", robot.sensorTimeOfFlight.getModelID()));
+//        telemetry.addData("TOF did time out", Boolean.toString(robot.sensorTimeOfFlight.didTimeoutOccur()));
     }
 
     private StateMachine.Builder getStateMachine(Stage stage) {

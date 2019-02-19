@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -60,6 +62,10 @@ public class PoseBigWheel
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
+    DistanceSensor distForward;
+    DistanceSensor distLeft;
+    DistanceSensor distRight;
+    Rev2mDistanceSensor sensorTimeOfFlight;
 
 
     private double powerLeft = 0;
@@ -286,6 +292,14 @@ public class PoseBigWheel
 
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
+
+        distForward = hwMap.get(DistanceSensor.class, "distForward");
+        distRight = hwMap.get(DistanceSensor.class, "distRight");
+        distLeft = hwMap.get(DistanceSensor.class, "distLeft");
+
+        // you can also cast this to a Rev2mDistanceSensor if you want to use added
+        // methods associated with the Rev2mDistanceSensor class.
+        Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)distForward;
 
     }
 
