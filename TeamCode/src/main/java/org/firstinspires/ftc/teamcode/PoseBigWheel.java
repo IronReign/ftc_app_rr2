@@ -158,6 +158,16 @@ public class PoseBigWheel
     protected boolean targetAngleInitialized = false;
     private int beaconState = 0; //switch variable that controls progress through the beacon pressing sequence
 
+    public boolean isAutonSingleStep() {
+        return autonSingleStep;
+    }
+
+    public void setAutonSingleStep(boolean autonSingleStep) {
+        this.autonSingleStep = autonSingleStep;
+    }
+
+    boolean autonSingleStep = false; //single step through auton deploying stages to facilitate testing and demos
+
 
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -682,8 +692,10 @@ public class PoseBigWheel
                superman.setTargetPosition(superman.pos_postlatch); //lower superman so it barely pushes up on hook
                //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
                //for now we wait on elapsed time to complete sequence
-               articulationTimer = futureTime(1); //setup wait for completion
+               articulationTimer = futureTime(2); //setup wait for completion. todo: change this to position based auto advancement
                miniState = 0; //reset nested state counter for next use
+               if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
+               else articulation = Articulation.manual;
                return Articulation.deployed; // signal advance to the deployed stage
            case deployed:
                //auton settled on ground - involves retracting the hook,
@@ -713,6 +725,7 @@ public class PoseBigWheel
                        case 3:  //automatically transition to driving articulation
                            if (System.nanoTime() >= miniTimer) {
                                miniState = 0; //just being a good citizen for next user of miniState
+                               articulation = Articulation.driving; //force transition to driving articulation
                                return Articulation.driving; //force transition to driving articulation
                            }
 

@@ -255,8 +255,10 @@ public class Game_6832 extends LinearOpMode {
             telemetry.update();
             stateSwitch();
             if(active) {
+                robot.setAutonSingleStep(false);
                 switch(state){
                     case 0: //code for tele-op control
+                        robot.setAutonSingleStep(true);
                         joystickDrive();
                         break;
                     case 1: //autonomous that goes to opponent's crater
@@ -278,6 +280,7 @@ public class Game_6832 extends LinearOpMode {
                     case 7:
                         break;
                     case 8: //turn to IMU
+                        robot.setAutonSingleStep(true);
                         demo();
                         break;
                     case 9:
@@ -592,17 +595,19 @@ public class Game_6832 extends LinearOpMode {
                     robot.collector.hookOff();
                 }
                 break;
-            case 2: //pregame mode
+            case 2: //pre-game = testing auton deploying functions
+                robot.setAutonSingleStep(true); //single step through articulations having to do with deploying
+
                 boolean doDelatch = false;
                 if (toggleAllowed(gamepad1.b, b)) {
                     stateDelatch++;
-                    if (stateIntake > 2) stateIntake = 0;
+                    if (stateDelatch > 2) stateDelatch = 0;
                     doDelatch = true;
                 }
 
                 if (toggleAllowed(gamepad1.x, x)) {
-                    stateIntake--;
-                    if (stateIntake < 0) stateIntake = 2;
+                    stateDelatch--;
+                    if (stateDelatch < 0) stateDelatch = 2;
                     doDelatch = true;
                 }
 
@@ -621,8 +626,6 @@ public class Game_6832 extends LinearOpMode {
                 }
                 break;
         }
-
-
 
         //manual control
         if(gamepad1.dpad_down){
