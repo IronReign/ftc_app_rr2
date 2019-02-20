@@ -883,8 +883,8 @@ public class PoseBigWheel
 
     public boolean goToPreIntake(){  //should usually be called from deposit position
                                     //todo: needs time to retract lift before moving elbow - slow elbow speed may not be good enough
-        collector.restart(.25, 1);
-        superman.restart(.75);
+        collector.restart(1, 1);
+        superman.restart(1);
         superman.setTargetPosition(superman.pos_Intake);
         collector.setElbowTargetPos(collector.pos_preIntake);
         collector.extendToLow(1,15);
