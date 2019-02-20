@@ -767,7 +767,9 @@ public class PoseBigWheel
                        break;
                    case 4:
                        superman.setTargetPosition(superman.pos_Deposit, .4); //slow on remaining rotation to minimize overshoot
+                       driveForward(true,.4, 1); //drive toward lander - helps pre-position  for deposit and slightly counters the robots tendency to over-rotate toward the lander because of all of the other moves
                        if (collector.extendToMax(1,15)) {
+                           collector.openGate(); //experimental - auto open gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
                            miniState = 0; //just being a good citizen for next user of miniState
                            articulation = Articulation.manual; //force end of articulation by switching to manual
                            return Articulation.manual;
