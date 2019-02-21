@@ -46,9 +46,10 @@ public class Collector {
     public int pos_Deposit  = 1520;
     public int pos_PartialDeposit = 1700;
     public int pos_SafeDrive = 800;
-    public int pos_prelatch = 2558;
+    public int pos_autonPrelatch = 2950;
+    public int pos_prelatch = 2558; //endgame preLatch
     public int pos_latched = 3023; //todo - likely needs to be same as prelatch
-    public int pos_postlatch = 260; //todo - check for safety - but might work
+    public int pos_postlatch = 1240; //todo - check for safety - but might work
     public int pos_Deployed = 0; //todo - what is this value?
 
     public static int extendMax = 2500;
@@ -267,7 +268,7 @@ public class Collector {
     }
 
     public void close(){
-        setElbowTargetPos(Math.max(getElbowCurrentPos() - 100, pos_postlatch));
+        setElbowTargetPos(Math.max(getElbowCurrentPos() - 100, 0));
     }
 
 

@@ -188,11 +188,23 @@ public class Game_6832 extends LinearOpMode {
             stateSwitch();
 
 
-            if(toggleAllowed(gamepad1.right_stick_button, right_stick_button)) robot.resetEncoders();
+            //reset the elbow, lift and superman motors - operator must make sure robot is in the stowed position, flat on the ground
+            if(toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
+                robot.resetEncoders();
+                robot.collector.setElbowTargetPos(10, 1);
+                robot.articulate(PoseBigWheel.Articulation.hanging);
+            }
 
             if(toggleAllowed(gamepad1.x,x)) {
-                isBlue = !isBlue;
+                robot.collector.hookOn();
             }
+
+            if (robot.distLeft.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOn();
+            if (robot.distRight.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOff();
+
+            /*if(toggleAllowed(gamepad1.x,x)) {
+                isBlue = !isBlue;
+            }*/
             if(toggleAllowed(gamepad1.a,a)){
                 autoDelay--;
                 if(autoDelay < 0) autoDelay = 15;
@@ -235,10 +247,10 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Side: " + getAlliance());
             telemetry.update();
 
+            robot.updateSensors();
+
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
-
-
 
         if(vp == null) {
             initialization_initDummyVisionProvider(); //this is blocking
@@ -274,6 +286,8 @@ public class Game_6832 extends LinearOpMode {
                         if(auto_driveStraight.execute()) active=false;
                         break;
                     case 5:
+                        robot.setAutonSingleStep(false);
+                        if (robot.getArticulation()== PoseBigWheel.Articulation.hanging) robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
                         break;
                     case 6:
                         break;
@@ -284,6 +298,8 @@ public class Game_6832 extends LinearOpMode {
                         demo();
                         break;
                     case 9:
+                        if(delatch())
+
                         break;
                     case 10:
                         break;
@@ -299,6 +315,28 @@ public class Game_6832 extends LinearOpMode {
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
+    }
+    int testDeLatch = 0;
+    public boolean delatch(){
+        switch(testDeLatch){
+            case 0:
+                robot.collector.setElbowTargetPos(robot.collector.pos_prelatch,.9);
+                if(robot.collector.nearTargetElbow()){
+                    testDeLatch++;
+                }
+                break;
+            case 1:
+                robot.superman.setTargetPosition(robot.superman.pos_prelatch);
+                if(robot.superman.nearTarget()){
+                    robot.collector.hookOff();
+                    testDeLatch++;
+                }
+                break;
+            default:
+                testDeLatch = 0;
+                return true;
+        }
+        return false;
     }
 
     private void initialization_initSound() {
@@ -507,11 +545,13 @@ public class Game_6832 extends LinearOpMode {
         else
             pwrDamper = 1.0;
 
-        robot.driveMixerTank(pwrFwd, pwrRot);
+
 
         switch(gameMode) {
-            case 0: //regular
+            case 0: //regular teleop mineral cycle
                 boolean doIntake = false;
+                robot.driveMixerTank(pwrFwd, pwrRot);
+
                 if(gamepad1.y){
                     robot.goToSafeDrive();
                     isIntakeClosed = true;
@@ -559,6 +599,7 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 1: //endgame mode
                 boolean doLatchStage = false;
+                robot.driveMixerTank(pwrFwd, pwrRot);
                 if(toggleAllowed(gamepad1.b,b)) { //b advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
                     stateLatched++;
                     if (stateLatched > 2) stateLatched = 0;
@@ -621,6 +662,8 @@ public class Game_6832 extends LinearOpMode {
                             break;
                         case 2:
                             robot.articulate(PoseBigWheel.Articulation.deployed);
+                            break;
+                        default:
                             break;
                     }
                 }

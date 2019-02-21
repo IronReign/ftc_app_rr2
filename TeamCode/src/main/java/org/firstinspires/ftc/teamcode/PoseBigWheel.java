@@ -106,6 +106,8 @@ public class PoseBigWheel
     private double poseSavedHeading = 0.0;
     int balanceState = 1;
 
+    long timeHook = 0;
+
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
     private long ticksLeftPrev;
@@ -149,6 +151,10 @@ public class PoseBigWheel
         latchPrep, //teleop endgame - make sure hook is open, set drivespeed slow, extend lift to max, finalize elbow angle for latch, elbow overrideable
         latchSet, //teleop endgame - close the latch
         latchHang; //teleop endgame - close collector elbow to final position, set locks if implemented
+    }
+
+    public Articulation getArticulation() {
+        return articulation;
     }
 
     protected Articulation articulation = Articulation.manual;
@@ -680,23 +686,39 @@ public class PoseBigWheel
            case driving:
                 if (goToSafeDrive()) return target;
                break;
-           case hanging:
+           case hanging: //todo: fixup comments for deploy actions - moved stuff around
                //auton initial hang at the beginning of a match
-                collector.hookOn();
-                collector.setElbowTargetPos(collector.pos_latched);
+                collector.setExtendABobTargetPos(0);
+                //collector.hookOn();
+                collector.setElbowTargetPos(10,1);
                break;
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
                // ends when wheels should be on the ground, including superman, and pressure is off of the hook
-               collector.setElbowTargetPos(collector.pos_Deployed);
-               superman.setTargetPosition(superman.pos_postlatch); //lower superman so it barely pushes up on hook
+               collector.extendToMid(1, 15);
+               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .5)) {
+                   if (driveForward(false, .1, .2)) {
+                       driveMixerTank(0,0);
+                       if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
+                       {
+                           miniState = 0; //reset nested state counter for next use
+                           if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
+                           else articulation = Articulation.manual;
+                           return Articulation.deployed; // signal advance to the deployed stage
+
+                       }
+                       break;
+                   }
+                   break;
+               }
+               break;
+
                //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
                //for now we wait on elapsed time to complete sequence
+               /*
                articulationTimer = futureTime(2); //setup wait for completion. todo: change this to position based auto advancement
-               miniState = 0; //reset nested state counter for next use
-               if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
-               else articulation = Articulation.manual;
-               return Articulation.deployed; // signal advance to the deployed stage
+
+               */
            case deployed:
                //auton settled on ground - involves retracting the hook,
                // moving forward a bit to clear lander and then
@@ -704,22 +726,30 @@ public class PoseBigWheel
                if (System.nanoTime() >= articulationTimer) {
                    switch (miniState) {
                        case 0:  //push lightly into lander to relieve pressure on hook
-                           driveForward(true, .1, .2);
-                           miniTimer = futureTime(1); //setup wait for completion
+                           collector.hookOff(); //retract hook
+                           miniTimer=futureTime(1);
                            miniState++;
+                           break;
+                           //if (driveForward(false, .2, .7)) miniState++;
+                           //miniTimer = futureTime(1); //setup wait for completion
+
                        case 1:  //retract lander hook
                            if (System.nanoTime() >= miniTimer) {
-                               collector.hookOff(); //retract hook
-                               miniTimer = futureTime(1); //setup wait for completion
-                               miniState++;
+                               if (rotateIMU(350, 1)) { //this turn is needed because hook doesn't clear entirely
+                                   resetMotors(true);
+                                   miniTimer = futureTime(1); //setup wait for completion
+                                   miniState++;
+                               }
                            }
                            break;
 
                        case 2://pull away from lander
                            if (System.nanoTime() >= miniTimer) {
-                               driveForward(true, .25, .4);
-                               miniTimer = futureTime(1); //setup wait for completion
-                               miniState++;
+                               if(driveForward(true, .25, .4)) {
+                                   driveMixerTank(0, 0); //stop drive motors
+                                   //miniTimer = futureTime(1); //setup wait for completion
+                                   miniState++;
+                               }
                            }
                            break;
                        case 3:  //automatically transition to driving articulation
@@ -808,6 +838,8 @@ public class PoseBigWheel
                        superman.restart(.60);
                        collector.restart(.30, .75);
                        superman.setTargetPosition(superman.pos_latched);
+                       if(superman.getCurrentPosition()>collector.pos_PartialDeposit)
+                           collector.setElbowTargetPos(collector.pos_latched);
                        if (superman.nearTarget()){
                            //beep();
                            miniState++;
@@ -847,6 +879,11 @@ public class PoseBigWheel
 
 //todo these need to be tested - those that are used in articulate() have probably been fixed up by now
 
+    public boolean Deploy(){
+       articulate(Articulation.deploying);
+
+       return true;
+    }
     public boolean goToPreLatch(){
         collector.restart(.40, .5);
         superman.restart(.75);
