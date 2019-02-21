@@ -189,14 +189,18 @@ public class Game_6832 extends LinearOpMode {
 
 
             //reset the elbow, lift and superman motors - operator must make sure robot is in the stowed position, flat on the ground
-            if(toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
+            if(toggleAllowed(gamepad1.y, y)) {
                 robot.resetEncoders();
                 robot.collector.setElbowTargetPos(10, 1);
                 robot.articulate(PoseBigWheel.Articulation.hanging);
             }
 
             if(toggleAllowed(gamepad1.x,x)) {
-                robot.collector.hookOn();
+                isHooked = !isHooked;
+                if (isHooked)
+                    robot.collector.hookOff();
+                else
+                    robot.collector.hookOn();
             }
 
             if (robot.distLeft.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOn();
@@ -267,10 +271,8 @@ public class Game_6832 extends LinearOpMode {
             telemetry.update();
             stateSwitch();
             if(active) {
-                robot.setAutonSingleStep(false);
                 switch(state){
                     case 0: //code for tele-op control
-                        robot.setAutonSingleStep(true);
                         joystickDrive();
                         break;
                     case 1: //autonomous that goes to opponent's crater
@@ -388,9 +390,12 @@ public class Game_6832 extends LinearOpMode {
     }
 
     private StateMachine auto_setup = getStateMachine(autoSetupStage)
-            .addSingleState(() -> robot.setZeroHeading())
-            .addState(() -> robot.driveForward(true, .1, .5))
-            .addState(() -> auto_sample())
+            .addSingleState(() -> robot.setZeroHeading()) //reset heading
+            .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
+            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
+            .addState(() -> robot.getArticulation()  == PoseBigWheel.Articulation.driving) //wait until done
+            .addState(() -> robot.rotateIMU(0, 3)) //turn back to center
+            .addState(() -> auto_sample()) //detect the mineral
             .build();
 
     private StateMachine auto_depotSide = getStateMachine(autoStage)
@@ -524,6 +529,8 @@ public class Game_6832 extends LinearOpMode {
 
         if (!joystickDriveStarted) {
             robot.resetMotors(true);
+            robot.setAutonSingleStep(true);
+            isHooked = false;
             joystickDriveStarted = true;
         }
 
@@ -549,124 +556,13 @@ public class Game_6832 extends LinearOpMode {
 
         switch(gameMode) {
             case 0: //regular teleop mineral cycle
-                boolean doIntake = false;
-                robot.driveMixerTank(pwrFwd, pwrRot);
-
-                if(gamepad1.y){
-                    robot.goToSafeDrive();
-                    isIntakeClosed = true;
-                }
-                if(toggleAllowed(gamepad1.a,a)){
-                    isIntakeClosed = !isIntakeClosed;
-                }
-
-
-                if (toggleAllowed(gamepad1.b, b)) {
-                    stateIntake++;
-                    if (stateIntake > 3) stateIntake = 0;
-                    doIntake = true;
-                }
-
-                if (toggleAllowed(gamepad1.x, x)) {
-                    stateIntake--;
-                    if (stateIntake < 0) stateIntake = 3;
-                    doIntake = true;
-                }
-
-                if(doIntake) {
-                    switch (stateIntake) {
-                        case 0:
-                            robot.articulate(PoseBigWheel.Articulation.preIntake);
-                            break;
-                        case 1:
-                            robot.articulate(PoseBigWheel.Articulation.intake);
-                            break;
-                        case 2:
-                            robot.articulate(PoseBigWheel.Articulation.deposit);
-                            break;
-                        case 3:
-                            robot.articulate(PoseBigWheel.Articulation.driving);
-                    }
-                }
-
-
-                if(isIntakeClosed){
-                    robot.collector.closeGate();
-                }else{
-                    robot.collector.openGate();
-                }
-
+                joystickDriveRegularMode();
                 break;
             case 1: //endgame mode
-                boolean doLatchStage = false;
-                robot.driveMixerTank(pwrFwd, pwrRot);
-                if(toggleAllowed(gamepad1.b,b)) { //b advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
-                    stateLatched++;
-                    if (stateLatched > 2) stateLatched = 0;
-                    doLatchStage = true;
-                }
-
-                if(toggleAllowed(gamepad1.x,x)) { //x allows us to back out of latching stages
-                    stateLatched--;
-                    if (stateLatched < 0) stateLatched = 0;
-                    doLatchStage = true;
-                }
-
-                if(doLatchStage) {
-                    switch (stateLatched) {
-                        case 0:
-                            robot.articulate(PoseBigWheel.Articulation.latchApproach);
-                            break;
-                        case 1:
-                            robot.articulate(PoseBigWheel.Articulation.latchPrep);
-                            break;
-                        case 2:
-                            robot.goToPostLatch();
-                            break;
-                    }
-                }
-
-                if(toggleAllowed(gamepad1.a,a)){
-                    isHooked = !isHooked;
-                }
-
-                if(isHooked){
-                    robot.collector.hookOn();
-                }else{
-                    robot.collector.hookOff();
-                }
+                joystickDriveEndgameMode();
                 break;
             case 2: //pre-game = testing auton deploying functions
-                robot.setAutonSingleStep(true); //single step through articulations having to do with deploying
-
-                boolean doDelatch = false;
-                if (toggleAllowed(gamepad1.b, b)) {
-                    stateDelatch++;
-                    if (stateDelatch > 2) stateDelatch = 0;
-                    doDelatch = true;
-                }
-
-                if (toggleAllowed(gamepad1.x, x)) {
-                    stateDelatch--;
-                    if (stateDelatch < 0) stateDelatch = 2;
-                    doDelatch = true;
-                }
-
-                if(doDelatch) {
-                    switch (stateDelatch) {
-                        case 0:
-                            robot.articulate(PoseBigWheel.Articulation.hanging);
-                            break;
-                        case 1:
-                            robot.articulate(PoseBigWheel.Articulation.deploying);
-                            break;
-                        case 2:
-                            robot.articulate(PoseBigWheel.Articulation.deployed);
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                joystickDrivePregameMode();
                 break;
         }
 
@@ -735,6 +631,128 @@ public class Game_6832 extends LinearOpMode {
             SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, soundID);
         }
 
+    }
+
+    private void joystickDrivePregameMode() {
+        robot.setAutonSingleStep(true); //single step through articulations having to do with deploying
+
+        boolean doDelatch = false;
+        if (toggleAllowed(gamepad1.b, b)) {
+            stateDelatch++;
+            if (stateDelatch > 2) stateDelatch = 0;
+            doDelatch = true;
+        }
+
+        if (toggleAllowed(gamepad1.x, x)) {
+            stateDelatch--;
+            if (stateDelatch < 0) stateDelatch = 2;
+            doDelatch = true;
+        }
+
+        if(doDelatch) {
+            switch (stateDelatch) {
+                case 0:
+                    robot.articulate(PoseBigWheel.Articulation.hanging);
+                    break;
+                case 1:
+                    robot.articulate(PoseBigWheel.Articulation.deploying);
+                    break;
+                case 2:
+                    robot.articulate(PoseBigWheel.Articulation.deployed);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void joystickDriveEndgameMode() {
+        boolean doLatchStage = false;
+        robot.driveMixerTank(pwrFwd, pwrRot);
+        if(toggleAllowed(gamepad1.b,b)) { //b advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
+            stateLatched++;
+            if (stateLatched > 2) stateLatched = 0;
+            doLatchStage = true;
+        }
+
+        if(toggleAllowed(gamepad1.x,x)) { //x allows us to back out of latching stages
+            stateLatched--;
+            if (stateLatched < 0) stateLatched = 0;
+            doLatchStage = true;
+        }
+
+        if(doLatchStage) {
+            switch (stateLatched) {
+                case 0:
+                    robot.articulate(PoseBigWheel.Articulation.latchApproach);
+                    break;
+                case 1:
+                    robot.articulate(PoseBigWheel.Articulation.latchPrep);
+                    break;
+                case 2:
+                    robot.goToPostLatch();
+                    break;
+            }
+        }
+
+        if(toggleAllowed(gamepad1.a,a)){
+            isHooked = !isHooked;
+        }
+
+        if(isHooked){
+            robot.collector.hookOn();
+        }else{
+            robot.collector.hookOff();
+        }
+    }
+
+    private void joystickDriveRegularMode() {
+        boolean doIntake = false;
+        robot.driveMixerTank(pwrFwd, pwrRot);
+
+        if(gamepad1.y){
+            robot.goToSafeDrive();
+            isIntakeClosed = true;
+        }
+        if(toggleAllowed(gamepad1.a,a)){
+            isIntakeClosed = !isIntakeClosed;
+        }
+
+
+        if (toggleAllowed(gamepad1.b, b)) {
+            stateIntake++;
+            if (stateIntake > 3) stateIntake = 0;
+            doIntake = true;
+        }
+
+        if (toggleAllowed(gamepad1.x, x)) {
+            stateIntake--;
+            if (stateIntake < 0) stateIntake = 3;
+            doIntake = true;
+        }
+
+        if(doIntake) {
+            switch (stateIntake) {
+                case 0:
+                    robot.articulate(PoseBigWheel.Articulation.preIntake);
+                    break;
+                case 1:
+                    robot.articulate(PoseBigWheel.Articulation.intake);
+                    break;
+                case 2:
+                    robot.articulate(PoseBigWheel.Articulation.deposit);
+                    break;
+                case 3:
+                    robot.articulate(PoseBigWheel.Articulation.driving);
+            }
+        }
+
+
+        if(isIntakeClosed){
+            robot.collector.closeGate();
+        }else{
+            robot.collector.openGate();
+        }
     }
 
     //the method that controls the main state of the robot; must be called in the main loop outside of the main switch
@@ -839,8 +857,8 @@ public class Game_6832 extends LinearOpMode {
                 .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))
                 .addData("distLeft",  () -> robot.distLeft.getDistance(DistanceUnit.METER))
                 .addData("distRight",  () -> robot.distRight.getDistance(DistanceUnit.METER));
-//        telemetry.addData("TOFID", String.format("%x", robot.sensorTimeOfFlight.getModelID()));
-//        telemetry.addData("TOF did time out", Boolean.toString(robot.sensorTimeOfFlight.didTimeoutOccur()));
+//        telemetry.addData("TOFID", () -> String.format("%x", robot.sensorTimeOfFlight.getModelID()));
+//        telemetry.addData("TOF did time out", () -> Boolean.toString(robot.sensorTimeOfFlight.didTimeoutOccur()));
     }
 
     private StateMachine.Builder getStateMachine(Stage stage) {
