@@ -193,6 +193,10 @@ public class Game_6832 extends LinearOpMode {
             if(toggleAllowed(gamepad1.b, b)) {
                 robot.resetEncoders();
                 robot.setZeroHeading();
+                if (gamepad1.right_trigger > 0.3)
+                    robot.setAutonomousIMUOffset(-45); //against field perimeter, facing left
+                else
+                    robot.setAutonomousIMUOffset(0); //against lander
                 robot.collector.setElbowTargetPos(10, 1);
                 robot.articulate(PoseBigWheel.Articulation.hanging);
                 robot.collector.extendToMin() ;
@@ -478,8 +482,8 @@ public class Game_6832 extends LinearOpMode {
             .addState(() -> robot.driveForward(false, 1.05, DRIVE_POWER)) //go to crater
             .addState(() -> robot.rotateIMU(310, 1.5)) //turn to crater
             .addState(() -> robot.driveForward(false, .80, DRIVE_POWER)) //go to grater
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
-            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - (robot.collector.pos_prelatch+100)) < 20)
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extend elbow to park
+            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
             .build();
 
     private StateMachine auto_depotSample = getStateMachine(autoStage)
@@ -536,8 +540,8 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
-            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - (robot.collector.pos_prelatch+100)) < 20)
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extend elbow to park
+            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
             .build();
 
     private StateMachine auto_driveStraight = getStateMachine(autoStage)

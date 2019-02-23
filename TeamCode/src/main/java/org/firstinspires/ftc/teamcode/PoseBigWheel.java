@@ -118,7 +118,7 @@ public class PoseBigWheel
 
     public int servoTesterPos = 1600;
 
-
+    public double autonomousIMUOffset = 0;
 
     private VectorF vuTrans; //vector that calculates the position of the vuforia target relative to the phone (mm)
     private double vuAngle; //angle of the vuforia target from the center of the phone camera (degrees)
@@ -556,7 +556,7 @@ public class PoseBigWheel
             turnTimerInit = true;
         }
         driveIMU(kpDrive, kiDrive, kdDrive, 0, targetAngle); //check to see if the robot turns within a threshold of the target
-        if(Math.abs(poseHeading - targetAngle) < minTurnError) {
+        if(Math.abs(poseHeading - (targetAngle + autonomousIMUOffset)) < minTurnError) {
             turnTimerInit = false;
             driveMixerTank(0,0);
             return true;
@@ -1112,6 +1112,12 @@ public class PoseBigWheel
         forwardTPM = 2493;
     }
 
+    /**
+     * sets autonomous imu offset for turns
+     */
+    public void setAutonomousIMUOffset(double offset) {
+        autonomousIMUOffset = offset;
+    }
 
 
     /**
