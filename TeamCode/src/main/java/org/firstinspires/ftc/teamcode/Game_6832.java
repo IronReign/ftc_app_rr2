@@ -129,6 +129,7 @@ public class Game_6832 extends LinearOpMode {
     int stateDelatch = -1;
     boolean isIntakeClosed = true;
     boolean isHooked = false;
+    boolean enableHookSensors = false;
 
     //game mode configuration
     private int gameMode = 0;
@@ -151,8 +152,8 @@ public class Game_6832 extends LinearOpMode {
     private int soundID = -1;
 
     //auto constants
-    private static final double DRIVE_POWER = .8;
-    private static final int TURN_TIME = 3;
+    private static final double DRIVE_POWER = .7;
+    private static final int TURN_TIME = 2;
     private static final int DUCKY_TIME = 2;
 
     @Override
@@ -170,7 +171,7 @@ public class Game_6832 extends LinearOpMode {
         // functions that waitForStart() normally does, but needed to customize it.
 
         robot.resetMotors(true);
-        robot.collector.hookOff();
+        robot.collector.hookOn();
         robot.collector.closeGate();
 
         visionProviderFinalized = false;
@@ -189,8 +190,9 @@ public class Game_6832 extends LinearOpMode {
 
 
             //reset the elbow, lift and superman motors - operator must make sure robot is in the stowed position, flat on the ground
-            if(toggleAllowed(gamepad1.y, y)) {
+            if(toggleAllowed(gamepad1.b, b)) {
                 robot.resetEncoders();
+                robot.setZeroHeading();
                 robot.collector.setElbowTargetPos(10, 1);
                 robot.articulate(PoseBigWheel.Articulation.hanging);
             }
@@ -203,19 +205,22 @@ public class Game_6832 extends LinearOpMode {
                     robot.collector.hookOn();
             }
 
-            if (robot.distLeft.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOn();
-            if (robot.distRight.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOff();
+            if (toggleAllowed(gamepad1.left_stick_button, left_stick_button))
+                enableHookSensors = !enableHookSensors;
 
-            /*if(toggleAllowed(gamepad1.x,x)) {
-                isBlue = !isBlue;
-            }*/
-            if(toggleAllowed(gamepad1.a,a)){
-                autoDelay--;
-                if(autoDelay < 0) autoDelay = 15;
-            }
+            if (enableHookSensors && robot.distLeft.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOn();
+            if (enableHookSensors && robot.distRight.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOff();
+
+//            if(toggleAllowed(gamepad1.x,x)) {
+//                isBlue = !isBlue;
+//            }
+//            if(toggleAllowed(gamepad1.a,a)){
+//                autoDelay--;
+//                if(autoDelay < 0) autoDelay = 20;
+//            }
             if(toggleAllowed(gamepad1.y, y)){
                 autoDelay++;
-                if(autoDelay>15) autoDelay = 0;
+                if(autoDelay>20) autoDelay = 0;
             }
 
             if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)){
@@ -249,6 +254,7 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Initialized");
             telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
+            telemetry.addData("Status", "Hook sensors: " + enableHookSensors);
             telemetry.update();
 
             robot.updateSensors();
@@ -294,6 +300,7 @@ public class Game_6832 extends LinearOpMode {
                     case 6:
                         break;
                     case 7:
+                        servoTest();
                         break;
                     case 8: //turn to IMU
                         robot.setAutonSingleStep(true);
@@ -318,6 +325,21 @@ public class Game_6832 extends LinearOpMode {
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
     }
+
+    private int servoTest = 900;
+    private void servoTest() {
+        robot.collector.hook.setPosition(servoNormalize(servoTest));
+        if (toggleAllowed(gamepad1.a, a))
+            servoTest -= 20;
+        else if (toggleAllowed(gamepad1.y, y))
+            servoTest += 20;
+        telemetry.addData("Pulse width", servoTest);
+    }
+    public static double servoNormalize(int pulse){
+        double normalized = (double)pulse;
+        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
+    }
+
     int testDeLatch = 0;
     public boolean delatch(){
         switch(testDeLatch){
@@ -390,12 +412,15 @@ public class Game_6832 extends LinearOpMode {
     }
 
     private StateMachine auto_setup = getStateMachine(autoSetupStage)
-            .addSingleState(() -> robot.setZeroHeading()) //reset heading
             .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
             .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
             .addState(() -> robot.getArticulation()  == PoseBigWheel.Articulation.driving) //wait until done
             .addState(() -> robot.rotateIMU(0, 3)) //turn back to center
+            .addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
+            .addState(() -> robot.driveForward(false, .05, DRIVE_POWER)) //move back to see everything
+            .addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
             .addState(() -> auto_sample()) //detect the mineral
+            .addState(() -> robot.driveForward(true, .05, DRIVE_POWER)) //move forward again
             .build();
 
     private StateMachine auto_depotSide = getStateMachine(autoStage)
@@ -472,7 +497,7 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(false, .440, DRIVE_POWER),
                     () -> robot.driveForward(false, .35, DRIVE_POWER),
                     () -> robot.driveForward(false, .445, DRIVE_POWER))
-            .addState(() -> robot.rotateIMU(90, TURN_TIME)) //turn parallel to minerals
+            .addState(() -> robot.rotateIMU(80, TURN_TIME)) //turn parallel to minerals
             .addMineralState(mineralStateProvider, //move to wall
                     () -> robot.driveForward(true, 1.4, DRIVE_POWER),
                     () -> robot.driveForward(true, 1.5, DRIVE_POWER),
@@ -480,7 +505,7 @@ public class Game_6832 extends LinearOpMode {
             .addState(() -> robot.rotateIMU(135, TURN_TIME)) //turn to depot
             .addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
             .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
+                    () -> robot.collector.collect(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
             .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
@@ -851,7 +876,7 @@ public class Game_6832 extends LinearOpMode {
 
         telemetry.addLine()
                 .addData("status", () -> robot.imu.getSystemStatus().toShortString())
-                .addData("servoPos", () -> robot.intakeGate.getPosition())
+                .addData("Pos", () -> robot.intakeGate.getPosition())
                 .addData("mineralState", () -> mineralState)
                 .addData("Game Mode", () -> GAME_MODES[gameMode])
                 .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))

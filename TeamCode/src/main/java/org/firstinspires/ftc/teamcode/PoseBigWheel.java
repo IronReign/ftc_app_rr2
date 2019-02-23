@@ -697,17 +697,18 @@ public class PoseBigWheel
                // ends when wheels should be on the ground, including superman, and pressure is off of the hook
                collector.extendToMid(1, 15);
                if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .5)) {
+                   superman.setTargetPosition(superman.pos_prelatch, 1);
                    if (driveForward(false, .1, .2)) {
                        driveMixerTank(0,0);
-                       if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
-                       {
+                       //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
+                       //{
                            miniState = 0; //reset nested state counter for next use
                            if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
                            else articulation = Articulation.manual;
                            return Articulation.deployed; // signal advance to the deployed stage
 
-                       }
-                       break;
+                       //}
+                       //break;
                    }
                    break;
                }
@@ -1083,6 +1084,13 @@ public class PoseBigWheel
      */
     public void setZeroHeading(){
         setHeading(0);
+    }
+
+    /**
+     * assign the current heading of the robot to 45 (robot on field perimeter wall)
+     */
+    public void setWallHeading(){
+        setHeading(45);
     }
 
     /**
