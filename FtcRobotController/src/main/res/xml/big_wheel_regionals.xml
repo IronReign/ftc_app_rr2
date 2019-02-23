@@ -10,7 +10,6 @@
 			<Servo name="intakeGate" port="0" />
 			<Servo name="intakeRight" port="1" />
 			<Servo name="intakeLeft" port="2" />
-			<Servo name="hook" port="3" />
 
 			<LynxEmbeddedIMU name="imu" port="0" bus="0" />
 			<REV_VL53L0X_RANGE_SENSOR name="distRight" port="0" bus="2"/>
@@ -22,6 +21,7 @@
 			<RevRobotics40HDHexMotor name="elbowLeft" port="2" />
 			<RevRobotics40HDHexMotor name="elbowRight" port="3" />
 
+			<Servo name="hook" port="3" />
 			<Servo name="blinkin" port="4" />
 
 			<LynxEmbeddedIMU name="imu 1" port="0" bus="0" />

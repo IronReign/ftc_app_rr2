@@ -53,7 +53,7 @@ import org.firstinspires.ftc.teamcode.vision.VisionProviders;
  * This file contains the code for Iron Reign's main OpMode, used for both TeleOp and Autonomous.
  */
 
-@TeleOp(name="Game_6832", group="Challenge")  // @Autonomous(...) is the other common choice
+@TeleOp(name = "Game_6832", group = "Challenge")  // @Autonomous(...) is the other common choice
 //  @Autonomous
 public class Game_6832 extends LinearOpMode {
 
@@ -177,7 +177,7 @@ public class Game_6832 extends LinearOpMode {
         visionProviderFinalized = false;
 
 
-        while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
+        while (!isStarted()) {    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
                 try {
                     this.wait();
@@ -191,7 +191,7 @@ public class Game_6832 extends LinearOpMode {
 
 
             //reset the elbow, lift and superman motors - operator must make sure robot is in the stowed position, flat on the ground
-            if(toggleAllowed(gamepad1.b, b)) {
+            if (toggleAllowed(gamepad1.b, b)) {
                 robot.resetEncoders();
                 robot.setZeroHeading();
                 if (gamepad1.right_trigger > 0.3)
@@ -200,10 +200,10 @@ public class Game_6832 extends LinearOpMode {
                     robot.setAutonomousIMUOffset(0); //against lander
                 robot.collector.setElbowTargetPos(10, 1);
                 robot.articulate(PoseBigWheel.Articulation.hanging);
-                robot.collector.extendToMin() ;
+                robot.collector.extendToMin();
             }
 
-            if(toggleAllowed(gamepad1.x,x)) {
+            if (toggleAllowed(gamepad1.x, x)) {
                 isHooked = !isHooked;
                 if (isHooked)
                     robot.collector.hookOff();
@@ -214,8 +214,10 @@ public class Game_6832 extends LinearOpMode {
             if (toggleAllowed(gamepad1.left_stick_button, left_stick_button))
                 enableHookSensors = !enableHookSensors;
 
-            if (enableHookSensors && robot.distLeft.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOn();
-            if (enableHookSensors && robot.distRight.getDistance(DistanceUnit.METER) < .08) robot.collector.hookOff();
+            if (enableHookSensors && robot.distLeft.getDistance(DistanceUnit.METER) < .08)
+                robot.collector.hookOn();
+            if (enableHookSensors && robot.distRight.getDistance(DistanceUnit.METER) < .08)
+                robot.collector.hookOff();
 
 //            if(toggleAllowed(gamepad1.x,x)) {
 //                isBlue = !isBlue;
@@ -224,34 +226,34 @@ public class Game_6832 extends LinearOpMode {
 //                autoDelay--;
 //                if(autoDelay < 0) autoDelay = 20;
 //            }
-            if(toggleAllowed(gamepad1.y, y)){
+            if (toggleAllowed(gamepad1.y, y)) {
                 autoDelay++;
-                if(autoDelay>20) autoDelay = 0;
+                if (autoDelay > 20) autoDelay = 0;
             }
 
-            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)){
-                visionProviderState = (visionProviderState+1) % visionProviders.length; //switch vision provider
+            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)) {
+                visionProviderState = (visionProviderState + 1) % visionProviders.length; //switch vision provider
             }
-            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)){
+            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
                 initialization_initVisionProvider(); //this is blocking
             } else if (visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
                 initialization_deinitVisionProvider(); //also blocking, but should be very quick
             }
-            if(!visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)){
+            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)) {
                 enableTelemetry = !enableTelemetry; //enable/disable FtcDashboard telemetry
             }
-            if(visionProviderFinalized && gamepad1.left_trigger > 0.3){
+            if (visionProviderFinalized && gamepad1.left_trigger > 0.3) {
                 GoldPos gp = vp.detect();
                 if (gp != GoldPos.HOLD_STATE)
                     initGoldPosTest = gp;
-                telemetry.addData("Vision", "Prep detection: %s%s", initGoldPosTest, gp==GoldPos.HOLD_STATE?" (HOLD_STATE)":"");
+                telemetry.addData("Vision", "Prep detection: %s%s", initGoldPosTest, gp == GoldPos.HOLD_STATE ? " (HOLD_STATE)" : "");
             }
 
-            if(soundState == 0 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
+            if (soundState == 0 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
                 initialization_initSound();
             }
 
-            telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis()/500%2==0?"**NOT FINALIZED**":"  NOT FINALIZED  ");
+            telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis() / 500 % 2 == 0 ? "**NOT FINALIZED**" : "  NOT FINALIZED  ");
             telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
             telemetry.addData("Vision", "Viewpoint: %s", viewpoint);
 
@@ -270,7 +272,7 @@ public class Game_6832 extends LinearOpMode {
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
-        if(vp == null) {
+        if (vp == null) {
             initialization_initDummyVisionProvider(); //this is blocking
         }
 
@@ -284,30 +286,32 @@ public class Game_6832 extends LinearOpMode {
         while (opModeIsActive()) {
             telemetry.update();
             stateSwitch();
-            if(active) {
-                switch(state){
+            if (active) {
+                switch (state) {
                     case 0: //code for tele-op control
                         joystickDrive();
                         break;
                     case 1: //autonomous that goes to opponent's crater
-                        if(auto_depotSide.execute()) active=false;
+                        if (auto_depotSide.execute()) active = false;
                         break;
                     case 2: //autonomous that only samples
-                        if(auto_depotSample.execute()) active=false;
+                        if (auto_depotSample.execute()) active = false;
                         break;
                     case 3: //autonomous that starts in our crater
-                        if(auto_craterSide.execute()) active=false;
+                        if (auto_craterSide.execute()) active = false;
                         break;
                     case 4:
-                        if(auto_driveStraight.execute()) active=false;
+                        if (auto_driveStraight.execute()) active = false;
                         break;
                     case 5:
                         robot.setAutonSingleStep(false);
-                        if (robot.getArticulation()== PoseBigWheel.Articulation.hanging) robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
+                        if (robot.getArticulation() == PoseBigWheel.Articulation.hanging)
+                            robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
                         break;
                     case 6:
                         break;
                     case 7:
+//                        ledTest();
                         servoTest();
                         break;
                     case 8: //turn to IMU
@@ -315,9 +319,8 @@ public class Game_6832 extends LinearOpMode {
                         demo();
                         break;
                     case 9:
-                        if(delatch())
-
-                        break;
+                        if (delatch())
+                            break;
                     case 10:
                         break;
                     default:
@@ -325,50 +328,12 @@ public class Game_6832 extends LinearOpMode {
                         break;
                 }
                 robot.updateSensors();
-            }
-            else {
+            } else {
                 robot.stopAll();
             }
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
-    }
-
-    private int servoTest = 900;
-    private void servoTest() {
-        robot.collector.hook.setPosition(servoNormalize(servoTest));
-        if (toggleAllowed(gamepad1.a, a))
-            servoTest -= 20;
-        else if (toggleAllowed(gamepad1.y, y))
-            servoTest += 20;
-        telemetry.addData("Pulse width", servoTest);
-    }
-    public static double servoNormalize(int pulse){
-        double normalized = (double)pulse;
-        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
-    }
-
-    int testDeLatch = 0;
-    public boolean delatch(){
-        switch(testDeLatch){
-            case 0:
-                robot.collector.setElbowTargetPos(robot.collector.pos_prelatch,.9);
-                if(robot.collector.nearTargetElbow()){
-                    testDeLatch++;
-                }
-                break;
-            case 1:
-                robot.superman.setTargetPosition(robot.superman.pos_prelatch);
-                if(robot.superman.nearTarget()){
-                    robot.collector.hookOff();
-                    testDeLatch++;
-                }
-                break;
-            default:
-                testDeLatch = 0;
-                return true;
-        }
-        return false;
     }
 
     private void initialization_initSound() {
@@ -384,7 +349,7 @@ public class Game_6832 extends LinearOpMode {
     }
 
     private void initialization_deinitVisionProvider() {
-        telemetry.addData("Please wait","Deinitializing vision");
+        telemetry.addData("Please wait", "Deinitializing vision");
         telemetry.update();
         robot.ledSystem.setColor(LEDSystem.Color.STRESS);
         vp.shutdownVision();
@@ -394,7 +359,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void initialization_initVisionProvider() {
         try {
-            telemetry.addData("Please wait","Initializing vision");
+            telemetry.addData("Please wait", "Initializing vision");
             telemetry.update();
             robot.ledSystem.setColor(LEDSystem.Color.STRESS);
             vp = visionProviders[visionProviderState].newInstance();
@@ -407,7 +372,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void initialization_initDummyVisionProvider() {
         try {
-            telemetry.addData("Please wait","Initializing vision");
+            telemetry.addData("Please wait", "Initializing vision");
             telemetry.update();
             robot.ledSystem.setColor(LEDSystem.Color.STRESS);
             vp = VisionProviders.defaultProvider.newInstance();
@@ -418,23 +383,23 @@ public class Game_6832 extends LinearOpMode {
         visionProviderFinalized = true;
     }
 
-    private void demo(){
-        if(gamepad1.x)
+    private void demo() {
+        if (gamepad1.x)
             robot.maintainHeading(gamepad1.x);
 
-        if(gamepad1.dpad_down){
+        if (gamepad1.dpad_down) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.superman.lower();
         }
-        if(gamepad1.dpad_up){
+        if (gamepad1.dpad_up) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.superman.raise();
         }
-        if(gamepad1.dpad_right){
+        if (gamepad1.dpad_right) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.open();
         }
-        if(gamepad1.dpad_left){
+        if (gamepad1.dpad_left) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.close();
         }
@@ -445,12 +410,16 @@ public class Game_6832 extends LinearOpMode {
             .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
             .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
-            .addState(() -> robot.getArticulation()  == PoseBigWheel.Articulation.driving) //wait until done
+            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.driving) //wait until done
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
             .addState(() -> robot.rotateIMU(0, 3)) //turn back to center
-            .addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
+            .addTimedState(0.5f, () -> {
+            }, () -> {
+            }) //wait for the robot to settle down
             .addState(() -> robot.driveForward(false, .05, DRIVE_POWER)) //move back to see everything
-            .addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
+            .addTimedState(0.5f, () -> {
+            }, () -> {
+            }) //wait for the robot to settle down
             .addState(() -> auto_sample()) //detect the mineral
             .addState(() -> robot.driveForward(true, .05, DRIVE_POWER)) //move forward again
             .build();
@@ -590,8 +559,7 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-
-    private void joystickDrive(){
+    private void joystickDrive() {
 
         if (!joystickDriveStarted) {
             robot.resetMotors(true);
@@ -611,7 +579,7 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
-        if ((robot.getRoll()>280) && robot.getRoll()< 350)
+        if ((robot.getRoll() > 280) && robot.getRoll() < 350)
             //todo - needs improvement - should be enabling slowmo mode, not setting the damper directly
             //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
             pwrDamper = .33;
@@ -619,8 +587,7 @@ public class Game_6832 extends LinearOpMode {
             pwrDamper = 1.0;
 
 
-
-        switch(gameMode) {
+        switch (gameMode) {
             case 0: //regular teleop mineral cycle
                 joystickDriveRegularMode();
                 break;
@@ -633,29 +600,29 @@ public class Game_6832 extends LinearOpMode {
         }
 
         //manual control
-        if(gamepad1.dpad_down){
+        if (gamepad1.dpad_down) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.superman.lower();
         }
-        if(gamepad1.dpad_up){
+        if (gamepad1.dpad_up) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.superman.raise();
         }
 
-        if(gamepad1.right_stick_y>0.5){
+        if (gamepad1.right_stick_y > 0.5) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.retract();
         }
-        if(gamepad1.right_stick_y<-0.5){
+        if (gamepad1.right_stick_y < -0.5) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.extend();
         }
 
-        if(gamepad1.dpad_right){
+        if (gamepad1.dpad_right) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.open();
         }
-        if(gamepad1.dpad_left){
+        if (gamepad1.dpad_left) {
             robot.articulate(PoseBigWheel.Articulation.manual);
             robot.collector.close();
         }
@@ -663,23 +630,22 @@ public class Game_6832 extends LinearOpMode {
 
         //elbow control
         currTarget = robot.collector.getExtendABobTargetPos();
-        if(toggleAllowed(gamepad1.left_bumper, left_bumper)){
-            if(currTarget == robot.collector.extendMid) {
+        if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
+            if (currTarget == robot.collector.extendMid) {
                 currTarget = robot.collector.extendMax;
-            }
-            else{
+            } else {
                 currTarget = robot.collector.extendMid;
             }
 
         }
-        if(currTarget >= 10){
+        if (currTarget >= 10) {
             robot.collector.setExtendABobTargetPos(currTarget);
         }
 
 
         //endgame mode
-        if(toggleAllowed(gamepad1.right_bumper, right_bumper)){
-            gameMode = (gameMode+1) % NUM_MODES;
+        if (toggleAllowed(gamepad1.right_bumper, right_bumper)) {
+            gameMode = (gameMode + 1) % NUM_MODES;
         }
 
 
@@ -717,7 +683,7 @@ public class Game_6832 extends LinearOpMode {
             doDelatch = true;
         }
 
-        if(doDelatch) {
+        if (doDelatch) {
             switch (stateDelatch) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.hanging);
@@ -740,19 +706,19 @@ public class Game_6832 extends LinearOpMode {
 
         boolean doLatchStage = false;
         robot.driveMixerTank(pwrFwd, pwrRot);
-        if(toggleAllowed(gamepad1.b,b)) { //b advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
+        if (toggleAllowed(gamepad1.b, b)) { //b advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
             stateLatched++;
             if (stateLatched > 2) stateLatched = 0;
             doLatchStage = true;
         }
 
-        if(toggleAllowed(gamepad1.x,x)) { //x allows us to back out of latching stages
+        if (toggleAllowed(gamepad1.x, x)) { //x allows us to back out of latching stages
             stateLatched--;
             if (stateLatched < 0) stateLatched = 0;
             doLatchStage = true;
         }
 
-        if(doLatchStage) {
+        if (doLatchStage) {
             switch (stateLatched) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.latchApproach);
@@ -766,13 +732,13 @@ public class Game_6832 extends LinearOpMode {
             }
         }
 
-        if(toggleAllowed(gamepad1.a,a)){
+        if (toggleAllowed(gamepad1.a, a)) {
             isHooked = !isHooked;
         }
 
-        if(isHooked){
+        if (isHooked) {
             robot.collector.hookOn();
-        }else{
+        } else {
             robot.collector.hookOff();
         }
     }
@@ -781,14 +747,16 @@ public class Game_6832 extends LinearOpMode {
 
         robot.ledSystem.setColor(LEDSystem.Color.GAME_OVER);
 
+        robot.collector.hookOff();
+
         boolean doIntake = false;
         robot.driveMixerTank(pwrFwd, pwrRot);
 
-        if(gamepad1.y){
+        if (gamepad1.y) {
             robot.goToSafeDrive();
             isIntakeClosed = true;
         }
-        if(toggleAllowed(gamepad1.a,a)){
+        if (toggleAllowed(gamepad1.a, a)) {
             isIntakeClosed = !isIntakeClosed;
         }
 
@@ -805,7 +773,7 @@ public class Game_6832 extends LinearOpMode {
             doIntake = true;
         }
 
-        if(doIntake) {
+        if (doIntake) {
             switch (stateIntake) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.preIntake);
@@ -822,16 +790,16 @@ public class Game_6832 extends LinearOpMode {
         }
 
 
-        if(isIntakeClosed){
+        if (isIntakeClosed) {
             robot.collector.closeGate();
-        }else{
+        } else {
             robot.collector.openGate();
         }
     }
 
     //the method that controls the main state of the robot; must be called in the main loop outside of the main switch
     private void stateSwitch() {
-        if(!active) {
+        if (!active) {
             if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
 
                 state--;
@@ -864,11 +832,10 @@ public class Game_6832 extends LinearOpMode {
     //checks to see if a specific button should allow a toggle at any given time; needs a rework
     private boolean toggleAllowed(boolean button, int buttonIndex) {
         if (button) {
-            if (!buttonSavedStates[buttonIndex])  { //we just pushed the button, and when we last looked at it, it was not pressed
+            if (!buttonSavedStates[buttonIndex]) { //we just pushed the button, and when we last looked at it, it was not pressed
                 buttonSavedStates[buttonIndex] = true;
                 return true;
-            }
-            else { //the button is pressed, but it was last time too - so ignore
+            } else { //the button is pressed, but it was last time too - so ignore
 
                 return false;
             }
@@ -880,14 +847,11 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-    private String getAlliance(){
-        if(isBlue)
+    private String getAlliance() {
+        if (isBlue)
             return "Blue";
         return "Red";
     }
-
-
-
 
 
     private void configureDashboard() {
@@ -929,20 +893,66 @@ public class Game_6832 extends LinearOpMode {
                 .addData("mineralState", () -> mineralState)
                 .addData("Game Mode", () -> GAME_MODES[gameMode])
                 .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))
-                .addData("distLeft",  () -> robot.distLeft.getDistance(DistanceUnit.METER))
-                .addData("distRight",  () -> robot.distRight.getDistance(DistanceUnit.METER));
+                .addData("distLeft", () -> robot.distLeft.getDistance(DistanceUnit.METER))
+                .addData("distRight", () -> robot.distRight.getDistance(DistanceUnit.METER));
 //        telemetry.addData("TOFID", () -> String.format("%x", robot.sensorTimeOfFlight.getModelID()));
 //        telemetry.addData("TOF did time out", () -> Boolean.toString(robot.sensorTimeOfFlight.didTimeoutOccur()));
+    }
+
+    int testDeLatch = 0;
+    public boolean delatch() {
+        switch (testDeLatch) {
+            case 0:
+                robot.collector.setElbowTargetPos(robot.collector.pos_prelatch, .9);
+                if (robot.collector.nearTargetElbow()) {
+                    testDeLatch++;
+                }
+                break;
+            case 1:
+                robot.superman.setTargetPosition(robot.superman.pos_prelatch);
+                if (robot.superman.nearTarget()) {
+                    robot.collector.hookOff();
+                    testDeLatch++;
+                }
+                break;
+            default:
+                testDeLatch = 0;
+                return true;
+        }
+        return false;
+    }
+
+    private int servoTest = 900;
+
+    private void servoTest() {
+        robot.ledSystem.movement.setPosition(servoNormalize(servoTest));
+        if (toggleAllowed(gamepad1.a, a))
+            servoTest -= 20;
+        else if (toggleAllowed(gamepad1.y, y))
+            servoTest += 20;
+        telemetry.addData("Pulse width", servoTest);
+    }
+
+    public static double servoNormalize(int pulse) {
+        double normalized = (double) pulse;
+        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
+    }
+
+    private void ledTest() {
+        int idx = (int) ((System.currentTimeMillis() / 2000) % LEDSystem.Color.values().length);
+        robot.ledSystem.setColor(LEDSystem.Color.values()[idx]);
+        telemetry.addData("Color", LEDSystem.Color.values()[idx].name());
     }
 
     private StateMachine.Builder getStateMachine(Stage stage) {
         return StateMachine.builder()
                 .stateSwitchAction(() -> robot.resetMotors(true))
-                .stateEndAction(() -> {})
+                .stateEndAction(() -> {
+                })
                 .stage(stage);
     }
 
-    private long futureTime(float seconds){
+    private long futureTime(float seconds) {
         return System.nanoTime() + (long) (seconds * 1e9);
     }
 }
