@@ -176,6 +176,7 @@ public class Game_6832 extends LinearOpMode {
 
         visionProviderFinalized = false;
 
+
         while(!isStarted()){    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
                 try {
@@ -261,6 +262,8 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Side: " + getAlliance());
             telemetry.addData("Status", "Hook sensors: " + enableHookSensors);
             telemetry.update();
+
+            robot.ledSystem.setColor(LEDSystem.Color.CALM);
 
             robot.updateSensors();
 
@@ -371,6 +374,7 @@ public class Game_6832 extends LinearOpMode {
     private void initialization_initSound() {
         telemetry.addData("Please wait", "Initializing Sound");
         telemetry.update();
+        robot.ledSystem.setColor(LEDSystem.Color.STRESS);
         soundID = hardwareMap.appContext.getResources().getIdentifier("gracious", "raw", hardwareMap.appContext.getPackageName());
         boolean success = SoundPlayer.getInstance().preload(hardwareMap.appContext, soundID);
         if (success)
@@ -382,6 +386,7 @@ public class Game_6832 extends LinearOpMode {
     private void initialization_deinitVisionProvider() {
         telemetry.addData("Please wait","Deinitializing vision");
         telemetry.update();
+        robot.ledSystem.setColor(LEDSystem.Color.STRESS);
         vp.shutdownVision();
         vp = null;
         visionProviderFinalized = false;
@@ -391,6 +396,7 @@ public class Game_6832 extends LinearOpMode {
         try {
             telemetry.addData("Please wait","Initializing vision");
             telemetry.update();
+            robot.ledSystem.setColor(LEDSystem.Color.STRESS);
             vp = visionProviders[visionProviderState].newInstance();
             vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
         } catch (IllegalAccessException | InstantiationException e) {
@@ -403,6 +409,7 @@ public class Game_6832 extends LinearOpMode {
         try {
             telemetry.addData("Please wait","Initializing vision");
             telemetry.update();
+            robot.ledSystem.setColor(LEDSystem.Color.STRESS);
             vp = VisionProviders.defaultProvider.newInstance();
             vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
         } catch (IllegalAccessException | InstantiationException e) {
@@ -436,8 +443,10 @@ public class Game_6832 extends LinearOpMode {
 
     private StateMachine auto_setup = getStateMachine(autoSetupStage)
             .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
+            .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
             .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
             .addState(() -> robot.getArticulation()  == PoseBigWheel.Articulation.driving) //wait until done
+            .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
             .addState(() -> robot.rotateIMU(0, 3)) //turn back to center
             .addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
             .addState(() -> robot.driveForward(false, .05, DRIVE_POWER)) //move back to see everything
@@ -693,6 +702,8 @@ public class Game_6832 extends LinearOpMode {
     private void joystickDrivePregameMode() {
         robot.setAutonSingleStep(true); //single step through articulations having to do with deploying
 
+        robot.ledSystem.setColor(LEDSystem.Color.GOLD);
+
         boolean doDelatch = false;
         if (toggleAllowed(gamepad1.b, b)) {
             stateDelatch++;
@@ -724,6 +735,9 @@ public class Game_6832 extends LinearOpMode {
     }
 
     private void joystickDriveEndgameMode() {
+
+        robot.ledSystem.setColor(LEDSystem.Color.BLUE);
+
         boolean doLatchStage = false;
         robot.driveMixerTank(pwrFwd, pwrRot);
         if(toggleAllowed(gamepad1.b,b)) { //b advances us through latching stages - todo: we should really be calling a pose.nextLatchStage function
@@ -764,6 +778,9 @@ public class Game_6832 extends LinearOpMode {
     }
 
     private void joystickDriveRegularMode() {
+
+        robot.ledSystem.setColor(LEDSystem.Color.GAME_OVER);
+
         boolean doIntake = false;
         robot.driveMixerTank(pwrFwd, pwrRot);
 

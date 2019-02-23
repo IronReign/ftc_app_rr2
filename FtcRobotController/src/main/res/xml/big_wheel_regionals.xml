@@ -22,6 +22,8 @@
 			<RevRobotics40HDHexMotor name="elbowLeft" port="2" />
 			<RevRobotics40HDHexMotor name="elbowRight" port="3" />
 
+			<Servo name="blinkin" port="4" />
+
 			<LynxEmbeddedIMU name="imu 1" port="0" bus="0" />
 			<REV_VL53L0X_RANGE_SENSOR name="distLeft" port="0" bus="2"/>
 			<REV_VL53L0X_RANGE_SENSOR name="distForward" port="0" bus="3"/>

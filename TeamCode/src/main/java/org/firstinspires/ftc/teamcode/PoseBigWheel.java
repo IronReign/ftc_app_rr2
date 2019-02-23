@@ -52,6 +52,7 @@ public class PoseBigWheel
     Servo intakeLeft = null;
     Servo hook = null;
     Servo intakeGate = null;
+    Servo blinkin = null;
 
 
 
@@ -59,6 +60,7 @@ public class PoseBigWheel
 
     Collector collector = null;
     Superman superman;
+    LEDSystem ledSystem;
 
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
@@ -276,6 +278,7 @@ public class PoseBigWheel
         this.supermanMotor = this.hwMap.dcMotor.get("supermanMotor");
         this.hook = this.hwMap.servo.get("hook");
         this.intakeGate = this.hwMap.servo.get("intakeGate");
+        this.blinkin = this.hwMap.servo.get("blinkin");
 
         driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
         driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -285,6 +288,7 @@ public class PoseBigWheel
         collector = new Collector(elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook, intakeGate);
         collector.setElbowPwr(.5);
         superman = new Superman(supermanMotor);
+        ledSystem = new LEDSystem(blinkin);
 
         isIntakeOn = false;
 

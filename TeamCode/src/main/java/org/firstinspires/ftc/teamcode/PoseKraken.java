@@ -122,7 +122,7 @@ public class PoseKraken
 //    public GlyphSystem glyphSystem;
     public JewelArm jewel;
     public GlyphSystem2 glyphSystem;
-    public LEDSystem ledSystem = null;
+    public KrakenLEDSystem ledSystem = null;
     public RelicArm relicArm = null;
 
 
@@ -286,7 +286,7 @@ public class PoseKraken
 
         //motor configurations
 
-        this.ledSystem=new LEDSystem(this.servoLED);
+        this.ledSystem=new KrakenLEDSystem(this.servoLED);
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
