@@ -224,8 +224,8 @@ public class PoseCart
          */
 
 
-        this.driveLeft = this.hwMap.servo.get("driveLeft");
-        this.driveRight = this.hwMap.servo.get("driveRight");
+        this.driveLeft = this.hwMap.servo.get("leftDrive");
+        this.driveRight = this.hwMap.servo.get("rightDrive");
 
         driveLeft.setDirection(Servo.Direction.FORWARD);
         driveRight.setDirection(Servo.Direction.REVERSE);
