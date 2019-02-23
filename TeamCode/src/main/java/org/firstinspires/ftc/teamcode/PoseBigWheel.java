@@ -674,6 +674,11 @@ public class PoseBigWheel
    double miniTimer;
    int miniState = 0;
 
+   public boolean articulate(Articulation target, boolean setAndForget){
+        articulate(target);
+        return true;
+   }
+
    public Articulation articulate(Articulation target) {
        articulation = target; //store the most recent explict articulation request as our target, allows us to keep calling incomplete multi-step transitions
        if (target == Articulation.manual) {

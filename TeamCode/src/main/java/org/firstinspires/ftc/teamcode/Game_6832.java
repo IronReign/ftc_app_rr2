@@ -153,8 +153,8 @@ public class Game_6832 extends LinearOpMode {
 
     //auto constants
     private static final double DRIVE_POWER = .7;
-    private static final int TURN_TIME = 2;
-    private static final int DUCKY_TIME = 2;
+    private static final float TURN_TIME = 2;
+    private static final float DUCKY_TIME = 0.5f;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -195,6 +195,7 @@ public class Game_6832 extends LinearOpMode {
                 robot.setZeroHeading();
                 robot.collector.setElbowTargetPos(10, 1);
                 robot.articulate(PoseBigWheel.Articulation.hanging);
+                robot.collector.extendToMin() ;
             }
 
             if(toggleAllowed(gamepad1.x,x)) {
@@ -441,6 +442,9 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, .880, DRIVE_POWER),
                     () -> robot.driveForward(true, .762, DRIVE_POWER),
                     () -> robot.driveForward(true, .890, DRIVE_POWER))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
+            .addState(() -> robot.collector.extendToMid(1, 15))
             .addTimedState(DUCKY_TIME, //yeet ducky
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
@@ -478,6 +482,9 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, .880, DRIVE_POWER),
                     () -> robot.driveForward(true, .762, DRIVE_POWER),
                     () -> robot.driveForward(true, .890, DRIVE_POWER))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
+            .addState(() -> robot.collector.extendToMid(1, 15))
             .addTimedState(DUCKY_TIME, //yeet ducky
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
@@ -504,8 +511,11 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, 1.9, DRIVE_POWER))
             .addState(() -> robot.rotateIMU(135, TURN_TIME)) //turn to depot
             .addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
+            .addState(() -> robot.collector.extendToMid(1, 15))
             .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.collect(),
+                    () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
             .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_prelatch+100))
