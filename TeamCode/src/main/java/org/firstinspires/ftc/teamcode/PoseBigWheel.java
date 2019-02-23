@@ -869,7 +869,13 @@ public class PoseBigWheel
                }
                break;
            case latchSet:
-               break;
+               collector.restart(.40, .5);
+               superman.restart(.75);
+               if(superman.setTargetPosition(superman.pos_postlatch, 1))
+                   collector.setElbowTargetPos(collector.pos_postlatch);
+               articulation = Articulation.manual;
+               return Articulation.manual;
+               //break;
            case latchHang:
                break;
            default:
@@ -926,6 +932,8 @@ public class PoseBigWheel
         superman.restart(.75);
         if(superman.setTargetPosition(superman.pos_postlatch, 1))
             collector.setElbowTargetPos(collector.pos_postlatch);
+        else
+            return false;
 
         if(collector.nearTarget() && superman.nearTarget())  return true;
         else return false;

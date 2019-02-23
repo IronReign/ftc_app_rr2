@@ -727,7 +727,7 @@ public class Game_6832 extends LinearOpMode {
                     robot.articulate(PoseBigWheel.Articulation.latchPrep);
                     break;
                 case 2:
-                    robot.goToPostLatch();
+                    robot.articulate(PoseBigWheel.Articulation.latchSet);
                     break;
             }
         }
