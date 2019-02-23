@@ -821,12 +821,13 @@ public class PoseBigWheel
                    case 0: //set superman
                        collector.restart(.40, .5);
                        superman.restart(.4);
-                       superman.setTargetPosition(superman.pos_prelatch);
+                       superman.setTargetPosition(superman.pos_prelatch-150);
                        if(superman.nearTarget()) miniState++;
                        break;
                    case 1: //set collector
                        collector.restart(.40, .5);
-                       superman.restart(.75);
+                       superman.restart(.1);
+                       superman.setTargetPosition(superman.pos_prelatch-150);
                        collector.setElbowTargetPos(collector.pos_prelatch);
                        collector.extendToMid(1, 15);
                        if(collector.nearTarget()) {
@@ -919,8 +920,8 @@ public class PoseBigWheel
     public boolean goToPostLatch(){
         collector.restart(.40, .5);
         superman.restart(.75);
-        superman.setTargetPosition(superman.pos_postlatch);
-        collector.setElbowTargetPos(collector.pos_postlatch);
+        if(superman.setTargetPosition(superman.pos_postlatch, 1))
+            collector.setElbowTargetPos(collector.pos_postlatch);
 
         if(collector.nearTarget() && superman.nearTarget())  return true;
         else return false;

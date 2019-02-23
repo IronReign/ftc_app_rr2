@@ -410,6 +410,24 @@ public class Game_6832 extends LinearOpMode {
     private void demo(){
         if(gamepad1.x)
             robot.maintainHeading(gamepad1.x);
+
+        if(gamepad1.dpad_down){
+            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.superman.lower();
+        }
+        if(gamepad1.dpad_up){
+            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.superman.raise();
+        }
+        if(gamepad1.dpad_right){
+            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.collector.open();
+        }
+        if(gamepad1.dpad_left){
+            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.collector.close();
+        }
+
     }
 
     private StateMachine auto_setup = getStateMachine(autoSetupStage)
