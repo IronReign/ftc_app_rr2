@@ -33,8 +33,8 @@ public class Collector {
     double extendABobPwr = 1;
 
 
-    int servoHooked = 900;
-    int servoUnhooked = 2100;
+    int servoHooked = 1560;
+    int servoUnhooked = 2060;
 
     int servoGateOpen = 900;
     int servoGateClosed = 1495;
