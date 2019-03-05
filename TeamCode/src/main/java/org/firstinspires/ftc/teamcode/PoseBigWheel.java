@@ -683,7 +683,7 @@ public class PoseBigWheel
         return true;
    }
 
-   public Articulation articulate(Articulation target) {
+   public boolean articulate(Articulation target) {
        articulation = target; //store the most recent explict articulation request as our target, allows us to keep calling incomplete multi-step transitions
        if (target == Articulation.manual) {
            miniState = 0; //reset ministate - it should only be used in the context of a multi-step transition, so safe to reset it here
@@ -693,13 +693,14 @@ public class PoseBigWheel
            case manual:
                break; //do nothing here - likely we are directly overriding articulations in game
            case driving:
-                if (goToSafeDrive()) return target;
+                if (goToSafeDrive()) return true;
                break;
            case hanging: //todo: fixup comments for deploy actions - moved stuff around
                //auton initial hang at the beginning of a match
                 collector.setExtendABobTargetPos(0);
                 //collector.hookOn();
                 collector.setElbowTargetPos(10,1);
+                return true;
                break;
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
@@ -714,7 +715,7 @@ public class PoseBigWheel
                            miniState = 0; //reset nested state counter for next use
                            if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
                            else articulation = Articulation.manual;
-                           return Articulation.deployed; // signal advance to the deployed stage
+                           return true; // signal advance to the deployed stage
 
                        //}
                        //break;
@@ -766,7 +767,7 @@ public class PoseBigWheel
                            if (System.nanoTime() >= miniTimer) {
                                miniState = 0; //just being a good citizen for next user of miniState
                                articulation = Articulation.driving; //force transition to driving articulation
-                               return Articulation.driving; //force transition to driving articulation
+                               return true; //force transition to driving articulation
                            }
 
                            break;
@@ -812,7 +813,7 @@ public class PoseBigWheel
                            collector.openGate(); //experimental - auto open gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
                            miniState = 0; //just being a good citizen for next user of miniState
                            articulation = Articulation.manual; //force end of articulation by switching to manual
-                           return Articulation.manual;
+                           return true;
                        }
                        break;
                }
@@ -837,7 +838,7 @@ public class PoseBigWheel
                        if(collector.nearTarget()) {
                            miniState = 0;
                            articulation = Articulation.manual;
-                           return Articulation.manual;
+                           return true;
                        }
                        break;
                }
@@ -863,7 +864,7 @@ public class PoseBigWheel
                        if(collector.nearTarget()) {
                            miniState = 0;
                            articulation = Articulation.manual;
-                           return Articulation.manual;
+                           return true;
                        }
                        break;
                }
@@ -874,15 +875,15 @@ public class PoseBigWheel
                if(superman.setTargetPosition(superman.pos_postlatch, 1))
                    collector.setElbowTargetPos(collector.pos_postlatch);
                articulation = Articulation.manual;
-               return Articulation.manual;
+               return true;
                //break;
            case latchHang:
                break;
            default:
-               return target;
+               return false;
 
        }
-       return target;
+       return false;
    }
 
 
@@ -1321,13 +1322,10 @@ public class PoseBigWheel
 
     }
 
-
     public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
-
-
 
     public double getBatteryVoltage(){
         return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();

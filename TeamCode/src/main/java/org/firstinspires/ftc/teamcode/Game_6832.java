@@ -49,6 +49,8 @@ import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
+import static org.firstinspires.ftc.teamcode.PoseBigWheel.servoNormalize;
+
 /**
  * This file contains the code for Iron Reign's main OpMode, used for both TeleOp and Autonomous.
  */
@@ -410,8 +412,7 @@ public class Game_6832 extends LinearOpMode {
             .addTimedState(autoDelay, () -> telemetry.addData("DELAY", "STARTED"), () -> telemetry.addData("DELAY", "DONE"))
             .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
-            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
-            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.driving) //wait until done
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //deploy
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
             .addState(() -> robot.rotateIMU(0, 2)) //turn back to center
             .addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
@@ -930,11 +931,6 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addData("Pulse width", servoTest);
     }
 
-    public static double servoNormalize(int pulse) {
-        double normalized = (double) pulse;
-        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
-    }
-
     private void ledTest() {
         int idx = (int) ((System.currentTimeMillis() / 2000) % LEDSystem.Color.values().length);
         robot.ledSystem.setColor(LEDSystem.Color.values()[idx]);
@@ -948,7 +944,4 @@ public class Game_6832 extends LinearOpMode {
                 .stage(stage);
     }
 
-    private long futureTime(float seconds) {
-        return System.nanoTime() + (long) (seconds * 1e9);
-    }
 }
