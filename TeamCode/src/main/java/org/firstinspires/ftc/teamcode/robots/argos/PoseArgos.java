@@ -29,7 +29,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.teamcode.CsvLogKeeper;
+import org.firstinspires.ftc.teamcode.util.CsvLogKeeper;
 import org.firstinspires.ftc.teamcode.PIDController;
 import org.firstinspires.ftc.teamcode.RC;
 import org.firstinspires.ftc.teamcode.vision.colorblob.ColorBlobDetector;

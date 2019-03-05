@@ -1,49 +1,17 @@
-/*
-Copyright (c) 2016 Robert Atkinson
+package org.firstinspires.ftc.teamcode.robots.kraken;
 
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted (subject to the limitations in the disclaimer below) provided that
-the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice, this list
-of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
-
-Neither the name of Robert Atkinson nor the names of his contributors may be used to
-endorse or promote products derived from this software without specific prior
-written permission.
-
-NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
-LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESSFOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-package org.firstinspires.ftc.teamcode;
+import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.qualcomm.ftcrobotcontroller.R;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
-import com.vuforia.PIXEL_FORMAT;
-import com.vuforia.Image;
 import com.vuforia.HINT;
+import com.vuforia.Image;
+import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.Vuforia;
-
-import android.graphics.Bitmap;
-import android.util.Log;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.MatrixF;
@@ -56,25 +24,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-
-
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
+import org.firstinspires.ftc.teamcode.RC;
+import org.firstinspires.ftc.teamcode.util.VisionUtils;
+import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Moments;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,11 +65,11 @@ import java.util.List;
  * is explained below.
  */
 
-@Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
-//@Disabled
-public class ConceptVuforiaNavigation extends LinearOpMode {
+@Autonomous(name="VisionTest", group ="Concept")
+@Disabled
+public class VisionTest extends LinearOpMode {
 
-    public static final String TAG = "Vuforia Sample";
+    public static final String TAG = "Vision Test";
 
     OpenGLMatrix lastLocation = null;
 
@@ -163,29 +118,14 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * example "FTC_201617", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables beaconTargets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
-        beaconTargets.get(0).setName("Wheels");
-        beaconTargets.get(1).setName("Tools");
-        beaconTargets.get(2).setName("Lego");
-        beaconTargets.get(3).setName("Gears");
+        VuforiaTrackables beaconTargets = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
+        beaconTargets.get(0).setName("RelicTemplate");
 
-        VuforiaTrackable redNearTarget = beaconTargets.get(3);
-        redNearTarget.setName("redNear");  // Gears
+        VuforiaTrackable relicCodex  = beaconTargets.get(0);
+        relicCodex.setName("CryptKey");  // Cryptokey
 
-        VuforiaTrackable blueNearTarget  = beaconTargets.get(0);
-        blueNearTarget.setName("blueNear");  // Wheels
 
-        VuforiaTrackable redFarTarget = beaconTargets.get(1);
-        redFarTarget.setName("redFar");  // Tools
-
-        VuforiaTrackable blueFarTarget  = beaconTargets.get(2);
-        blueFarTarget.setName("blueFar");  // Legos
-        /** For convenience, gather together all the trackable objects in one easily-iterable collection */
-        List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
-        allTrackables.addAll(beaconTargets);
-
-        //vuforia. setHint (com.qualcomm.vuforia.HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 2);
-        Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
+        Vuforia.setHint (HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
 
         /**
          * We use units of mm here because that's the recommended units of measurement for the
@@ -255,56 +195,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * - Then we rotate it  90 around the field's Z access to face it away from the audience.
          * - Finally, we translate it back along the X axis towards the red audience wall.
          */
-        OpenGLMatrix redTargetLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the RED WALL. Our translation here
-                is a negative translation in X.
-                nearRed is also translated 1 ft negative toward drivers*/
-                .translation(-mmFTCFieldWidth/2, -1 * mmPerInch, mmTargetHeight/2)
-                .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
-                        AxesReference.EXTRINSIC, AxesOrder.XZX,
-                        AngleUnit.DEGREES, 90, 90, 0));
-        redNearTarget.setLocation(redTargetLocationOnField);
-        RobotLog.ii(TAG, "RedNear Target=%s", format(redTargetLocationOnField));
-
-        OpenGLMatrix redFarTargetLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the RED WALL. Our translation here
-                is a negative translation in X.
-                farRed is also translated 3 ft toward audience on Y*/
-                .translation(-mmFTCFieldWidth/2, 3 * mmPerInch, mmTargetHeight/2)
-                .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
-                        AxesReference.EXTRINSIC, AxesOrder.XZX,
-                        AngleUnit.DEGREES, 90, 90, 0));
-        redNearTarget.setLocation(redTargetLocationOnField);
-        RobotLog.ii(TAG, "RedFar Target=%s", format(redFarTargetLocationOnField));
 
        /*
         * To place the Stones Target on the Blue Audience wall:
         * - First we rotate it 90 around the field's X axis to flip it upright
         * - Finally, we translate it along the Y axis towards the blue audience wall.
         */
-        OpenGLMatrix blueNearTargetLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the Blue Audience wall.
-                Our translation here is a positive translation in Y.*/
-                .translation(1 * mmPerInch, mmFTCFieldWidth/2, mmTargetHeight/2)
-                .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
-                        AxesReference.EXTRINSIC, AxesOrder.XZX,
-                        AngleUnit.DEGREES, 90, 0, 0));
-        blueNearTarget.setLocation(blueNearTargetLocationOnField);
-        RobotLog.ii(TAG, "BlueNear Target=%s", format(blueNearTargetLocationOnField));
-
-        OpenGLMatrix blueFarTargetLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the Blue Audience wall.
-                Our translation here is a positive translation in Y.*/
-                .translation(-3 * mmPerInch, mmFTCFieldWidth/2, mmTargetHeight/2)
-                .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
-                        AxesReference.EXTRINSIC, AxesOrder.XZX,
-                        AngleUnit.DEGREES, 90, 0, 0));
-        blueNearTarget.setLocation(blueFarTargetLocationOnField);
-        RobotLog.ii(TAG, "BlueFar Target=%s", format(blueFarTargetLocationOnField));
 
         /**
          * Create a transformation matrix describing where the phone is on the robot. Here, we
@@ -330,11 +226,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
          */
-        ((VuforiaTrackableDefaultListener)redNearTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)redFarTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)blueNearTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)blueFarTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        blueNearTarget.getTrackables().deactivate();
 
         /**
          * A brief tutorial: here's how all the math is going to work:
@@ -371,18 +262,20 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
 
             Image rgb = null;
             Mat img = null;
+            int jewelConfig = 20;
 
             VuforiaLocalizer.CloseableFrame frame = null;
 
             try {
                 frame = vuforia.getFrameQueue().take(); //takes the frame at the head of the queue
-
+                jewelConfig = VisionUtils.getJewelConfig(getImageFromFrame(frame, PIXEL_FORMAT.RGB565), (VuforiaTrackableDefaultListener) relicCodex.getListener(), vuforia.getCameraCalibration());
 
                 if (frame != null) {
                     long numImages = frame.getNumImages();
                     Log.d(TAG, String.valueOf(numImages));
 
                     for (int i = 0; i < numImages; i++) {
+                        Log.d(TAG, String.valueOf(i));
                         if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
                             rgb = frame.getImage(i);
                             break;
@@ -407,30 +300,12 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                     Log.d(TAG, e.toString());
 
                 }//if frame null
+            telemetry.addData("jewelConfig", jewelConfig);
             telemetry.update();
 
-            for (VuforiaTrackable trackable : allTrackables) {
-                /**
-                 * getUpdatedRobotLocation() will return null if no new information is available since
-                 * the last time that call was made, or if the trackable is not currently visible.
-                 * getRobotLocation() will return null if the trackable is not currently visible.
-                 */
-                telemetry.addData(trackable.getName(), ((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible() ? "Visible" : "Not Visible");    //
-
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-                }
-            }
             /**
              * Provide feedback as to where the robot was last located (if we know).
              */
-            if (lastLocation != null) {
-                //  RobotLog.vv(TAG, "robot=%s", format(lastLocation));
-                telemetry.addData("Pos", format(lastLocation));
-            } else {
-                telemetry.addData("Pos", "Unknown");
-            }
             telemetry.update();
 
 
