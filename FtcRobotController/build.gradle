@@ -1,7 +1,14 @@
 //
 // build.gradle in FtcRobotController
 //
+
+plugins {
+    id "org.sonarqube" version "2.7"
+}
+
 apply plugin: 'com.android.library'
+
+
 
 android {
 
