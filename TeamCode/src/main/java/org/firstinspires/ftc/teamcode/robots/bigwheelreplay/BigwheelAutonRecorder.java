@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robots.bigwheelreplay;
 
 import android.util.Log;
 
@@ -98,7 +98,7 @@ public class BigwheelAutonRecorder extends LinearOpMode {
         StringBuilder str = new StringBuilder(
                             "package org.firstinspires.ftc.teamcode;\n\n" +
 
-                            "import org.firstinspires.ftc.teamcode.BigwheelAutonRecorder.GamepadPair;\n\n" +
+                            "import org.firstinspires.ftc.teamcode.robots.bigwheelreplay.BigwheelAutonRecorder.GamepadPair;\n\n" +
 
                             "public final class BigwheelAutonData {\n\n" +
 

@@ -1,17 +1,14 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robots.bigwheelreplay;
 
 import com.qualcomm.robotcore.eventloop.opmode.*;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.firstinspires.ftc.teamcode.BigwheelAutonRecorder.GamepadPair;
+import org.firstinspires.ftc.teamcode.robots.bigwheelreplay.BigwheelAutonRecorder.GamepadPair;
 
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
-import static org.firstinspires.ftc.teamcode.BigwheelAutonData.log;
+import static org.firstinspires.ftc.teamcode.robots.bigwheelreplay.BigwheelAutonData.log;
 
 @Autonomous(name="Big Wheel Auton Test", group="Linear Opmode")
 public class BigwheelAutonTest extends LinearOpMode {

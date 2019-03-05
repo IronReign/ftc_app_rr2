@@ -26,7 +26,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -45,13 +44,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.teamcode.util.VisionUtils;
+import org.firstinspires.ftc.teamcode.vision.colorblob.ColorBlobDetector;
 
 import java.util.Locale;
-
-import static org.firstinspires.ftc.teamcode.PoseKraken.servoNormalize;
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
-import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either

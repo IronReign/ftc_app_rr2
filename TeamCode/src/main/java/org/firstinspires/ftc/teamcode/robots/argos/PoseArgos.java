@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robots.argos;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -29,6 +29,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.teamcode.CsvLogKeeper;
+import org.firstinspires.ftc.teamcode.PIDController;
+import org.firstinspires.ftc.teamcode.RC;
+import org.firstinspires.ftc.teamcode.vision.colorblob.ColorBlobDetector;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -1102,7 +1106,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         Mat                   mRgba;
         Scalar mBlobColorRgba;
         Scalar mBlobColorHsv;
-        ColorBlobDetector     mDetector;
+        ColorBlobDetector mDetector;
         Image img;
         mDetector = new ColorBlobDetector();
 

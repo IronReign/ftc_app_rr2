@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robots.bigwheelreplay;
 
-import org.firstinspires.ftc.teamcode.BigwheelAutonRecorder.GamepadPair;
+import org.firstinspires.ftc.teamcode.robots.bigwheelreplay.BigwheelAutonRecorder.GamepadPair;
 
 public final class BigwheelAutonData {
 

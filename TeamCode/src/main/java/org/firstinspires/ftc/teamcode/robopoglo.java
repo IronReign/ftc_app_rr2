@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import static org.firstinspires.ftc.teamcode.PoseKraken.servoNormalize;
+import static org.firstinspires.ftc.teamcode.robots.kraken.PoseKraken.servoNormalize;
 
 
 /**

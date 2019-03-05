@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robots.kraken;
 
 import android.util.Log;
 
@@ -15,6 +15,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.teamcode.PIDController;
+import org.firstinspires.ftc.teamcode.RC;
+import org.firstinspires.ftc.teamcode.robots.kraken.GlyphSystem2;
+import org.firstinspires.ftc.teamcode.robots.kraken.JewelArm;
+import org.firstinspires.ftc.teamcode.robots.kraken.RelicArm;
 
 
 /**
@@ -29,7 +34,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefau
  * @since 2016-12-10
  */
 
-public class PoseKraken
+public class PoseKrakatoa
 {
 
     HardwareMap hwMap;
@@ -62,7 +67,7 @@ public class PoseKraken
     Servo servoLiftRight             = null;
     Servo servoPhone                 = null;
     Servo servoJewelFlipper = null;
-    Servo servoLED                   = null;
+    Servo cannon                     = null;
     Servo relicShoulder              = null;
     Servo relicElbow                 = null;
     Servo relicGrip                  = null;
@@ -118,11 +123,14 @@ public class PoseKraken
     private double poseSavedHeading = 0.0;
     int balanceState = 1;
 
+    public boolean isCannonOn = false;
+    public double cannonOn = 1;
+    public double cannonOff = .5;
+
     //scoring objects and related variables
 //    public GlyphSystem glyphSystem;
     public JewelArm jewel;
     public GlyphSystem2 glyphSystem;
-    public KrakenLEDSystem ledSystem = null;
     public RelicArm relicArm = null;
 
 
@@ -186,7 +194,7 @@ public class PoseKraken
      * @param heading The heading of the robot
      * @param speed The speed of the robot
      */
-    public PoseKraken(double x, double y, double heading, double speed)
+    public PoseKrakatoa(double x, double y, double heading, double speed)
     {
 
         poseX     = x;
@@ -205,7 +213,7 @@ public class PoseKraken
      * @param y     The position relative to the y axis of the field
      * @param angle The vuAngle of the robot
      */
-    public PoseKraken(double x, double y, double angle)
+    public PoseKrakatoa(double x, double y, double angle)
     {
 
         poseX     = x;
@@ -219,7 +227,7 @@ public class PoseKraken
      * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 vuAngle.
      * Useful for determining the Pose of the robot relative to the origin.
      */
-    public PoseKraken()
+    public PoseKrakatoa()
     {
 
         poseX     = 0;
@@ -276,7 +284,7 @@ public class PoseKraken
         this.motorGripLeft      = this.hwMap.dcMotor.get("motorGripLeft");
         this.motorGripRight     = this.hwMap.dcMotor.get("motorGripRight");
         this.servoJewelFlipper  = this.hwMap.servo.get("servoJewelFlipper");
-        this.servoLED           = this.hwMap.servo.get("servoLED");
+        this.cannon             = this.hwMap.servo.get("cannon");
         this.relicShoulder      = this.hwMap.servo.get("relicShoulder");
         this.relicElbow         = this.hwMap.servo.get("relicElbow");
         this.relicGrip          = this.hwMap.servo.get("relicGrip");
@@ -285,8 +293,6 @@ public class PoseKraken
         //this.glyphUpper       = this.hwMap.get(DistanceSensor.class, "glyphDetectUp");
 
         //motor configurations
-
-        this.ledSystem=new KrakenLEDSystem(this.servoLED);
 
         this.motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -329,6 +335,18 @@ public class PoseKraken
         headLampOn();
     }
 
+    public void cannonOn(){
+        isCannonOn = true;
+    }
+
+    public void cannonOff(){
+        isCannonOn = false;
+    }
+
+    public void toggleCannon(){
+        isCannonOn = !isCannonOn;
+    }
+
 
     /**
      * update the current location of the robot. This implementation gets heading and orientation
@@ -366,6 +384,9 @@ public class PoseKraken
         }
 
         glyphSystem.update();
+
+        if(isCannonOn) cannon.setPosition(cannonOn);
+        else  cannon.setPosition(cannonOff);
 
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);

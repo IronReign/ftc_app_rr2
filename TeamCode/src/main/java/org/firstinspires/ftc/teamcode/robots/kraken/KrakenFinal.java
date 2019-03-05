@@ -24,7 +24,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robots.kraken;
 
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -45,11 +45,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.vision.colorblob.ColorBlobDetector;
+import org.firstinspires.ftc.teamcode.R;
+import org.firstinspires.ftc.teamcode.RC;
 import org.firstinspires.ftc.teamcode.util.VisionUtils;
 
 import java.util.Locale;
 
-import static org.firstinspires.ftc.teamcode.PoseKraken.servoNormalize;
+import static org.firstinspires.ftc.teamcode.robots.kraken.PoseKraken.servoNormalize;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getImageFromFrame;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getJewelConfig;
 import static org.firstinspires.ftc.teamcode.util.VisionUtils.getColumnPos;
