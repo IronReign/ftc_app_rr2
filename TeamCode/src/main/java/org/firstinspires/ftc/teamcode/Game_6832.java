@@ -49,6 +49,8 @@ import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
+import static org.firstinspires.ftc.teamcode.PoseBigWheel.servoNormalize;
+
 /**
  * This file contains the code for Iron Reign's main OpMode, used for both TeleOp and Autonomous.
  */
@@ -397,11 +399,11 @@ public class Game_6832 extends LinearOpMode {
         }
         if (gamepad1.dpad_right) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.open();
+            robot.collector.increaseElbowAngle();
         }
         if (gamepad1.dpad_left) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.close();
+            robot.collector.retractBelt();
         }
 
     }
@@ -457,7 +459,7 @@ public class Game_6832 extends LinearOpMode {
             .addState(() -> robot.driveForward(false, 1.05, DRIVE_POWER)) //go to crater
             .addState(() -> robot.rotateIMU(310, 1.5)) //turn to crater
             .addState(() -> robot.driveForward(false, .80, DRIVE_POWER)) //go to grater
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extend elbow to park
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
             .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
             .build();
 
@@ -515,7 +517,7 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extend elbow to park
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
             .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
             .build();
 
@@ -608,20 +610,20 @@ public class Game_6832 extends LinearOpMode {
 
         if (gamepad1.right_stick_y > 0.5) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.retract();
+            robot.collector.decreaseElbowAngle();
         }
         if (gamepad1.right_stick_y < -0.5) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.extend();
+            robot.collector.extendBelt();
         }
 
         if (gamepad1.dpad_right) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.open();
+            robot.collector.increaseElbowAngle();
         }
         if (gamepad1.dpad_left) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.close();
+            robot.collector.retractBelt();
         }
 
 
@@ -930,11 +932,6 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addData("Pulse width", servoTest);
     }
 
-    public static double servoNormalize(int pulse) {
-        double normalized = (double) pulse;
-        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
-    }
-
     private void ledTest() {
         int idx = (int) ((System.currentTimeMillis() / 2000) % LEDSystem.Color.values().length);
         robot.ledSystem.setColor(LEDSystem.Color.values()[idx]);
@@ -948,7 +945,4 @@ public class Game_6832 extends LinearOpMode {
                 .stage(stage);
     }
 
-    private long futureTime(float seconds) {
-        return System.nanoTime() + (long) (seconds * 1e9);
-    }
 }

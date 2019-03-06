@@ -19,6 +19,7 @@ public class Collector {
     DcMotor elbowRight = null;
     DcMotor extendABobLeft = null;
     DcMotor extendABobRight = null;
+
     Servo intakeRight = null;
     Servo intakeLeft = null;
     Servo hook = null;
@@ -41,18 +42,23 @@ public class Collector {
 
     public double intakePwr = .5;
 
+    //normal Teleop encoder values
     public int pos_preIntake = 3600;
     public int pos_Intake   = 3900;
     public int pos_Deposit  = 1520;
     public int pos_PartialDeposit = 1700;
     public int pos_SafeDrive = 800;
+
+    //autonomous encoder values
     public int pos_AutoPark = pos_SafeDrive + 500;
     public int pos_autonPrelatch = 2950;
-    public int pos_prelatch = 2558; //endgame preLatch
-    public int pos_latched = 3023; //todo - likely needs to be same as prelatch
-    public int pos_postlatch = 1240; //todo - check for safety - but might work
-    public int pos_Deployed = 0; //todo - what is this value?
 
+    //end game encoder values
+    public int pos_prelatch = 2558;
+    public int pos_latched = 3023;
+    public int pos_postlatch = 1240;
+
+    //belt extension encoder values
     public static int extendMax = 2500;
     public static int extendMid= 980;
     public static int extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
@@ -68,13 +74,13 @@ public class Collector {
 
         elbowLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elbowRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //elbowLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         elbowRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         extendABobLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         extendABobRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         extendABobRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        intakeLeft.setDirection(Servo.Direction.REVERSE);
 
         this.elbowLeft = elbowLeft;
         this.elbowRight = elbowRight;
@@ -84,19 +90,18 @@ public class Collector {
         this.intakeLeft = intakeLeft;
         this.hook = hook;
         this.intakeGate = intakeGate;
-        intakeLeft.setDirection(Servo.Direction.REVERSE);
 
     }
 
     public void update(){
-        if(active && elbowPosInternal!=elbowPos) { //don't keep updating if we are close to target position
+        if(active && elbowPosInternal!=elbowPos) { //don't keep updating if we are retractBelt to target position
             elbowPosInternal = elbowPos;
             elbowLeft.setTargetPosition(elbowPos);
             elbowRight.setTargetPosition(elbowPos);
             elbowLeft.setPower(elbowPwr);
             elbowRight.setPower(elbowPwr);
         }
-        if(active && extendABobPosInternal!=extendABobPos) { //don't keep updating if we are close to target position
+        if(active && extendABobPosInternal!=extendABobPos) { //don't keep updating if we are retractBelt to target position
             extendABobPosInternal = extendABobPos;
             extendABobLeft.setTargetPosition(extendABobPos);
             extendABobRight.setTargetPosition(extendABobPos);
@@ -111,6 +116,7 @@ public class Collector {
     public void hookOff(){
         hook.setPosition(servoNormalize(servoUnhooked));
     }
+
     public void openGate(){
         intakeGate.setPosition(servoNormalize(servoGateOpen));
     }
@@ -160,11 +166,9 @@ public class Collector {
     }
     public int getElbowCurrentPos(){
         return elbowLeft.getCurrentPosition();
-        //return elbowRight.getCurrentPosition();
     }
     public int getElbowCurrentPos2(){
         return elbowRight.getCurrentPosition();
-        //return elbowRight.getCurrentPosition();
     }
     public void setElbowPwr(double pwr){ elbowPwr = pwr; }
 
@@ -174,7 +178,6 @@ public class Collector {
         update();
         active = false;
     }
-
     public void restart(double elbowPwr, double extendABobPwr){
         setElbowPwr(elbowPwr);
         setExtendABobPwr(extendABobPwr);
@@ -195,7 +198,6 @@ public class Collector {
     public boolean extendToMin(){
         return extendToMin(extendABobPwr, 15);
     }
-
     public boolean extendToMin(double speed, int range){
         setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMin);
@@ -207,7 +209,6 @@ public class Collector {
     public boolean extendToLow(){
         return extendToLow(extendABobPwr, 15);
     }
-
     public boolean extendToLow(double speed, int range){
         setExtendABobPwr(speed);
         setExtendABobTargetPos(extendLow);
@@ -216,11 +217,9 @@ public class Collector {
         }
         return false;
     }
-
     public boolean extendToMid(){
         return extendToMid(extendABobPwr, 15);
     }
-
     public boolean extendToMid(double speed, int range){
         setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMid);
@@ -229,11 +228,9 @@ public class Collector {
         }
         return false;
     }
-
     public boolean extendToMax(){
         return extendToMax(extendABobPwr, 15);
     }
-
     public boolean extendToMax(double speed, int range){
         setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMax);
@@ -256,34 +253,26 @@ public class Collector {
         else return false;
     }
 
-    public void open(){
+    public void increaseElbowAngle(){
         setElbowTargetPos(Math.min(getElbowCurrentPos() + 100, pos_Intake));
     }
-
-    public void retract(){
+    public void decreaseElbowAngle(){
         setExtendABobTargetPos(Math.max(getExtendABobCurrentPos() - 100, extendMin));
     }
 
-    public void extend(){
+    public void extendBelt(){
         setExtendABobTargetPos(Math.min(getExtendABobCurrentPos() + 100, extendMax));
     }
-
-    public void close(){
+    public void retractBelt(){
         setElbowTargetPos(Math.max(getElbowCurrentPos() - 100, 0));
     }
 
-
     public void runToAngle(double angle){
         setElbowTargetPos((int)(angle * ticksPerDegree));
-    }
+    }//untested
 
     public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
-
-    long futureTime(float seconds){
-        return System.nanoTime() + (long) (seconds * 1e9);
-    }
-
 }

@@ -22,7 +22,6 @@ public class LEDSystem {
 
     public LEDSystem(Servo ledServo) {
         this.movement = ledServo;
-
     }
 
     public void setColor(Color color) {
