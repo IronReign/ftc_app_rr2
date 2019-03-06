@@ -616,23 +616,6 @@ public class PoseBigWheel
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
 
-   /*
-       public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
-        manual, //target positions are all being manually overridden
-        driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
-        hanging, //auton initial hang at the beginning of a match
-        deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
-        deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
-        cratered, //auton arm extended over the crater - this might end up being the same as preIntake
-        preIntake, //teleop mostly - collector retracted and increaseElbowAngle to almost ground level
-        intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
-        deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, superman up to deposit position, extendBelt collector to deposit position
-        latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
-        latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
-        latchSet, //teleop endgame - retractBelt the latch
-        latchHang; //teleop endgame - retractBelt collector elbow to final position, set locks if implemented
-    }
-    */
    double miniTimer;
    int miniState = 0;
 
@@ -641,7 +624,7 @@ public class PoseBigWheel
         return true;
    }
 
-   public boolean articulate(Articulation target) {
+   public Articulation articulate(Articulation target) {
        articulation = target; //store the most recent explict articulation request as our target, allows us to keep calling incomplete multi-step transitions
        if (target == Articulation.manual) {
            miniState = 0; //reset ministate - it should only be used in the context of a multi-step transition, so safe to reset it here
@@ -651,14 +634,13 @@ public class PoseBigWheel
            case manual:
                break; //do nothing here - likely we are directly overriding articulations in game
            case driving:
-                if (goToSafeDrive()) return true;
+                if (goToSafeDrive()) return target;
                break;
            case hanging: //todo: fixup comments for deploy actions - moved stuff around
                //auton initial hang at the beginning of a match
                 collector.setExtendABobTargetPos(0);
                 //collector.hookOn();
                 collector.setElbowTargetPos(10,1);
-                return true;
                break;
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
@@ -673,7 +655,7 @@ public class PoseBigWheel
                            miniState = 0; //reset nested state counter for next use
                            if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
                            else articulation = Articulation.manual;
-                           return true; // signal advance to the deployed stage
+                           return Articulation.deployed; // signal advance to the deployed stage
 
                        //}
                        //break;
@@ -725,7 +707,7 @@ public class PoseBigWheel
                            if (System.nanoTime() >= miniTimer) {
                                miniState = 0; //just being a good citizen for next user of miniState
                                articulation = Articulation.driving; //force transition to driving articulation
-                               return true; //force transition to driving articulation
+                               return Articulation.driving; //force transition to driving articulation
                            }
 
                            break;
@@ -771,7 +753,7 @@ public class PoseBigWheel
                            collector.openGate(); //experimental - auto increaseElbowAngle gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
                            miniState = 0; //just being a good citizen for next user of miniState
                            articulation = Articulation.manual; //force end of articulation by switching to manual
-                           return true;
+                           return Articulation.manual;
                        }
                        break;
                }
@@ -796,7 +778,7 @@ public class PoseBigWheel
                        if(collector.nearTarget()) {
                            miniState = 0;
                            articulation = Articulation.manual;
-                           return true;
+                           return Articulation.manual;
                        }
                        break;
                }
@@ -822,7 +804,7 @@ public class PoseBigWheel
                        if(collector.nearTarget()) {
                            miniState = 0;
                            articulation = Articulation.manual;
-                           return true;
+                           return Articulation.manual;
                        }
                        break;
                }
@@ -833,15 +815,15 @@ public class PoseBigWheel
                if(superman.setTargetPosition(superman.pos_postlatch, 1))
                    collector.setElbowTargetPos(collector.pos_postlatch);
                articulation = Articulation.manual;
-               return true;
+               return target;
                //break;
            case latchHang:
                break;
            default:
-               return false;
+               return target;
 
        }
-       return false;
+       return target;
    }
 
 

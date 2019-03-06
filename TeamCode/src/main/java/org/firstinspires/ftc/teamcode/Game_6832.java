@@ -412,7 +412,8 @@ public class Game_6832 extends LinearOpMode {
             .addTimedState(autoDelay, () -> telemetry.addData("DELAY", "STARTED"), () -> telemetry.addData("DELAY", "DONE"))
             .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //deploy
+            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
+            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.driving) //wait until done
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
             .addState(() -> robot.rotateIMU(0, 2)) //turn back to center
             .addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
