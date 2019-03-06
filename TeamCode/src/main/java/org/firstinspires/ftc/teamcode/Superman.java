@@ -40,13 +40,22 @@ public class Superman {
 
 
     public void update() {
-        if (active && supermanPosInternal != supermanPos) { //don't keep updating if we are close to target position
+        if (active && supermanPosInternal != supermanPos) { //don't keep updating if we are retractBelt to target position
             supermanPosInternal = supermanPos;
             superman.setTargetPosition(supermanPos);
             superman.setPower(supermanPwr);
         }
     }
+    public void kill() {
+        setPower(0);
+        update();
+        active = false;
+    }
 
+    public void restart(double pwr) {
+        setPower(pwr);
+        active = true;
+    }
     public void resetEncoders() {
         //just encoder - only safe to call if we know robot is in normal ground state
         //this should stop the motor
@@ -55,7 +64,6 @@ public class Superman {
         superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
     }
-
     public boolean reset(){
         //reset the superman arm by retracting it to the physical start position on very low power until it stops moving
         //this has to be called repeatedly until it returns true - unless we decide to start a dedicated thread
@@ -78,11 +86,12 @@ public class Superman {
         return active;
     }
 
+    public void setPower(double pwr) {
+        supermanPwr = pwr;
+    }
     public void setTargetPosition(int pos) {
         supermanPos = pos;
     }
-
-
     public boolean setTargetPosition(int pos, double speed) {
         setPower(speed);
         setTargetPosition(pos);
@@ -93,48 +102,23 @@ public class Superman {
     public int getTargetPosition() {
         return supermanPos;
     }
-
     public int getCurrentPosition() {
         return superman.getCurrentPosition();
     }
-
     public boolean nearTarget(){
         if ((Math.abs(getCurrentPosition()-getTargetPosition()))<15) return true;
         else return false;
     }
 
-    public void setPower(double pwr) {
-        supermanPwr = pwr;
-    }
-
-    public void kill() {
-        setPower(0);
-        update();
-        active = false;
-    }
-
-    public void restart(double pwr) {
-        setPower(pwr);
-        active = true;
-    }
-
-
 
     public void raise() {
         setTargetPosition(Math.min(getCurrentPosition() + 30, pos_Maximum));
     }
-
     public void lower() {
         setTargetPosition(Math.max(getCurrentPosition() -30, 0));
     }
-
     public void runToAngle(double angle) {
         setTargetPosition((int) (angle * ticksPerDegree));
-    }
-
-    public static double servoNormalize(int pulse) {
-        double normalized = (double) pulse;
-        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
-    }
+    }//untested
 
 }

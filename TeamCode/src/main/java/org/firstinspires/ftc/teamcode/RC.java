@@ -37,23 +37,14 @@ public class RC {
 
         if (op instanceof LinearOpMode) {
             l = (LinearOpMode) op;
-        }//if
+        }
 
-    }//setOpMode
-
-
-
+    }
 
     public static Context c() {
         return AppUtil.getInstance().getActivity();
     }//context
-
     public static FtcRobotControllerActivity a() {
         return ((FtcRobotControllerActivity) AppUtil.getInstance().getActivity());
-    }//activity
-
-
-
-
-
+    }
 }

@@ -943,7 +943,7 @@ public void BalanceArgos(double Kp, double Ki, double Kd, double pwr, double cur
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
 
-    public boolean nearBeacon(boolean isBlue) { //did the optical distance sensor see something close enough to
+    public boolean nearBeacon(boolean isBlue) { //did the optical distance sensor see something retractBelt enough to
         if(isBlue){                              //be one of the beacons
             return beaconDistFore > 0.08;
         }

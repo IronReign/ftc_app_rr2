@@ -159,6 +159,6 @@ public class robopoglo extends LinearOpMode {
         if(isClosed){
             return "closed";
         }
-        else return "open";
+        else return "increaseElbowAngle";
     }
 }
