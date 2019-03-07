@@ -108,19 +108,12 @@ public class PoseBigWheel
     private static final double ANGLE_TAU = Math.PI / 2;
 
 
-    private Pose2d estimatedPose;
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
 
     public int servoTesterPos = 1600;
     public double autonomousIMUOffset = 0;
-
-    private VectorF vuTrans; //vector that calculates the position of the vuforia target relative to the phone (mm)
-    private double vuAngle; //angle of the vuforia target from the center of the phone camera (degrees)
-    private double vuDepth = 0; //calculated distance from the vuforia target on the z axis (mm)
-    private double vuXOffset = 0; //calculated distance from the vuforia target on the x axis (mm)
-    private List<Integer> lastWheelPositions;
 
 
     public enum MoveMode{
@@ -1287,28 +1280,7 @@ public class PoseBigWheel
 
      */
 
-    public void updatePose() {
-        List<Integer> wheelPositions = getWheelPositions();
-        double heading = imuAngles.firstAngle;
-        if (lastWheelPositions.size() != 0) {
-            List<Integer> wheelDeltas = new ArrayList<>();
-            for (int i = 0; i < wheelPositions.size(); i++)
-                wheelDeltas.add(wheelPositions.get(i) - lastWheelPositions.get(i));
-            Pose2d robotPoseDelta = TankKinematics.wheelToRobotVelocity(wheelDeltas, trackWidth);
-            double finalHeadingDelta = angleNorm(heading - lastHeading);
-            estimatedPose = relativeOdometryUpdate(estimatedPose, new Pose2d(new Vector2d(robotPoseDelta.x(), robotPoseDelta.y()), finalHeadingDelta));
-        }
 
-        lastWheelPositions = wheelPositions;
-        lastHeading = heading;
-    }
-
-    public List<Integer> getWheelPositions() {
-        List<Integer> wheelPositions = new ArrayList<>();
-        wheelPositions.add(driveLeft.getCurrentPosition());
-        wheelPositions.add(driveRight.getCurrentPosition());
-        return wheelPositions;
-    }
 
 
     public Pose2d relativeOdometryUpdate(Pose2d fieldPose, Pose2d robotPoseDelta) {
