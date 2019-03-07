@@ -49,6 +49,8 @@ import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
 import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
+import static org.firstinspires.ftc.teamcode.PoseBigWheel.servoNormalize;
+
 /**
  * This file contains the code for Iron Reign's main OpMode, used for both TeleOp and Autonomous.
  */
@@ -309,6 +311,7 @@ public class Game_6832 extends LinearOpMode {
                             robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
                         break;
                     case 6:
+                        if(driveStraight()) active = false;
                         break;
                     case 7:
 //                        ledTest();
@@ -322,6 +325,7 @@ public class Game_6832 extends LinearOpMode {
                         if (delatch())
                             break;
                     case 10:
+                        if (auto_craterSide_extend.execute()) active = false;
                         break;
                     default:
                         robot.stopAll();
@@ -334,6 +338,10 @@ public class Game_6832 extends LinearOpMode {
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
+    }
+
+    public boolean driveStraight(){
+        return robot.driveIMUDistance(0.01, 1, 0, false, 3.0);
     }
 
     private void initialization_initSound() {
@@ -397,11 +405,11 @@ public class Game_6832 extends LinearOpMode {
         }
         if (gamepad1.dpad_right) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.open();
+            robot.collector.increaseElbowAngle();
         }
         if (gamepad1.dpad_left) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.close();
+            robot.collector.retractBelt();
         }
 
     }
@@ -457,7 +465,7 @@ public class Game_6832 extends LinearOpMode {
             .addState(() -> robot.driveForward(false, 1.05, DRIVE_POWER)) //go to crater
             .addState(() -> robot.rotateIMU(310, 1.5)) //turn to crater
             .addState(() -> robot.driveForward(false, .80, DRIVE_POWER)) //go to grater
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extend elbow to park
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
             .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
             .build();
 
@@ -485,6 +493,52 @@ public class Game_6832 extends LinearOpMode {
             .addTimedState(DUCKY_TIME, //yeet ducky
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
+            .build();
+
+    private StateMachine auto_craterSide_extend = getStateMachine(autoStage)
+            .addNestedStateMachine(auto_setup)
+            .addMineralState(mineralStateProvider, //turn to mineral
+                    () -> robot.rotateIMU(39, TURN_TIME),
+                    () -> true,
+                    () -> robot.rotateIMU(321, TURN_TIME))
+            .addMineralState(mineralStateProvider, //move to mineral
+                    () -> robot.driveForward(true, .880, DRIVE_POWER),
+                    () -> robot.driveForward(true, .70, DRIVE_POWER),
+                    () -> robot.driveForward(true, .890, DRIVE_POWER))
+            .addMineralState(mineralStateProvider, //move back
+                    () -> robot.driveForward(false, .440, DRIVE_POWER),
+                    () -> robot.driveForward(false, .35, DRIVE_POWER),
+                    () -> robot.driveForward(false, .445, DRIVE_POWER))
+            .addState(() -> robot.rotateIMU(270, 3)) //turn parallel to minerals
+            .addMineralState(mineralStateProvider, //move to wall
+                    () -> robot.driveForward(false, 1.23344, DRIVE_POWER),
+                    () -> robot.driveForward(false, 1.28988, DRIVE_POWER),
+                    () -> robot.driveForward(false, 1.7, DRIVE_POWER))
+            .addState(() -> robot.rotateIMU(310, 3)) //turn to depot
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
+            .addState(() -> robot.collector.extendToMax(1,10))
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
+            .addState(() -> robot.collector.extendToMin(1,10))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.driving, true))
+            .addState(() -> robot.rotateIMU(130, 3))
+            .addState(() -> robot.driveForward(false, .5, .75))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
+            
+
+            /*.addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
+            .addState(() -> robot.collector.extendToMid(1, 15))
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
+            .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
+            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done*/
             .build();
 
     private StateMachine auto_craterSide = getStateMachine(autoStage)
@@ -515,13 +569,16 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extend elbow to park
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
             .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
             .build();
 
     private StateMachine auto_driveStraight = getStateMachine(autoStage)
             .addState(() -> robot.driveForward(false, 4, DRIVE_POWER))
             .build();
+
+
+
 
     private boolean auto_sample() {
         //Turn on camera to see which is gold
@@ -608,20 +665,20 @@ public class Game_6832 extends LinearOpMode {
 
         if (gamepad1.right_stick_y > 0.5) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.retract();
+            robot.collector.decreaseElbowAngle();
         }
         if (gamepad1.right_stick_y < -0.5) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.extend();
+            robot.collector.extendBelt();
         }
 
         if (gamepad1.dpad_right) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.open();
+            robot.collector.increaseElbowAngle();
         }
         if (gamepad1.dpad_left) {
             robot.articulate(PoseBigWheel.Articulation.manual);
-            robot.collector.close();
+            robot.collector.retractBelt();
         }
 
 
@@ -930,11 +987,6 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addData("Pulse width", servoTest);
     }
 
-    public static double servoNormalize(int pulse) {
-        double normalized = (double) pulse;
-        return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
-    }
-
     private void ledTest() {
         int idx = (int) ((System.currentTimeMillis() / 2000) % LEDSystem.Color.values().length);
         robot.ledSystem.setColor(LEDSystem.Color.values()[idx]);
@@ -948,7 +1000,4 @@ public class Game_6832 extends LinearOpMode {
                 .stage(stage);
     }
 
-    private long futureTime(float seconds) {
-        return System.nanoTime() + (long) (seconds * 1e9);
-    }
 }

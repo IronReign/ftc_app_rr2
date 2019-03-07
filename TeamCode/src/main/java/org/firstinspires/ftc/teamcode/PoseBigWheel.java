@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -36,17 +37,15 @@ import java.util.List;
 public class PoseBigWheel
 {
 
+    //setup
     HardwareMap hwMap;
-
-    //motors
-
     PIDController drivePID = new PIDController(0, 0, 0);
-
     public double kpDrive = 0.010; //proportional constant multiplier
     public double kiDrive = 0.000; //integral constant multiplier
     public double kdDrive = 0.001; //derivative constant multiplier
 
 
+    //All Actuators
     DcMotor driveLeft = null;
     DcMotor driveRight = null;
     DcMotor elbowLeft = null;
@@ -61,33 +60,26 @@ public class PoseBigWheel
     Servo blinkin = null;
 
 
-
-    //subsystems
-
+    //All Subsystems
     Collector collector = null;
     Superman superman;
     LEDSystem ledSystem;
 
+    //All sensors
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
 //    Orientation angles; //feedback from the IMU
     DistanceSensor distForward;
     DistanceSensor distLeft;
     DistanceSensor distRight;
     Rev2mDistanceSensor sensorTimeOfFlight;
+    static  int ticksPerRot        = 1680;
 
-
+    //drive train power values
     private double powerLeft = 0;
     private double powerRight = 0;
 
-    private boolean isIntakeOn = false;
-    private double intakeOn = 1;
-    private double intakeOff = .5;
-    static  int ticksPerRot        = 1680;
-
-    private long flingTimer = 0;
-    private int flingSpeed  = 5000; //ticks per second
+    //PID values
     private int forwardTPM = (int) (1078); //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
-
     private double poseX;
     private double poseY;
     private double poseHeading; //current heading in degrees. Might be rotated by 90 degrees from imu's heading when strafing
@@ -103,10 +95,8 @@ public class PoseBigWheel
     private double displacement;
     private double displacementPrev;
     private double odometer;
-    static double scanSpeed = .25;
-    private long presserTimer = 0;
-    private long presserSavedTime = 0;
-    private double zeroHeading = 0;
+
+
     private long turnTimer = 0;
     private boolean turnTimerInit = false;
     private double minTurnError = 1.0;
@@ -117,20 +107,13 @@ public class PoseBigWheel
     double lastHeading = 0;
     private static final double ANGLE_TAU = Math.PI / 2;
 
-    long timeHook = 0;
 
     private Pose2d estimatedPose;
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
-    private long ticksLeftPrev;
-    private long ticksRightPrev;
-    private long ticksLeftOffset; //provide a way to offset (effectively reset) the motor encoder readings
-    private long ticksRightOffset;
-    private double wheelbase; //the width between the wheels
 
     public int servoTesterPos = 1600;
-
     public double autonomousIMUOffset = 0;
 
     private VectorF vuTrans; //vector that calculates the position of the vuforia target relative to the phone (mm)
@@ -138,6 +121,7 @@ public class PoseBigWheel
     private double vuDepth = 0; //calculated distance from the vuforia target on the z axis (mm)
     private double vuXOffset = 0; //calculated distance from the vuforia target on the x axis (mm)
     private List<Integer> lastWheelPositions;
+
 
     public enum MoveMode{
         forward,
@@ -147,7 +131,6 @@ public class PoseBigWheel
         rotate,
         still;
     }
-
     protected MoveMode moveMode;
 
     public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
@@ -158,38 +141,32 @@ public class PoseBigWheel
         deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
         deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
         cratered, //auton arm extended over the crater - this might end up being the same as preIntake
-        preIntake, //teleop mostly - collector retracted and open to almost ground level
+        preIntake, //teleop mostly - collector retracted and increaseElbowAngle to almost ground level
         intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
-        deposit, //teleop mostly - transition from intake to deposit - retract collector to low position waiting on completion, close elbow to deposit position, superman up to deposit position, extend collector to deposit position
+        deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, superman up to deposit position, extendBelt collector to deposit position
         latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
-        latchPrep, //teleop endgame - make sure hook is open, set drivespeed slow, extend lift to max, finalize elbow angle for latch, elbow overrideable
-        latchSet, //teleop endgame - close the latch
-        latchHang; //teleop endgame - close collector elbow to final position, set locks if implemented
+        latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
+        latchSet, //teleop endgame - retractBelt the latch
+        latchHang; //teleop endgame - retractBelt collector elbow to final position, set locks if implemented
     }
-
     public Articulation getArticulation() {
         return articulation;
     }
-
     protected Articulation articulation = Articulation.manual;
     double articulationTimer = 0;
 
     Orientation imuAngles; //pitch, roll and yaw from the IMU
-    protected boolean targetAngleInitialized = false;
-    private int beaconState = 0; //switch variable that controls progress through the beacon pressing sequence
 
     public boolean isAutonSingleStep() {
         return autonSingleStep;
     }
-
     public void setAutonSingleStep(boolean autonSingleStep) {
         this.autonSingleStep = autonSingleStep;
     }
-
     boolean autonSingleStep = false; //single step through auton deploying stages to facilitate testing and demos
 
 
-
+    private Telemetry telemetry;
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
     ////                                                                                  ////
@@ -271,44 +248,45 @@ public class PoseBigWheel
      * @param isBlue   Tells the robot which alliance to initialize for (however initialization is currently alliance independent)
      */
     public void init(HardwareMap ahwMap, boolean isBlue) {
-        // save reference to HW Map
         hwMap = ahwMap;
         /* eg: Initialize the hardware variables. Note that the strings used here as parameters
          * to 'get' must correspond to the names assigned during the robot configuration
          * step (using the FTC Robot Controller app on the phone).
          */
 
+        //create hwmap with config values
+        this.driveLeft          = this.hwMap.dcMotor.get("driveLeft");
+        this.driveRight         = this.hwMap.dcMotor.get("driveRight");
+        this.elbowLeft          = this.hwMap.dcMotor.get("elbowLeft");
+        this.elbowRight         = this.hwMap.dcMotor.get("elbowRight");
+        this.extendABobLeft     = this.hwMap.dcMotor.get("liftLeft");
+        this.extendABobRight    = this.hwMap.dcMotor.get("liftRight");
+        this.intakeRight        = this.hwMap.servo.get("intakeRight");
+        this.intakeLeft         = this.hwMap.servo.get("intakeLeft");
+        this.supermanMotor      = this.hwMap.dcMotor.get("supermanMotor");
+        this.hook               = this.hwMap.servo.get("hook");
+        this.intakeGate         = this.hwMap.servo.get("intakeGate");
+        this.blinkin            = this.hwMap.servo.get("blinkin");
+        this.distForward        = this.hwMap.get(DistanceSensor.class, "distForward");
+        this.distRight          = this.hwMap.get(DistanceSensor.class, "distRight");
+        this.distLeft           = this.hwMap.get(DistanceSensor.class, "distLeft");
 
-        this.driveLeft = this.hwMap.dcMotor.get("driveLeft");
-        this.driveRight = this.hwMap.dcMotor.get("driveRight");
-        this.elbowLeft = this.hwMap.dcMotor.get("elbowLeft");
-        this.elbowRight = this.hwMap.dcMotor.get("elbowRight");
-        this.extendABobLeft = this.hwMap.dcMotor.get("liftLeft");
-        this.extendABobRight = this.hwMap.dcMotor.get("liftRight");
-        this.intakeRight = this.hwMap.servo.get("intakeRight");
-        this.intakeLeft = this.hwMap.servo.get("intakeLeft");
-        this.supermanMotor = this.hwMap.dcMotor.get("supermanMotor");
-        this.hook = this.hwMap.servo.get("hook");
-        this.intakeGate = this.hwMap.servo.get("intakeGate");
-        this.blinkin = this.hwMap.servo.get("blinkin");
-
+        //behaviors of motors
         driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
         driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        //setup subsystems
         collector = new Collector(elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook, intakeGate);
         collector.setElbowPwr(.5);
         superman = new Superman(supermanMotor);
         ledSystem = new LEDSystem(blinkin);
 
-        isIntakeOn = false;
-
-
-//        this.driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         moveMode = MoveMode.still;
 
+        //setup both IMU's (Assuming 2 rev hubs
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
         parametersIMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         parametersIMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -321,21 +299,16 @@ public class PoseBigWheel
         parametersIMULift.loggingEnabled = true;
         parametersIMULift.loggingTag = "IMULift";
 
-
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
 
-        distForward = hwMap.get(DistanceSensor.class, "distForward");
-        distRight = hwMap.get(DistanceSensor.class, "distRight");
-        distLeft = hwMap.get(DistanceSensor.class, "distLeft");
+
 
         // you can also cast this to a Rev2mDistanceSensor if you want to use added
         // methods associated with the Rev2mDistanceSensor class.
         Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)distForward;
 
     }
-
-
 
     public void resetIMU(){
         BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
@@ -377,14 +350,14 @@ public class PoseBigWheel
             //first time in - we assume that the robot has not started moving and that orientation values are set to the current absolute orientation
             //so first set of imu readings are effectively offsets
 
-
             offsetHeading = wrapAngleMinus(poseHeading, imuAngles.firstAngle);
             offsetRoll = wrapAngleMinus(imuAngles.secondAngle, poseRoll);
             offsetPitch = wrapAngleMinus(imuAngles.thirdAngle, posePitch);
-
-
             initialized = true;
         }
+        poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
+        posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
+        poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
 
         if(posePitch>40){
             superman.restart(.6);
@@ -393,15 +366,6 @@ public class PoseBigWheel
         articulate(articulation); //call the most recently requested articulation
         collector.update();
         superman.update();
-
-
-
-
-        poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
-        posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
-        poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
-
-        //double displacement = (((double)(ticksRight - ticksRightPrev)/ticksPerMeterRight) + ((double)(ticksLeft - ticksLeftPrev)/ticksPerMeterLeft))/2.0;
 
         // we haven't worked out the trig of calculating displacement from any driveMixer combination, so
         // for now we are just restricting ourselves to cardinal relative directions of pure forward, backward, left and right
@@ -474,7 +438,7 @@ public class PoseBigWheel
     }
 
     /**
-     * Moves the mecanum platform under PID control applied to the rotation of the robot. This version can either drive forwards/backwards or strafe.
+     * Moves the tank platform under PID control applied to the rotation of the robot. This version can either drive forwards/backwards or strafe.
      *
      * @param Kp   proportional constant multiplier
      * @param Ki   integral constant multiplier
@@ -670,23 +634,6 @@ public class PoseBigWheel
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
 
-   /*
-       public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
-        manual, //target positions are all being manually overridden
-        driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
-        hanging, //auton initial hang at the beginning of a match
-        deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
-        deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
-        cratered, //auton arm extended over the crater - this might end up being the same as preIntake
-        preIntake, //teleop mostly - collector retracted and open to almost ground level
-        intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
-        deposit, //teleop mostly - transition from intake to deposit - retract collector to low position waiting on completion, close elbow to deposit position, superman up to deposit position, extend collector to deposit position
-        latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
-        latchPrep, //teleop endgame - make sure hook is open, set drivespeed slow, extend lift to max, finalize elbow angle for latch, elbow overrideable
-        latchSet, //teleop endgame - close the latch
-        latchHang; //teleop endgame - close collector elbow to final position, set locks if implemented
-    }
-    */
    double miniTimer;
    int miniState = 0;
 
@@ -748,14 +695,14 @@ public class PoseBigWheel
                if (System.nanoTime() >= articulationTimer) {
                    switch (miniState) {
                        case 0:  //push lightly into lander to relieve pressure on hook
-                           collector.hookOff(); //retract hook
+                           collector.hookOff(); //decreaseElbowAngle hook
                            miniTimer=futureTime(1);
                            miniState++;
                            break;
                            //if (driveForward(false, .2, .7)) miniState++;
                            //miniTimer = futureTime(1); //setup wait for completion
 
-                       case 1:  //retract lander hook
+                       case 1:  //decreaseElbowAngle lander hook
                            if (System.nanoTime() >= miniTimer) {
                                if (rotateIMU(350, 1)) { //this turn is needed because hook doesn't clear entirely
                                    resetMotors(true);
@@ -797,12 +744,12 @@ public class PoseBigWheel
                break;
            case deposit:
                //goToDeposit();
-               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive close of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        collector.restart(.25, 1);
                        superman.restart(.75);
                        if (collector.setElbowTargetPos(collector.pos_PartialDeposit,1))
-                       miniState++; //close elbow as fast as possible and hold state until completion
+                       miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up
                        collector.extendToMid(1,15);
@@ -821,7 +768,7 @@ public class PoseBigWheel
                        superman.setTargetPosition(superman.pos_Deposit, .4); //slow on remaining rotation to minimize overshoot
                        driveForward(true,.4, 1); //drive toward lander - helps pre-position  for deposit and slightly counters the robots tendency to over-rotate toward the lander because of all of the other moves
                        if (collector.extendToMax(1,15)) {
-                           collector.openGate(); //experimental - auto open gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
+                           collector.openGate(); //experimental - auto increaseElbowAngle gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
                            miniState = 0; //just being a good citizen for next user of miniState
                            articulation = Articulation.manual; //force end of articulation by switching to manual
                            return Articulation.manual;
@@ -854,8 +801,8 @@ public class PoseBigWheel
                        break;
                }
                break;
-           case latchPrep://teleop endgame - make sure hook is open,
-               // set drivespeed slow, extend lift to mid, finalize elbow angle for latch, elbow overrideable
+           case latchPrep://teleop endgame - make sure hook is increaseElbowAngle,
+               // set drivespeed slow, extendBelt lift to mid, finalize elbow angle for latch, elbow overrideable
                switch (miniState) {
                    case 0:
                        superman.restart(.60);
@@ -886,7 +833,7 @@ public class PoseBigWheel
                if(superman.setTargetPosition(superman.pos_postlatch, 1))
                    collector.setElbowTargetPos(collector.pos_postlatch);
                articulation = Articulation.manual;
-               return Articulation.manual;
+               return target;
                //break;
            case latchHang:
                break;
@@ -952,7 +899,7 @@ public class PoseBigWheel
     }
 
     public boolean goToPreIntake(){  //should usually be called from deposit position
-                                    //todo: needs time to retract lift before moving elbow - slow elbow speed may not be good enough
+                                    //todo: needs time to decreaseElbowAngle lift before moving elbow - slow elbow speed may not be good enough
         collector.restart(1, 1);
         superman.restart(1);
         superman.setTargetPosition(superman.pos_Intake);
@@ -1031,6 +978,7 @@ public class PoseBigWheel
 
         driveLeft.setPower(clampMotor(powerLeft));
         driveRight.setPower(clampMotor(powerRight));
+
 
     }
 
@@ -1240,14 +1188,6 @@ public class PoseBigWheel
 
     public void setForwardTPM(long forwardTPM) { this.forwardTPM = (int) forwardTPM; }
 
-    public long getTicksLeftPrev()
-    {
-        return ticksLeftPrev;
-    }
-    public long getTicksRightPrev()
-    {
-        return ticksRightPrev;
-    }
 
     /**
      *
@@ -1334,13 +1274,10 @@ public class PoseBigWheel
 
     }
 
-
     public static double servoNormalize(int pulse){
         double normalized = (double)pulse;
         return (normalized - 750.0) / 1500.0; //convert mr servo controller pulse width to double on _0 - 1 scale
     }
-
-
 
     public double getBatteryVoltage(){
         return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();
