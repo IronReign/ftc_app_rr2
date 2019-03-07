@@ -311,6 +311,7 @@ public class Game_6832 extends LinearOpMode {
                             robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
                         break;
                     case 6:
+                        if(driveStraight()) active = false;
                         break;
                     case 7:
 //                        ledTest();
@@ -324,6 +325,7 @@ public class Game_6832 extends LinearOpMode {
                         if (delatch())
                             break;
                     case 10:
+                        if (auto_craterSide_extend.execute()) active = false;
                         break;
                     default:
                         robot.stopAll();
@@ -336,6 +338,10 @@ public class Game_6832 extends LinearOpMode {
 
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
+    }
+
+    public boolean driveStraight(){
+        return robot.driveIMUDistance(0.01, 1, 0, false, 3.0);
     }
 
     private void initialization_initSound() {
@@ -489,6 +495,52 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.collector.stopIntake())
             .build();
 
+    private StateMachine auto_craterSide_extend = getStateMachine(autoStage)
+            .addNestedStateMachine(auto_setup)
+            .addMineralState(mineralStateProvider, //turn to mineral
+                    () -> robot.rotateIMU(39, TURN_TIME),
+                    () -> true,
+                    () -> robot.rotateIMU(321, TURN_TIME))
+            .addMineralState(mineralStateProvider, //move to mineral
+                    () -> robot.driveForward(true, .880, DRIVE_POWER),
+                    () -> robot.driveForward(true, .70, DRIVE_POWER),
+                    () -> robot.driveForward(true, .890, DRIVE_POWER))
+            .addMineralState(mineralStateProvider, //move back
+                    () -> robot.driveForward(false, .440, DRIVE_POWER),
+                    () -> robot.driveForward(false, .35, DRIVE_POWER),
+                    () -> robot.driveForward(false, .445, DRIVE_POWER))
+            .addState(() -> robot.rotateIMU(270, 3)) //turn parallel to minerals
+            .addMineralState(mineralStateProvider, //move to wall
+                    () -> robot.driveForward(false, 1.23344, DRIVE_POWER),
+                    () -> robot.driveForward(false, 1.28988, DRIVE_POWER),
+                    () -> robot.driveForward(false, 1.7, DRIVE_POWER))
+            .addState(() -> robot.rotateIMU(310, 3)) //turn to depot
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
+            .addState(() -> robot.collector.extendToMax(1,10))
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
+            .addState(() -> robot.collector.extendToMin(1,10))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.driving, true))
+            .addState(() -> robot.rotateIMU(130, 3))
+            .addState(() -> robot.driveForward(false, .5, .75))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
+            
+
+            /*.addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
+            .addState(() -> robot.collector.extendToMid(1, 15))
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
+            .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
+            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
+            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done*/
+            .build();
+
     private StateMachine auto_craterSide = getStateMachine(autoStage)
             .addNestedStateMachine(auto_setup)
             .addMineralState(mineralStateProvider, //turn to mineral
@@ -524,6 +576,9 @@ public class Game_6832 extends LinearOpMode {
     private StateMachine auto_driveStraight = getStateMachine(autoStage)
             .addState(() -> robot.driveForward(false, 4, DRIVE_POWER))
             .build();
+
+
+
 
     private boolean auto_sample() {
         //Turn on camera to see which is gold

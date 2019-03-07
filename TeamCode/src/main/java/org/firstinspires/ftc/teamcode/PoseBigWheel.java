@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -148,7 +149,7 @@ public class PoseBigWheel
     boolean autonSingleStep = false; //single step through auton deploying stages to facilitate testing and demos
 
 
-
+    private Telemetry telemetry;
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
     ////                                                                                  ////
@@ -959,6 +960,7 @@ public class PoseBigWheel
         //provide power to the motors
         driveLeft.setPower(clampMotor(powerLeft));
         driveRight.setPower(clampMotor(powerRight));
+
 
     }
 
