@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.localization;
 
 /*
-
+    Puts vector pos and heading of robot into one class
  */
 public class Pose2d {
     private Vector2d pos;
