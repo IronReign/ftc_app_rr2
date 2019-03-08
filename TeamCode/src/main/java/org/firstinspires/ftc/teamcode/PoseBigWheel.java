@@ -1289,7 +1289,7 @@ public class PoseBigWheel
 
     public void updatePose() {
         List<Integer> wheelPositions = getWheelPositions();
-        double heading = imuAngles.firstAngle;
+        double heading = getHeading();
         if (lastWheelPositions.size() != 0) {
             List<Integer> wheelDeltas = new ArrayList<>();
             for (int i = 0; i < wheelPositions.size(); i++)
