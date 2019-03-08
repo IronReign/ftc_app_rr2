@@ -25,6 +25,7 @@ public class Vector2d {
     Vector2d divide(double scalar) { return new Vector2d(x / scalar, y  / scalar); }
 
     public Vector2d rotated(double angle) {
+        // vnew = R matrix * vold
         double newX = x * Math.cos(angle) - y * Math.sin(angle);
         double newY = x * Math.sin(angle) + y * Math.cos(angle);
         return new Vector2d(newX, newY);
