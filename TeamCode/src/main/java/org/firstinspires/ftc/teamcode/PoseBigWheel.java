@@ -156,6 +156,7 @@ public class PoseBigWheel
     double articulationTimer = 0;
 
     Orientation imuAngles; //pitch, roll and yaw from the IMU
+    //roll is in x, pitch is in y, yaw is in z
 
     public boolean isAutonSingleStep() {
         return autonSingleStep;
