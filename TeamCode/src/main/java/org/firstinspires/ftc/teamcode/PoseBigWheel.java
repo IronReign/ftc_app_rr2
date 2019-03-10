@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
@@ -28,6 +29,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * @since 2018-11-02
  */
 
+@Config
 public class PoseBigWheel
 {
 
@@ -37,6 +39,15 @@ public class PoseBigWheel
     public double kpDrive = 0.010; //proportional constant multiplier
     public double kiDrive = 0.000; //integral constant multiplier
     public double kdDrive = 0.001; //derivative constant multiplier
+
+    public static double headingP = 0.006;
+    public static double headingD = 0;
+
+    public static double balanceP = 0;
+    public static double balanceD = 0;
+
+
+
 
 
     //All Actuators
@@ -451,6 +462,20 @@ public class PoseBigWheel
         driveMixerTank(pwr, correction);
     }
 
+    public void balancePID(double kP, double kI, double kD, double pwr, double currentRoll, double targetRoll) {
+        drivePID.setOutputRange(-.2, .2);
+        drivePID.setPID(kP, kI, kD);
+        drivePID.setSetpoint(targetRoll);
+        drivePID.enable();
+        drivePID.setInputRange(0,360);
+        drivePID.setContinuous();
+        drivePID.setInput(currentRoll);
+
+        double correction = drivePID.performPID();
+
+        driveMixerTank(pwr, correction);
+    }
+
     /**
      * Stops all motors on the robot
      */
@@ -533,6 +558,30 @@ public class PoseBigWheel
         return false;
     }
 
+    public void balance(double targetRoll) {
+        collector.setElbowTargetPos(3900, 1);
+        balancePID(balanceP,0, balanceD, .4, getRoll(), targetRoll);
+    }
+
+    public boolean rotatePIDIMU(double targetAngle, double maxTime){
+        if(!turnTimerInit){ //intiate the timer that the robot will use to cut of the sequence if it takes too long; only happens on the first cycle
+            turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
+            turnTimerInit = true;
+        }
+        driveIMU(headingP, 0, headingD, 0, targetAngle); //check to see if the robot turns within a threshold of the target
+        if(Math.abs(poseHeading - (targetAngle + autonomousIMUOffset)) < minTurnError) {
+            turnTimerInit = false;
+            driveMixerTank(0,0);
+            return true;
+        }
+        if(turnTimer < System.nanoTime()){ //check to see if the robot takes too long to turn within a threshold of the target (e.g. it gets stuck)
+            turnTimerInit = false;
+            driveMixerTank(0,0);
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * the maintain heading function used in demo: holds the heading read on initial button press
@@ -584,9 +633,15 @@ public class PoseBigWheel
         //send the PWM value to the servo regardless of if it is altered or not
     }
 
-    public boolean autoBalance (){
+    public void autoBalance (){
 
-        switch(balanceState){
+
+        //roll 278
+        //elbow 3900
+
+        double pwr = 1* ((getPitch() - 278)/90);
+
+        /*switch(balanceState){
             case 1:
                  //posePitch;
                 driveMixerTank(.2, 0);
@@ -606,7 +661,7 @@ public class PoseBigWheel
                 balanceState=1;
                 return true;
         }
-        return false;
+        return false;*/
     }
 
 
@@ -648,8 +703,8 @@ public class PoseBigWheel
                //auton unfolding after initial hang - should only be called from the hanging position during auton
                // ends when wheels should be on the ground, including superman, and pressure is off of the hook
                collector.extendToMid(1, 15);
-               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .5)) {
-                   superman.setTargetPosition(superman.pos_prelatch, 1);
+               superman.setTargetPosition(superman.pos_prelatch, 1);
+               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
                    if (driveForward(false, .1, .2)) {
                        driveMixerTank(0,0);
                        //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
@@ -963,6 +1018,14 @@ public class PoseBigWheel
         driveRight.setPower(clampMotor(powerRight));
 
 
+    }
+
+    public void constMixerTank(double correction) {
+        powerLeft += correction;
+        powerRight += correction;
+
+        driveLeft.setPower(clampMotor(powerLeft));
+        driveRight.setPower(clampMotor(powerRight));
     }
 
 
