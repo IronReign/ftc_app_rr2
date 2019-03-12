@@ -137,7 +137,9 @@ public class PoseBigWheel
         cratered, //auton arm extended over the crater - this might end up being the same as preIntake
         preIntake, //teleop mostly - collector retracted and increaseElbowAngle to almost ground level
         intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
+        reverseIntake,
         deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, superman up to deposit position, extendBelt collector to deposit position
+        reverseDeposit,
         latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
         latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
         latchSet, //teleop endgame - retractBelt the latch
@@ -781,6 +783,12 @@ public class PoseBigWheel
                collector.closeGate();
                goToIntake();
                break;
+           case reverseIntake:
+               collector.closeGate();
+               goToPoaition(superman.pos_reverseIntake, collector.pos_reverseIntake,1,.5);
+               break;
+           case reverseDeposit:
+               goToPoaition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
            case deposit:
                //goToDeposit();
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
@@ -983,6 +991,16 @@ public class PoseBigWheel
         else return false;
     }
 
+
+    public boolean goToPoaition(int supermanTargetPos, int elbowTargetPos, double supermanPower, double elbowPower){
+        collector.restart(elbowPower, 1);
+        superman.restart(supermanPower);
+        superman.setTargetPosition(supermanTargetPos);
+        collector.setElbowTargetPos(elbowTargetPos);
+
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
+    }
 
 
     //////////////////////////////////////////////////////////////////////////////////////////

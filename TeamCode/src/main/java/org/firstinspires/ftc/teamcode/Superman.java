@@ -12,6 +12,8 @@ public class Superman {
 
     //Positions for moving superman during articulations
     public int pos_Intake = 10;
+    public int pos_reverseIntake = 10;
+    public int pos_reverseDeposit = 250;
     public int pos_Deposit = 354;
     public int pos_DepositPartial = 250;
     public int pos_Maximum = 500;

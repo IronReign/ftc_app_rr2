@@ -136,7 +136,7 @@ public class Game_6832 extends LinearOpMode {
 
     //game mode configuration
     private int gameMode = 0;
-    private static final int NUM_MODES = 3;
+    private static final int NUM_MODES = 4;
     private static final String[] GAME_MODES = {"REGULAR", "ENDGAME", "PRE-GAME"};
 
     //vision-related configuration
@@ -676,6 +676,9 @@ public class Game_6832 extends LinearOpMode {
             case 2: //pre-game = testing auton deploying functions
                 joystickDrivePregameMode();
                 break;
+            case 3:
+                joystickDriveRegularModeReverse();
+                break;
         }
 
         //manual control
@@ -884,6 +887,59 @@ public class Game_6832 extends LinearOpMode {
             robot.collector.openGate();
         }
     }
+
+    private void joystickDriveRegularModeReverse() {
+
+        robot.ledSystem.setColor(LEDSystem.Color.GAME_OVER);
+
+        robot.collector.hookOff();
+
+        boolean doIntake = false;
+        robot.driveMixerTank(pwrFwd, pwrRot);
+
+        if (gamepad1.y) {
+            robot.goToSafeDrive();
+            isIntakeClosed = true;
+        }
+        if (toggleAllowed(gamepad1.a, a)) {
+            isIntakeClosed = !isIntakeClosed;
+        }
+
+
+        if (toggleAllowed(gamepad1.b, b)) {
+            stateIntake++;
+            if (stateIntake > 2) stateIntake = 0;
+            doIntake = true;
+        }
+
+        if (toggleAllowed(gamepad1.x, x)) {
+            stateIntake--;
+            if (stateIntake < 0) stateIntake = 2;
+            doIntake = true;
+        }
+
+        if (doIntake) {
+            switch (stateIntake) {
+                case 0:
+                    robot.articulate(PoseBigWheel.Articulation.reverseIntake);
+                    break;
+                case 1:
+                    robot.articulate(PoseBigWheel.Articulation.reverseDeposit);
+                    break;
+                case 2:
+                    robot.articulate(PoseBigWheel.Articulation.driving);
+                    break;
+            }
+        }
+
+
+        if (isIntakeClosed) {
+            robot.collector.closeGate();
+        } else {
+            robot.collector.openGate();
+        }
+    }
+
 
     //the method that controls the main state of the robot; must be called in the main loop outside of the main switch
     private void stateSwitch() {
