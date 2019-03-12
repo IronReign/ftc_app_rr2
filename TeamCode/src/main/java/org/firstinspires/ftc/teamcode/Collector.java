@@ -46,8 +46,10 @@ public class Collector {
     public int pos_preIntake = 3600;
     public int pos_Intake   = 3900;
     public int pos_Deposit  = 1520;
-    public int pos_reverseIntake = 800;
-    public int pos_reverseDeposit = 800;
+    public int pos_reverseIntake = 80;
+    public int pos_reversePreDeposit=1408;
+    public int pos_reverseDeposit = 2908;
+    public int pose_reverseSafeDrive = 1000;
     public int pos_PartialDeposit = 1700;
     public int pos_SafeDrive = 800;
 

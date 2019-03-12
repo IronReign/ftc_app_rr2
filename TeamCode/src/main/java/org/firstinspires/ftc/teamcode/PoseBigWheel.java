@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -131,6 +130,7 @@ public class PoseBigWheel
         inprogress, //currently in progress to a final articulation
         manual, //target positions are all being manually overridden
         driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
+        reverseDriving,
         hanging, //auton initial hang at the beginning of a match
         deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
         deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
@@ -139,6 +139,7 @@ public class PoseBigWheel
         intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
         reverseIntake,
         deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, superman up to deposit position, extendBelt collector to deposit position
+        prereversedeposit,
         reverseDeposit,
         latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
         latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
@@ -774,6 +775,27 @@ public class PoseBigWheel
 
                }
                    else break;
+           case reverseDriving:
+               collector.closeGate();
+               switch(miniState){
+                   case 0:
+                      // if(driveForward(true,.2,.7)){
+                           miniState++;
+                      // }
+                       break;
+                   case 1:
+                       collector.extendToMin(1,10);
+                       if(goToPosition(superman.pos_reverseIntake-100,collector.pose_reverseSafeDrive,.75,.3)){
+                           miniState++;
+                       }
+                       break;
+                   case 2:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
+
+               }
+               break;
            case cratered:
                break;
            case preIntake:
@@ -785,21 +807,78 @@ public class PoseBigWheel
                break;
            case reverseIntake:
                collector.closeGate();
-               goToPoaition(superman.pos_reverseIntake, collector.pos_reverseIntake,1,.5);
+               switch(miniState){
+                   case 0:
+                       if(collector.extendToMid(1,10)){
+                           miniState++;
+                       }
+                       break;
+                   case 1:
+                       if(goToPosition(superman.pos_reverseIntake, 80,1,.5)){
+                           miniState++;
+                       }
+                       break;
+                   case 2:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
+
+               }
+               break;
+           case prereversedeposit:
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+                   case 0: //set basic speeds and start closing elbow to manage COG
+                       if (collector.extendToMin(1,10))
+                           miniState++; //retractBelt elbow as fast as possible and hold state until completion
+                       break;
+                   case 1: //rise up
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reversePreDeposit,1,.7)) miniState++; //start going really fast to interim position
+                       break;
+                   case 2:
+                       miniState++;
+                       break;
+                   case 3:
+                       miniState++;
+                       break;
+                   case 4:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
+               }
                break;
            case reverseDeposit:
-               goToPoaition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
+               //goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+                   case 0: //set basic speeds and start closing elbow to manage COG
+                       if (collector.extendToMax(1,10))
+                           miniState++; //retractBelt elbow as fast as possible and hold state until completion
+                       break;
+                   case 1: //rise up
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.3)) miniState++; //start going really fast to interim position
+                       break;
+                   case 2:
+                       miniState++;
+                       break;
+                   case 3:
+                       miniState++;
+                       break;
+                   case 4:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
+               }
+               break;
            case deposit:
                //goToDeposit();
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        collector.restart(.25, 1);
                        superman.restart(.75);
-                       if (collector.setElbowTargetPos(collector.pos_PartialDeposit,1))
+                       if (collector.setElbowTargetPos(collector.pos_PartialDeposit,1) && collector.extendToMid(1,10))
                        miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up
-                       collector.extendToMid(1,15);
+                       collector.extendToMin(1,15);
                        if (superman.setTargetPosition(superman.pos_DepositPartial, 1)) miniState++; //start going really fast to interim position
                        break;
                    case 2:
@@ -992,7 +1071,7 @@ public class PoseBigWheel
     }
 
 
-    public boolean goToPoaition(int supermanTargetPos, int elbowTargetPos, double supermanPower, double elbowPower){
+    public boolean goToPosition(int supermanTargetPos, int elbowTargetPos, double supermanPower, double elbowPower){
         collector.restart(elbowPower, 1);
         superman.restart(supermanPower);
         superman.setTargetPosition(supermanTargetPos);

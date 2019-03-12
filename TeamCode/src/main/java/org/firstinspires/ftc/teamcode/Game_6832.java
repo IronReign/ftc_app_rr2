@@ -137,7 +137,7 @@ public class Game_6832 extends LinearOpMode {
     //game mode configuration
     private int gameMode = 0;
     private static final int NUM_MODES = 4;
-    private static final String[] GAME_MODES = {"REGULAR", "ENDGAME", "PRE-GAME"};
+    private static final String[] GAME_MODES = {"REGULAR", "ENDGAME", "PRE-GAME", "REVERE-REGULAR"};
 
     //vision-related configuration
     private VisionProvider vp;
@@ -658,7 +658,7 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
-        if ((robot.getRoll() > 280) && robot.getRoll() < 350)
+        if ((robot.getRoll() > 300) && robot.getRoll() < 350)
             //todo - needs improvement - should be enabling slowmo mode, not setting the damper directly
             //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
             pwrDamper = .33;
@@ -868,15 +868,18 @@ public class Game_6832 extends LinearOpMode {
             switch (stateIntake) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.preIntake);
+                    isIntakeClosed = true;
                     break;
                 case 1:
                     robot.articulate(PoseBigWheel.Articulation.intake);
+                    isIntakeClosed = true;
                     break;
                 case 2:
                     robot.articulate(PoseBigWheel.Articulation.deposit);
                     break;
                 case 3:
                     robot.articulate(PoseBigWheel.Articulation.driving);
+                    isIntakeClosed = true;
             }
         }
 
@@ -898,7 +901,7 @@ public class Game_6832 extends LinearOpMode {
         robot.driveMixerTank(pwrFwd, pwrRot);
 
         if (gamepad1.y) {
-            robot.goToSafeDrive();
+            robot.articulate(PoseBigWheel.Articulation.reverseDriving);
             isIntakeClosed = true;
         }
         if (toggleAllowed(gamepad1.a, a)) {
@@ -908,13 +911,13 @@ public class Game_6832 extends LinearOpMode {
 
         if (toggleAllowed(gamepad1.b, b)) {
             stateIntake++;
-            if (stateIntake > 2) stateIntake = 0;
+            if (stateIntake > 3) stateIntake = 0;
             doIntake = true;
         }
 
         if (toggleAllowed(gamepad1.x, x)) {
             stateIntake--;
-            if (stateIntake < 0) stateIntake = 2;
+            if (stateIntake < 0) stateIntake = 3;
             doIntake = true;
         }
 
@@ -922,12 +925,18 @@ public class Game_6832 extends LinearOpMode {
             switch (stateIntake) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.reverseIntake);
+                    isIntakeClosed = true;
                     break;
                 case 1:
-                    robot.articulate(PoseBigWheel.Articulation.reverseDeposit);
+                    robot.articulate(PoseBigWheel.Articulation.prereversedeposit);
+                    isIntakeClosed = true;
                     break;
                 case 2:
-                    robot.articulate(PoseBigWheel.Articulation.driving);
+                    robot.articulate(PoseBigWheel.Articulation.reverseDeposit);
+                    break;
+                case 3:
+                    robot.articulate(PoseBigWheel.Articulation.reverseDriving);
+                    isIntakeClosed = true;
                     break;
             }
         }
