@@ -13,8 +13,12 @@ public class StateSpaceObserver {
         this.plant = plant;
     }
 
+
     public void setXHat(RealMatrix xHat) {
         this.xHat = xHat;
+    }
+    public void setXHat(int i, double value) {
+        xHat.setEntry(i, 0, value);
     }
 
     public RealMatrix XHat() { return xHat; }
@@ -22,6 +26,8 @@ public class StateSpaceObserver {
     public RealMatrix K() { return K; }
 
     public double K(int i, int j) { return K.getEntry(i,j); }
+
+
     public double XHat(int i) { return XHat().getEntry(i,0); }
 
     public void predict(RealMatrix newU) {
