@@ -41,7 +41,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.robots.handprosthetic.robopoglo;
 import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
 import org.firstinspires.ftc.teamcode.statemachine.Stage;
 import org.firstinspires.ftc.teamcode.statemachine.StateMachine;
@@ -202,7 +201,7 @@ public class Game_6832 extends LinearOpMode {
                 else
                     robot.setAutonomousIMUOffset(0); //against lander
                 robot.collector.setElbowTargetPos(10, 1);
-                robot.articulate(PoseBigWheel.Articulation.hanging);
+                robot.setDesiredArticulation(PoseBigWheel.Articulation.hanging);
                 robot.collector.extendToMin();
             }
 
@@ -308,8 +307,8 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 5:
                         robot.setAutonSingleStep(false);
-                        if (robot.getArticulation() == PoseBigWheel.Articulation.hanging)
-                            robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
+                        if (robot.getTrueArticulation() == PoseBigWheel.Articulation.hanging)
+                            robot.performArticulation(PoseBigWheel.Articulation.deploying); //start deploy sequence
                         break;
                     case 6:
                         if(driveStraight()) active = false;
@@ -335,7 +334,7 @@ public class Game_6832 extends LinearOpMode {
                         if (delatch())
                             break;
                     case 10:
-                        if (auto_craterSide_extend.execute()) active = false;
+                        if (auto_craterSideExtend.execute()) active = false;
                         break;
 
                     default:
@@ -407,19 +406,19 @@ public class Game_6832 extends LinearOpMode {
             robot.maintainHeading(gamepad1.x);
 
         if (gamepad1.dpad_down) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.superman.lower();
         }
         if (gamepad1.dpad_up) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.superman.raise();
         }
         if (gamepad1.dpad_right) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.collector.increaseElbowAngle();
         }
         if (gamepad1.dpad_left) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.collector.retractBelt();
         }
 
@@ -432,20 +431,17 @@ public class Game_6832 extends LinearOpMode {
             .build();
 
     private StateMachine auto_setup = getStateMachine(autoSetupStage)
-            .addTimedState(autoDelay, () -> telemetry.addData("DELAY", "STARTED"), () -> telemetry.addData("DELAY", "DONE"))
+            .addTimedState(autoDelay, () -> {}, () -> {})
             .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
             //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
-            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
-            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.driving) //wait until done
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.driving, true))
+            .addSingleState(() -> robot.performArticulation(PoseBigWheel.Articulation.deploying, PoseBigWheel.Articulation.driving)) //start deploy
             //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
             .addState(() -> robot.rotatePIDIMU(0, 1)) //turn back to center
-            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
             .addState(() -> robot.driveForward(false, .05, DRIVE_POWER)) //move back to see everything
-            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
             .addState(() -> auto_sample()) //detect the mineral
             .addState(() -> robot.driveForward(true, .05, DRIVE_POWER)) //move forward again
             .build();
+
 
     private StateMachine auto_depotSide = getStateMachine(autoStage)
             .addNestedStateMachine(auto_setup)
@@ -465,7 +461,7 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, .880, DRIVE_POWER),
                     () -> robot.driveForward(true, .762, DRIVE_POWER),
                     () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.performArticulation(PoseBigWheel.Articulation.manual)) //so we can start overriding
             .addState(() -> robot.collector.setElbowTargetPos(618, 1))
             .addState(() -> robot.collector.extendToMid(1, 15))
             .addTimedState(DUCKY_TIME, //yeet ducky
@@ -505,7 +501,7 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, .880, DRIVE_POWER),
                     () -> robot.driveForward(true, .762, DRIVE_POWER),
                     () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.performArticulation(PoseBigWheel.Articulation.manual)) //so we can start overriding
             .addState(() -> robot.collector.setElbowTargetPos(618, 1))
             .addState(() -> robot.collector.extendToMid(1, 15))
             .addTimedState(DUCKY_TIME, //yeet ducky
@@ -513,7 +509,7 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.collector.stopIntake())
             .build();
 
-    private StateMachine auto_craterSide_extend = getStateMachine(autoStage)
+    private StateMachine auto_craterSideExtend = getStateMachine(autoStage)
             .addNestedStateMachine(auto_setup)
             .addMineralState(mineralStateProvider, //turn to mineral
                     () -> robot.rotatePIDIMU(39, TURN_TIME),
@@ -533,32 +529,18 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(false, 1.48988, DRIVE_POWER),
                     () -> robot.driveForward(false, 1.9, DRIVE_POWER))
             .addState(() -> robot.rotatePIDIMU(310, 3)) //turn to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
+            .addState(() -> robot.performArticulation(PoseBigWheel.Articulation.preIntake))
             .addState(() -> robot.collector.extendToMax(1,10))
             .addTimedState(DUCKY_TIME, //yeet ducky
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.collector.extendToMid(1,10))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.driving, true))
+            .addState(() -> robot.performArticulation(PoseBigWheel.Articulation.driving))
             .addState(() -> robot.collector.nearTargetElbow())
             .addState(() -> robot.rotatePIDIMU(100, 0.6))
             .addState(() -> robot.rotatePIDIMU(130, 3))
             .addState(() -> robot.driveForward(false, .5, DRIVE_POWER))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
-
-
-            /*.addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
-            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
-            .addState(() -> robot.collector.extendToMid(1, 15))
-            .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
-                    () -> robot.collector.stopIntake())
-            .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
-            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done*/
+            .addState(() -> robot.performArticulation(PoseBigWheel.Articulation.preIntake))
             .build();
 
 
@@ -587,7 +569,7 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.driveForward(true, 1.9, DRIVE_POWER))
             .addState(() -> robot.rotateIMU(135, TURN_TIME)) //turn to depot
             .addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
+            .addState(() -> robot.performArticulation(PoseBigWheel.Articulation.manual)) //so we can start overriding
             .addState(() -> robot.collector.setElbowTargetPos(618, 1))
             .addState(() -> robot.collector.extendToMid(1, 15))
             .addTimedState(DUCKY_TIME, //yeet ducky
@@ -601,9 +583,6 @@ public class Game_6832 extends LinearOpMode {
     private StateMachine auto_driveStraight = getStateMachine(autoStage)
             .addState(() -> robot.driveForward(false, 4, DRIVE_POWER))
             .build();
-
-
-
 
     private boolean auto_sample() {
         //Turn on camera to see which is gold
@@ -683,29 +662,29 @@ public class Game_6832 extends LinearOpMode {
 
         //manual control
         if (gamepad1.dpad_down) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.superman.lower();
         }
         if (gamepad1.dpad_up) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.superman.raise();
         }
 
         if (gamepad1.right_stick_y > 0.5) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.collector.decreaseElbowAngle();
         }
         if (gamepad1.right_stick_y < -0.5) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.collector.extendBelt();
         }
 
         if (gamepad1.dpad_right) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.collector.increaseElbowAngle();
         }
         if (gamepad1.dpad_left) {
-            robot.articulate(PoseBigWheel.Articulation.manual);
+            robot.setManualArticulation();
             robot.collector.retractBelt();
         }
 
@@ -768,13 +747,13 @@ public class Game_6832 extends LinearOpMode {
         if (doDelatch) {
             switch (stateDelatch) {
                 case 0:
-                    robot.articulate(PoseBigWheel.Articulation.hanging);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.hanging);
                     break;
                 case 1:
-                    robot.articulate(PoseBigWheel.Articulation.deploying);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.deploying);
                     break;
                 case 2:
-                    robot.articulate(PoseBigWheel.Articulation.deployed);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.deployed);
                     break;
                 default:
                     break;
@@ -808,13 +787,13 @@ public class Game_6832 extends LinearOpMode {
         if (doLatchStage) {
             switch (stateLatched) {
                 case 0:
-                    robot.articulate(PoseBigWheel.Articulation.latchApproach);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.latchApproach);
                     break;
                 case 1:
-                    robot.articulate(PoseBigWheel.Articulation.latchPrep);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.latchPrep);
                     break;
                 case 2:
-                    robot.articulate(PoseBigWheel.Articulation.latchSet);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.latchSet);
                     break;
             }
         }
@@ -867,18 +846,18 @@ public class Game_6832 extends LinearOpMode {
         if (doIntake) {
             switch (stateIntake) {
                 case 0:
-                    robot.articulate(PoseBigWheel.Articulation.preIntake);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.preIntake);
                     isIntakeClosed = true;
                     break;
                 case 1:
-                    robot.articulate(PoseBigWheel.Articulation.intake);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.intake);
                     isIntakeClosed = true;
                     break;
                 case 2:
-                    robot.articulate(PoseBigWheel.Articulation.deposit);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.deposit);
                     break;
                 case 3:
-                    robot.articulate(PoseBigWheel.Articulation.driving);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.driving);
                     isIntakeClosed = true;
             }
         }
@@ -901,7 +880,7 @@ public class Game_6832 extends LinearOpMode {
         robot.driveMixerTank(pwrFwd, pwrRot);
 
         if (gamepad1.y) {
-            robot.articulate(PoseBigWheel.Articulation.reverseDriving);
+            robot.setDesiredArticulation(PoseBigWheel.Articulation.reverseDriving);
             isIntakeClosed = true;
         }
         if (toggleAllowed(gamepad1.a, a)) {
@@ -924,18 +903,18 @@ public class Game_6832 extends LinearOpMode {
         if (doIntake) {
             switch (stateIntake) {
                 case 0:
-                    robot.articulate(PoseBigWheel.Articulation.reverseIntake);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.reverseIntake);
                     isIntakeClosed = true;
                     break;
                 case 1:
-                    robot.articulate(PoseBigWheel.Articulation.prereversedeposit);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.preReverseDeposit);
                     isIntakeClosed = true;
                     break;
                 case 2:
-                    robot.articulate(PoseBigWheel.Articulation.reverseDeposit);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.reverseDeposit);
                     break;
                 case 3:
-                    robot.articulate(PoseBigWheel.Articulation.reverseDriving);
+                    robot.setDesiredArticulation(PoseBigWheel.Articulation.reverseDriving);
                     isIntakeClosed = true;
                     break;
             }

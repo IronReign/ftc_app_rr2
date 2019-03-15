@@ -69,6 +69,10 @@ public class Collector {
     public static int extendMin = 300;  //prevent crunching collector tray
     public static int extendPreLatch = extendMax;
 
+    //trueArticulation tolerances
+    public static int extendABobTolerance = 15;
+    public static int elbowTolerance = 15;
+
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
 
@@ -171,8 +175,11 @@ public class Collector {
     public int getElbowCurrentPos(){
         return elbowLeft.getCurrentPosition();
     }
-    public int getElbowCurrentPos2(){
+    public int getElbowCurrentPos2() {
         return elbowRight.getCurrentPosition();
+    }
+    public int getElbowCurrentPosAvg() {
+        return (getElbowCurrentPos() + getElbowCurrentPos2())/2;
     }
     public void setElbowPwr(double pwr){ elbowPwr = pwr; }
 
@@ -245,11 +252,11 @@ public class Collector {
     }
 
     public boolean nearTargetExtend(){
-        if((Math.abs(getExtendABobCurrentPos()-getExtendABobTargetPos()))<15) return true;
+        if((Math.abs(getExtendABobCurrentPos()-getExtendABobTargetPos()))<extendABobTolerance) return true;
         else return false;
     }
     public boolean nearTargetElbow(){
-        if ((Math.abs( getElbowCurrentPos()-getElbowTargetPos()))<15) return true;
+        if ((Math.abs( getElbowCurrentPos()-getElbowTargetPos()))<elbowTolerance) return true;
         else return false;
     }
     public boolean nearTarget(){
