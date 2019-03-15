@@ -32,6 +32,6 @@ public class StateSpaceObserver {
         // correct xHat using a kalman filter
         RealMatrix matOne = y.subtract(plant.C().multiply(XHat()));
         RealMatrix matTwo = plant.D().multiply(u);
-        xHat = xHat.add(matOne.subtract(matTwo));
+        xHat = xHat.add(K().multiply(matOne.subtract(matTwo)));
     }
 }
