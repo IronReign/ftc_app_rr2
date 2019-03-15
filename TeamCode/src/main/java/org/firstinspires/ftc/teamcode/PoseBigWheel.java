@@ -126,8 +126,8 @@ public class PoseBigWheel
     }
     protected MoveMode moveMode;
 
-    public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
-        inprogress, //currently in progress to a final articulation
+    public enum Articulation{ //serves as a desired robot trueArticulation which may include related complex movements of the elbow, lift and superman
+        inprogress, //currently in progress to a final trueArticulation
         manual, //target positions are all being manually overridden
         driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
         reverseDriving,
@@ -139,17 +139,34 @@ public class PoseBigWheel
         intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
         reverseIntake,
         deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, superman up to deposit position, extendBelt collector to deposit position
-        prereversedeposit,
+        preReverseDeposit,
         reverseDeposit,
         latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
         latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
         latchSet, //teleop endgame - retractBelt the latch
         latchHang; //teleop endgame - retractBelt collector elbow to final position, set locks if implemented
     }
-    public Articulation getArticulation() {
-        return articulation;
+    protected Articulation trueArticulation = Articulation.manual;
+    protected Articulation desiredArticulation = Articulation.manual;
+    public void setDesiredArticulation(Articulation desired) {
+        this.desiredArticulation = desired;
     }
-    protected Articulation articulation = Articulation.manual;
+    public void setManualArticulation() {
+        setDesiredArticulation(Articulation.manual);
+    }
+    public boolean performArticulation(Articulation target) {
+        return performArticulation(target, target);
+    }
+    public boolean performArticulation(Articulation target, Articulation stop) {
+        setDesiredArticulation(target);
+        return trueArticulation == stop;
+    }
+    public Articulation getDesiredArticulation() {
+        return desiredArticulation;
+    }
+    public Articulation getTrueArticulation() {
+        return trueArticulation;
+    }
     double articulationTimer = 0;
 
     Orientation imuAngles; //pitch, roll and yaw from the IMU
@@ -361,7 +378,7 @@ public class PoseBigWheel
             superman.restart(.6);
         }
 
-        articulate(articulation); //call the most recently requested articulation
+        articulate(); //call the most recently requested trueArticulation
         collector.update();
         superman.update();
 
@@ -679,28 +696,23 @@ public class PoseBigWheel
    double miniTimer;
    int miniState = 0;
 
-   public boolean articulate(Articulation target, boolean setAndForget){
-        articulate(target);
-        return true;
-   }
-
-   public Articulation articulate(Articulation target) {
-       articulation = target; //store the most recent explict articulation request as our target, allows us to keep calling incomplete multi-step transitions
-       if (target == Articulation.manual) {
-           miniState = 0; //reset ministate - it should only be used in the context of a multi-step transition, so safe to reset it here
-       }
-
-       switch (articulation) {
+   private void articulate() { //internal use only - only call during sensor update() loop.
+       trueArticulation = Articulation.inprogress;
+       switch (desiredArticulation) {
            case manual:
+               miniState = 0; //reset ministate - it should only be used in the context of a multi-step transition, so safe to reset it here
+               trueArticulation = Articulation.manual;
                break; //do nothing here - likely we are directly overriding articulations in game
            case driving:
-                if (goToSafeDrive()) return target;
+                if (goToSafeDrive()) trueArticulation = Articulation.manual;
                break;
            case hanging: //todo: fixup comments for deploy actions - moved stuff around
                //auton initial hang at the beginning of a match
                 collector.setExtendABobTargetPos(0);
                 //collector.hookOn();
                 collector.setElbowTargetPos(10,1);
+                if (collector.nearTarget())
+                    trueArticulation = Articulation.hanging;
                break;
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
@@ -710,26 +722,14 @@ public class PoseBigWheel
                if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
                    if (driveForward(false, .1, .2)) {
                        driveMixerTank(0,0);
-                       //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
-                       //{
                            miniState = 0; //reset nested state counter for next use
-                           if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
-                           else articulation = Articulation.manual;
-                           return Articulation.deployed; // signal advance to the deployed stage
-
-                       //}
-                       //break;
+                           trueArticulation = Articulation.deploying;
+                           if (!isAutonSingleStep()) desiredArticulation = Articulation.deployed; //auto advance to next stage
+                           else desiredArticulation = Articulation.manual;
                    }
                    break;
                }
                break;
-
-               //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
-               //for now we wait on elapsed time to complete sequence
-               /*
-               articulationTimer = futureTime(2); //setup wait for completion. todo: change this to position based auto advancement
-
-               */
            case deployed:
                //auton settled on ground - involves retracting the hook,
                // moving forward a bit to clear lander and then
@@ -763,18 +763,16 @@ public class PoseBigWheel
                                }
                            }
                            break;
-                       case 3:  //automatically transition to driving articulation
+                       case 3:  //automatically transition to driving trueArticulation
                            if (System.nanoTime() >= miniTimer) {
                                miniState = 0; //just being a good citizen for next user of miniState
-                               articulation = Articulation.driving; //force transition to driving articulation
-                               return Articulation.driving; //force transition to driving articulation
+                               trueArticulation = Articulation.deployed;
+                               desiredArticulation = Articulation.driving; //force transition to driving trueArticulation
                            }
-
                            break;
                    }
-
                }
-                   else break;
+               break;
            case reverseDriving:
                collector.closeGate();
                switch(miniState){
@@ -791,19 +789,19 @@ public class PoseBigWheel
                        break;
                    case 2:
                        miniState = 0; //just being a good citizen for next user of miniState
-                       articulation = Articulation.manual; //force end of articulation by switching to manual
-                       return Articulation.manual;
-
+                       trueArticulation = Articulation.reverseDriving;
+                       desiredArticulation = Articulation.manual; //force end of articulation by switching to manual
                }
                break;
            case cratered:
+               trueArticulation = Articulation.cratered; //if we add any code here, make sure to only execute this when trueArticulation complete
                break;
            case preIntake:
-               goToPreIntake();
+               if (goToPreIntake()) trueArticulation = Articulation.preIntake;
                break;
            case intake:
                collector.closeGate();
-               goToIntake();
+               if (goToIntake()) trueArticulation = Articulation.intake;
                break;
            case reverseIntake:
                collector.closeGate();
@@ -820,12 +818,12 @@ public class PoseBigWheel
                        break;
                    case 2:
                        miniState = 0; //just being a good citizen for next user of miniState
-                       articulation = Articulation.manual; //force end of articulation by switching to manual
-                       return Articulation.manual;
+                       trueArticulation = Articulation.reverseIntake;
+                       desiredArticulation = Articulation.manual; //force end of articulation by switching to manual
 
                }
                break;
-           case prereversedeposit:
+           case preReverseDeposit:
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        if (collector.extendToMin(1,10))
@@ -842,8 +840,8 @@ public class PoseBigWheel
                        break;
                    case 4:
                        miniState = 0; //just being a good citizen for next user of miniState
-                       articulation = Articulation.manual; //force end of articulation by switching to manual
-                       return Articulation.manual;
+                       trueArticulation = Articulation.preReverseDeposit;
+                       desiredArticulation = Articulation.manual; //force end of articulation by switching to manual
                }
                break;
            case reverseDeposit:
@@ -864,8 +862,8 @@ public class PoseBigWheel
                        break;
                    case 4:
                        miniState = 0; //just being a good citizen for next user of miniState
-                       articulation = Articulation.manual; //force end of articulation by switching to manual
-                       return Articulation.manual;
+                       trueArticulation = Articulation.reverseDeposit;
+                       desiredArticulation = Articulation.manual; //force end of articulation by switching to manual
                }
                break;
            case deposit:
@@ -896,12 +894,11 @@ public class PoseBigWheel
                        if (collector.extendToMax(1,15)) {
                            collector.openGate(); //experimental - auto increaseElbowAngle gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
                            miniState = 0; //just being a good citizen for next user of miniState
-                           articulation = Articulation.manual; //force end of articulation by switching to manual
-                           return Articulation.manual;
+                           trueArticulation = Articulation.deposit;
+                           desiredArticulation = Articulation.manual; //force end of trueArticulation by switching to manual
                        }
                        break;
                }
-
                break;
            case latchApproach://teleop endgame - driving approach for latching,
                // expected safe to be called from manual, driving, deposit -
@@ -921,8 +918,8 @@ public class PoseBigWheel
                        collector.extendToMid(1, 15);
                        if(collector.nearTarget()) {
                            miniState = 0;
-                           articulation = Articulation.manual;
-                           return Articulation.manual;
+                           trueArticulation = Articulation.latchApproach;
+                           desiredArticulation = Articulation.manual;
                        }
                        break;
                }
@@ -939,7 +936,7 @@ public class PoseBigWheel
                        if (superman.nearTarget()){
                            //beep();
                            miniState++;
-               }
+                       }
                        break;
                    case 1:
                        superman.restart(.60);
@@ -947,8 +944,8 @@ public class PoseBigWheel
                        collector.setElbowTargetPos(collector.pos_latched);
                        if(collector.nearTarget()) {
                            miniState = 0;
-                           articulation = Articulation.manual;
-                           return Articulation.manual;
+                           trueArticulation = Articulation.latchPrep;
+                           desiredArticulation = Articulation.manual;
                        }
                        break;
                }
@@ -956,18 +953,20 @@ public class PoseBigWheel
            case latchSet:
                collector.restart(.40, .5);
                superman.restart(.75);
-               if(superman.setTargetPosition(superman.pos_postlatch, 1))
+               if(superman.setTargetPosition(superman.pos_postlatch, 1)) {
                    collector.setElbowTargetPos(collector.pos_postlatch);
-               articulation = Articulation.manual;
-               return target;
-               //break;
+                   if (collector.nearTarget()) {
+                       trueArticulation = Articulation.latchSet;
+                       desiredArticulation = Articulation.manual;
+                   }
+               }
+               break;
            case latchHang:
+               trueArticulation = Articulation.latchHang; //if we add any code here, make sure to only execute this when trueArticulation complete
                break;
            default:
-               return target;
-
+               break;
        }
-       return target;
    }
 
 
@@ -981,11 +980,6 @@ public class PoseBigWheel
 
 //todo these need to be tested - those that are used in articulate() have probably been fixed up by now
 
-    public boolean Deploy(){
-       articulate(Articulation.deploying);
-
-       return true;
-    }
     public boolean goToPreLatch(){
         collector.restart(.40, .5);
         superman.restart(.75);
