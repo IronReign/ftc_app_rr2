@@ -436,6 +436,10 @@ public class Game_6832 extends LinearOpMode {
             .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
             //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
             .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
+            /*.addState(() -> {
+                auto_sample();
+                return  robot.getArticulation() == PoseBigWheel.Articulation.driving);
+            })*/
             .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.driving) //wait until done
             .addState(() -> robot.articulate(PoseBigWheel.Articulation.driving, true))
             //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
