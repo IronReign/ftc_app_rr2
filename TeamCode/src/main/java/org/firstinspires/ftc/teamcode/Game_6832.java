@@ -322,7 +322,7 @@ public class Game_6832 extends LinearOpMode {
                         telemetry.addData("Error: ", 90 - robot.getHeading());
                         telemetry.update();
                         */
-                        robot.balance(278);
+                        robot.balance(270);
 
 
 

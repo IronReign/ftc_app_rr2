@@ -42,7 +42,7 @@ public class PoseBigWheel
     public static double headingP = 0.006;
     public static double headingD = 0;
 
-    public static double balanceP = 0;
+    public static double balanceP = .5;
     public static double balanceD = 0;
 
 
@@ -466,17 +466,16 @@ public class PoseBigWheel
     }
 
     public void balancePID(double kP, double kI, double kD, double pwr, double currentRoll, double targetRoll) {
-        drivePID.setOutputRange(-.2, .2);
+        drivePID.setOutputRange(-.6, .6);
         drivePID.setPID(kP, kI, kD);
         drivePID.setSetpoint(targetRoll);
         drivePID.enable();
         drivePID.setInputRange(0,360);
-        drivePID.setContinuous();
         drivePID.setInput(currentRoll);
 
         double correction = drivePID.performPID();
 
-        driveMixerTank(pwr, correction);
+        driveMixerTankChad(pwr, correction);
     }
 
     /**
@@ -562,8 +561,8 @@ public class PoseBigWheel
     }
 
     public void balance(double targetRoll) {
-        collector.setElbowTargetPos(3900, 1);
-        balancePID(balanceP,0, balanceD, .4, getRoll(), targetRoll);
+        collector.setElbowTargetPos(3575, 1);
+        balancePID(balanceP,0, balanceD, 0, getRoll(), targetRoll);
     }
 
     public boolean rotatePIDIMU(double targetAngle, double maxTime){
@@ -1089,7 +1088,25 @@ public class PoseBigWheel
     ////                                                                                  ////
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
+    public void driveMixerTankChad(double forward, double rotate){
 
+        //reset the power of all motors
+        powerRight = 0;
+        powerLeft = 0;
+
+        //set power in the forward direction
+        powerLeft = forward;
+        powerRight = forward;
+
+        //set power in the clockwise rotational direction
+        powerLeft += rotate;
+        powerRight += rotate;
+        //provide power to the motors
+        driveLeft.setPower(clampMotor(powerLeft));
+        driveRight.setPower(clampMotor(powerRight));
+
+
+    }
 
 
     /**
