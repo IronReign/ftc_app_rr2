@@ -17,6 +17,7 @@ public class StateSpaceLoop {
     public RealMatrix XHat() {
         return observer.XHat();
     }
+    public double XHat(int i) { return observer.XHat(i); }
 
     public void setXHat(RealMatrix xHat) {
         observer.setXHat(xHat);
