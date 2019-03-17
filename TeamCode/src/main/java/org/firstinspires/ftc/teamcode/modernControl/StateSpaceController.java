@@ -4,6 +4,12 @@ package org.firstinspires.ftc.teamcode.modernControl;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
+
+/*
+    State space controller implementing the control law u = K(r - x)
+    Created by Ben on 3/15/19
+ */
+
 public class StateSpaceController {
     private RealMatrix K, Kff, Umin, Umax, R, U;
     private StateSpacePlant plant;

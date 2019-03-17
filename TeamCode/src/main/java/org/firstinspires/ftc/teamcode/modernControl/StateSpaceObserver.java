@@ -3,6 +3,12 @@ package org.firstinspires.ftc.teamcode.modernControl;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
+/*
+    Used to estimate states not being directly measured
+    Uses a kalman filter to reduce noise
+    Created by Ben on 3/15/19
+ */
+
 public class StateSpaceObserver {
     RealMatrix K; // kalman gain
     StateSpacePlant plant;

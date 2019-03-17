@@ -2,6 +2,11 @@ package org.firstinspires.ftc.teamcode.modernControl;
 
 import org.apache.commons.math3.linear.RealMatrix;
 
+/*
+    State space control loop, client code calls methods here
+    Created by Ben on 3/14/19
+ */
+
 public class StateSpaceLoop {
     StateSpaceController controller;
     StateSpacePlant plant;

@@ -2,6 +2,11 @@ package org.firstinspires.ftc.teamcode.modernControl;
 
 import org.apache.commons.math3.linear.RealMatrix;
 
+/*
+    Represents the system we are controlling
+    Created by Ben on 3/13/19
+ */
+
 public class StateSpacePlant {
     RealMatrix A,B,C,D, X, Y;
     public StateSpacePlant(RealMatrix A, RealMatrix B, RealMatrix C, RealMatrix D) {
