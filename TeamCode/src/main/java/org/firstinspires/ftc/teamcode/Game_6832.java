@@ -158,6 +158,9 @@ public class Game_6832 extends LinearOpMode {
     private static final double DRIVE_POWER = .95;
     private static final float TURN_TIME = 2;
     private static final float DUCKY_TIME = 0.5f;
+    private double pCoeff = 0.26;
+    private double dCoeff = 0.33;
+    private double targetAngle = 273;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -282,7 +285,7 @@ public class Game_6832 extends LinearOpMode {
         vp.reset();
 
         robot.superman.restart(.75);
-        robot.collector.restart(.4, .5);
+                robot.collector.restart(.4, .5);
 
 
         // run until the end of the match (driver presses STOP)
@@ -322,7 +325,25 @@ public class Game_6832 extends LinearOpMode {
                         telemetry.addData("Error: ", 90 - robot.getHeading());
                         telemetry.update();
                         */
-                        robot.balance(270);
+                        if (toggleAllowed(gamepad1.y,y))
+                            pCoeff+=.01;
+                        else if (toggleAllowed(gamepad1.a, a))
+                            pCoeff-=.01;
+                        if (toggleAllowed(gamepad1.dpad_down, dpad_down))
+                            dCoeff-=.005;
+                        else if (toggleAllowed(gamepad1.dpad_up, dpad_down))
+                            dCoeff+=.005;
+                        if (toggleAllowed(gamepad1.right_bumper,right_bumper))
+                            targetAngle+=.25;
+                        else if (toggleAllowed(gamepad1.left_bumper, left_bumper))
+                            targetAngle-=.25;
+                        robot.balanceP = pCoeff;
+                        robot.balanceD = dCoeff;
+                        telemetry.addData("P Coeff: ", pCoeff);
+                        telemetry.addData("D Coeff: ", dCoeff);
+                        telemetry.addData("Target Ange: ", targetAngle);
+                        telemetry.update();
+                        robot.balance(targetAngle);
 
 
 

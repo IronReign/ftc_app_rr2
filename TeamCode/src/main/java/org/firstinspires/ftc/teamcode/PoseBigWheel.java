@@ -42,10 +42,9 @@ public class PoseBigWheel
     public static double headingP = 0.006;
     public static double headingD = 0;
 
-    public static double balanceP = .5;
-    public static double balanceD = 0;
-
-
+    public double balanceP = .35;
+    public double balanceD = 3.1444;
+    public boolean needsUpdate = false;
 
 
 
@@ -260,6 +259,7 @@ public class PoseBigWheel
         this.extendABobLeft     = this.hwMap.dcMotor.get("liftLeft");
         this.extendABobRight    = this.hwMap.dcMotor.get("liftRight");
         this.intakeRight        = this.hwMap.servo.get("intakeRight");
+
         this.intakeLeft         = this.hwMap.servo.get("intakeLeft");
         this.supermanMotor      = this.hwMap.dcMotor.get("supermanMotor");
         this.hook               = this.hwMap.servo.get("hook");
@@ -466,7 +466,7 @@ public class PoseBigWheel
     }
 
     public void balancePID(double kP, double kI, double kD, double pwr, double currentRoll, double targetRoll) {
-        drivePID.setOutputRange(-.6, .6);
+        drivePID.setOutputRange(-.55, .55);
         drivePID.setPID(kP, kI, kD);
         drivePID.setSetpoint(targetRoll);
         drivePID.enable();
@@ -561,7 +561,10 @@ public class PoseBigWheel
     }
 
     public void balance(double targetRoll) {
-        collector.setElbowTargetPos(3575, 1);
+        collector.setElbowTargetPos(3738, 1);
+        collector.extendToMax(1,10);
+        driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         balancePID(balanceP,0, balanceD, 0, getRoll(), targetRoll);
     }
 
