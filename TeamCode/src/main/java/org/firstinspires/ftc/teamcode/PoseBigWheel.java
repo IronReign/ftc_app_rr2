@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Consumer;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -1449,5 +1450,12 @@ public class PoseBigWheel
     private long futureTime(float seconds){
         return System.nanoTime() + (long) (seconds * 1e9);
     }
+
+    public Consumer<Double[]> updateBalanceGains = (gains) -> {
+        balanceP = gains[0];
+        balanceD = gains[2];
+    };
+
+
 }
 

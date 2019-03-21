@@ -45,6 +45,7 @@ import org.firstinspires.ftc.teamcode.robots.handprosthetic.robopoglo;
 import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
 import org.firstinspires.ftc.teamcode.statemachine.Stage;
 import org.firstinspires.ftc.teamcode.statemachine.StateMachine;
+import org.firstinspires.ftc.teamcode.util.DSPIDTuner;
 import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
@@ -95,6 +96,7 @@ public class Game_6832 extends LinearOpMode {
 
     //sensors/sensing-related variables
     private Orientation angles;
+    DSPIDTuner balanceTuner;
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
@@ -181,7 +183,7 @@ public class Game_6832 extends LinearOpMode {
         robot.collector.closeGate();
 
         visionProviderFinalized = false;
-
+        balanceTuner = new DSPIDTuner(gamepad1, telemetry, pCoeff,0, dCoeff, robot.updateBalanceGains);
 
         while (!isStarted()) {    // Wait for the game to start (driver presses PLAY)
             synchronized (this) {
@@ -325,6 +327,7 @@ public class Game_6832 extends LinearOpMode {
                         telemetry.addData("Error: ", 90 - robot.getHeading());
                         telemetry.update();
                         */
+                        /*
                         if (toggleAllowed(gamepad1.y,y))
                             pCoeff+=.01;
                         else if (toggleAllowed(gamepad1.a, a))
@@ -343,8 +346,9 @@ public class Game_6832 extends LinearOpMode {
                         telemetry.addData("D Coeff: ", dCoeff);
                         telemetry.addData("Target Ange: ", targetAngle);
                         telemetry.update();
-                        robot.balance(targetAngle);
+                        robot.balance(targetAngle);*/
 
+                        balanceTuner.update(robot.getRoll());
 
 
                         break;
