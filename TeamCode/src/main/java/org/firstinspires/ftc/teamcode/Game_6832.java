@@ -163,7 +163,7 @@ public class Game_6832 extends LinearOpMode {
     private double pCoeff = 0.26;
     private double dCoeff = 0.33;
     private double targetAngle = 273;
-
+    private BalancingRobot balancingRobot = new BalancingRobot(robot, targetAngle);
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -349,7 +349,7 @@ public class Game_6832 extends LinearOpMode {
                         robot.balance(targetAngle);*/
 
                         balanceTuner.update(robot.getRoll());
-
+                        balancingRobot.update();
 
                         break;
                     case 8: //turn to IMU
