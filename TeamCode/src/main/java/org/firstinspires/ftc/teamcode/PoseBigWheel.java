@@ -14,6 +14,12 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.localization.Pose2d;
+import org.firstinspires.ftc.teamcode.localization.TankKinematics;
+import org.firstinspires.ftc.teamcode.localization.Vector2d;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -70,7 +76,7 @@ public class PoseBigWheel
 
     //All sensors
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
-//    Orientation angles; //feedback from the IMU
+    //    Orientation angles; //feedback from the IMU
     DistanceSensor distForward;
     DistanceSensor distLeft;
     DistanceSensor distRight;
@@ -106,13 +112,24 @@ public class PoseBigWheel
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
     int balanceState = 1;
+    private static final double trackWidth = 0;
+    double lastHeading = 0;
+    private static final double ANGLE_TAU = Math.PI / 2;
 
+
+    private Pose2d estimatedPose;
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
 
     public int servoTesterPos = 1600;
     public double autonomousIMUOffset = 0;
+
+    private VectorF vuTrans; //vector that calculates the position of the vuforia target relative to the phone (mm)
+    private double vuAngle; //angle of the vuforia target from the center of the phone camera (degrees)
+    private double vuDepth = 0; //calculated distance from the vuforia target on the z axis (mm)
+    private double vuXOffset = 0; //calculated distance from the vuforia target on the x axis (mm)
+    private List<Integer> lastWheelPositions;
 
 
     public enum MoveMode{
@@ -493,7 +510,7 @@ public class PoseBigWheel
      * @param Kd derivative proportional for PID
      * @param pwr set the forward power
      * @param targetAngle the heading the robot will try to maintain while driving
-    */
+     */
     public void driveIMU(double Kp, double Ki, double Kd, double pwr, double targetAngle){
         movePID(Kp, Ki, Kd, pwr, poseHeading, targetAngle);
     }
@@ -648,10 +665,10 @@ public class PoseBigWheel
 
         /*switch(balanceState){
             case 1:
-                 //posePitch;
+                //posePitch;
                 driveMixerTank(.2, 0);
                 if(posePitch<=0){
-                   balanceState++;
+                    balanceState++;
                 }
                 break;
             case 2:
@@ -678,28 +695,28 @@ public class PoseBigWheel
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
 
-   double miniTimer;
-   int miniState = 0;
+    double miniTimer;
+    int miniState = 0;
 
-   public boolean articulate(Articulation target, boolean setAndForget){
+    public boolean articulate(Articulation target, boolean setAndForget){
         articulate(target);
         return true;
-   }
+    }
 
-   public Articulation articulate(Articulation target) {
-       articulation = target; //store the most recent explict articulation request as our target, allows us to keep calling incomplete multi-step transitions
-       if (target == Articulation.manual) {
-           miniState = 0; //reset ministate - it should only be used in the context of a multi-step transition, so safe to reset it here
-       }
+    public Articulation articulate(Articulation target) {
+        articulation = target; //store the most recent explict articulation request as our target, allows us to keep calling incomplete multi-step transitions
+        if (target == Articulation.manual) {
+            miniState = 0; //reset ministate - it should only be used in the context of a multi-step transition, so safe to reset it here
+        }
 
-       switch (articulation) {
-           case manual:
-               break; //do nothing here - likely we are directly overriding articulations in game
-           case driving:
+        switch (articulation) {
+            case manual:
+                break; //do nothing here - likely we are directly overriding articulations in game
+            case driving:
                 if (goToSafeDrive()) return target;
-               break;
-           case hanging: //todo: fixup comments for deploy actions - moved stuff around
-               //auton initial hang at the beginning of a match
+                break;
+            case hanging: //todo: fixup comments for deploy actions - moved stuff around
+                //auton initial hang at the beginning of a match
                 collector.setExtendABobTargetPos(0);
                 //collector.hookOn();
                 collector.setElbowTargetPos(10,1);
@@ -984,9 +1001,9 @@ public class PoseBigWheel
 //todo these need to be tested - those that are used in articulate() have probably been fixed up by now
 
     public boolean Deploy(){
-       articulate(Articulation.deploying);
+        articulate(Articulation.deploying);
 
-       return true;
+        return true;
     }
     public boolean goToPreLatch(){
         collector.restart(.40, .5);
@@ -1027,7 +1044,7 @@ public class PoseBigWheel
     }
 
     public boolean goToPreIntake(){  //should usually be called from deposit position
-                                    //todo: needs time to decreaseElbowAngle lift before moving elbow - slow elbow speed may not be good enough
+        //todo: needs time to decreaseElbowAngle lift before moving elbow - slow elbow speed may not be good enough
         collector.restart(1, 1);
         superman.restart(1);
         superman.setTargetPosition(superman.pos_Intake);
@@ -1131,6 +1148,7 @@ public class PoseBigWheel
         powerLeft += rotate;
         powerRight += -rotate;
         //provide power to the motors
+
         driveLeft.setPower(clampMotor(powerLeft));
         driveRight.setPower(clampMotor(powerRight));
 
@@ -1445,9 +1463,68 @@ public class PoseBigWheel
     public double getBatteryVoltage(){
         return RC.h.voltageSensor.get("Motor Controller 1").getVoltage();
     }
+    /*
+        Refer here for equation:
+
+     */
+
+    public void updatePose() {
+        List<Integer> wheelPositions = getWheelPositions();
+        double heading = getHeading();
+        if (lastWheelPositions.size() != 0) {
+            List<Integer> wheelDeltas = new ArrayList<>();
+            for (int i = 0; i < wheelPositions.size(); i++)
+                wheelDeltas.add(wheelPositions.get(i) - lastWheelPositions.get(i));
+            Pose2d robotPoseDelta = TankKinematics.wheelToRobotVelocity(wheelDeltas, trackWidth);
+            double finalHeadingDelta = angleNorm(heading - lastHeading);
+            estimatedPose = relativeOdometryUpdate(estimatedPose, new Pose2d(new Vector2d(robotPoseDelta.x(), robotPoseDelta.y()), finalHeadingDelta));
+        }
+
+        lastWheelPositions = wheelPositions;
+        lastHeading = heading;
+    }
+
+    public List<Integer> getWheelPositions() {
+        List<Integer> wheelPositions = new ArrayList<>();
+        wheelPositions.add(driveLeft.getCurrentPosition());
+        wheelPositions.add(driveRight.getCurrentPosition());
+        return wheelPositions;
+    }
+
+
+    public Pose2d relativeOdometryUpdate(Pose2d fieldPose, Pose2d robotPoseDelta) {
+        Pose2d fieldPoseDelta;
+        if (Math.abs(robotPoseDelta.heading) > 1e-6) {
+            double finalHeading = fieldPose.heading + robotPoseDelta.heading;
+            double cosTerm = Math.cos(finalHeading) - Math.cos(fieldPose.heading);
+            double sinTerm = Math.cos(finalHeading) - Math.sin(fieldPose.heading);
+
+            fieldPoseDelta = new Pose2d( new Vector2d(
+                    (robotPoseDelta.x() * sinTerm + robotPoseDelta.y() * cosTerm) / robotPoseDelta.heading,
+                    (-robotPoseDelta.x() * cosTerm + robotPoseDelta.y() * sinTerm) / robotPoseDelta.heading),
+                    robotPoseDelta.heading
+            );
+        } else {
+            fieldPoseDelta = new Pose2d(
+                    robotPoseDelta.pos().rotated(fieldPose.heading + robotPoseDelta.heading / 2),
+                    robotPoseDelta.heading
+            );
+        }
+
+        return fieldPose.plus(fieldPoseDelta);
+    }
+    // normalize an angle in radians
+
+    public double angleNorm(double angle) {
+        double newAngle = angle % ANGLE_TAU;
+        newAngle = (newAngle + ANGLE_TAU) % ANGLE_TAU;
+        if (newAngle > Math.PI)
+            newAngle -= ANGLE_TAU;
+        return newAngle;
+    }
+
 
     private long futureTime(float seconds){
         return System.nanoTime() + (long) (seconds * 1e9);
     }
 }
-
