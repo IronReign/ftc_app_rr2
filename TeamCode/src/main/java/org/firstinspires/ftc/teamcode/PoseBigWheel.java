@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
@@ -10,7 +11,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -34,6 +34,7 @@ import java.util.List;
  * @since 2018-11-02
  */
 
+@Config
 public class PoseBigWheel
 {
 
@@ -43,6 +44,14 @@ public class PoseBigWheel
     public double kpDrive = 0.010; //proportional constant multiplier
     public double kiDrive = 0.000; //integral constant multiplier
     public double kdDrive = 0.001; //derivative constant multiplier
+
+    public static double headingP = 0.006;
+    public static double headingD = 0;
+
+    public double balanceP = .35;
+    public double balanceD = 3.1444;
+    public boolean needsUpdate = false;
+
 
 
     //All Actuators
@@ -137,13 +146,17 @@ public class PoseBigWheel
         inprogress, //currently in progress to a final articulation
         manual, //target positions are all being manually overridden
         driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
+        reverseDriving,
         hanging, //auton initial hang at the beginning of a match
         deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
         deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
         cratered, //auton arm extended over the crater - this might end up being the same as preIntake
         preIntake, //teleop mostly - collector retracted and increaseElbowAngle to almost ground level
         intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
+        reverseIntake,
         deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, superman up to deposit position, extendBelt collector to deposit position
+        prereversedeposit,
+        reverseDeposit,
         latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
         latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
         latchSet, //teleop endgame - retractBelt the latch
@@ -263,6 +276,7 @@ public class PoseBigWheel
         this.extendABobLeft     = this.hwMap.dcMotor.get("liftLeft");
         this.extendABobRight    = this.hwMap.dcMotor.get("liftRight");
         this.intakeRight        = this.hwMap.servo.get("intakeRight");
+
         this.intakeLeft         = this.hwMap.servo.get("intakeLeft");
         this.supermanMotor      = this.hwMap.dcMotor.get("supermanMotor");
         this.hook               = this.hwMap.servo.get("hook");
@@ -468,6 +482,19 @@ public class PoseBigWheel
         driveMixerTank(pwr, correction);
     }
 
+    public void balancePID(double kP, double kI, double kD, double pwr, double currentRoll, double targetRoll) {
+        drivePID.setOutputRange(-.55, .55);
+        drivePID.setPID(kP, kI, kD);
+        drivePID.setSetpoint(targetRoll);
+        drivePID.enable();
+        drivePID.setInputRange(0,360);
+        drivePID.setInput(currentRoll);
+
+        double correction = drivePID.performPID();
+
+        driveMixerTankChad(pwr, correction);
+    }
+
     /**
      * Stops all motors on the robot
      */
@@ -550,6 +577,33 @@ public class PoseBigWheel
         return false;
     }
 
+    public void balance(double targetRoll) {
+        collector.setElbowTargetPos(3738, 1);
+        collector.extendToMax(1,10);
+        driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        balancePID(balanceP,0, balanceD, 0, getRoll(), targetRoll);
+    }
+
+    public boolean rotatePIDIMU(double targetAngle, double maxTime){
+        if(!turnTimerInit){ //intiate the timer that the robot will use to cut of the sequence if it takes too long; only happens on the first cycle
+            turnTimer = System.nanoTime() + (long)(maxTime * (long) 1e9);
+            turnTimerInit = true;
+        }
+        driveIMU(headingP, 0, headingD, 0, targetAngle); //check to see if the robot turns within a threshold of the target
+        if(Math.abs(poseHeading - (targetAngle + autonomousIMUOffset)) < minTurnError) {
+            turnTimerInit = false;
+            driveMixerTank(0,0);
+            return true;
+        }
+        if(turnTimer < System.nanoTime()){ //check to see if the robot takes too long to turn within a threshold of the target (e.g. it gets stuck)
+            turnTimerInit = false;
+            driveMixerTank(0,0);
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * the maintain heading function used in demo: holds the heading read on initial button press
@@ -601,9 +655,15 @@ public class PoseBigWheel
         //send the PWM value to the servo regardless of if it is altered or not
     }
 
-    public boolean autoBalance (){
+    public void autoBalance (){
 
-        switch(balanceState){
+
+        //roll 278
+        //elbow 3900
+
+        double pwr = 1* ((getPitch() - 278)/90);
+
+        /*switch(balanceState){
             case 1:
                 //posePitch;
                 driveMixerTank(.2, 0);
@@ -623,7 +683,7 @@ public class PoseBigWheel
                 balanceState=1;
                 return true;
         }
-        return false;
+        return false;*/
     }
 
 
@@ -660,190 +720,274 @@ public class PoseBigWheel
                 collector.setExtendABobTargetPos(0);
                 //collector.hookOn();
                 collector.setElbowTargetPos(10,1);
-                break;
-            case deploying:
-                //auton unfolding after initial hang - should only be called from the hanging position during auton
-                // ends when wheels should be on the ground, including superman, and pressure is off of the hook
-                collector.extendToMid(1, 15);
-                if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .5)) {
-                    superman.setTargetPosition(superman.pos_prelatch, 1);
-                    if (driveForward(false, .1, .2)) {
-                        driveMixerTank(0,0);
-                        //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
-                        //{
-                        miniState = 0; //reset nested state counter for next use
-                        if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
-                        else articulation = Articulation.manual;
-                        return Articulation.deployed; // signal advance to the deployed stage
+               break;
+           case deploying:
+               //auton unfolding after initial hang - should only be called from the hanging position during auton
+               // ends when wheels should be on the ground, including superman, and pressure is off of the hook
+               collector.extendToMid(1, 15);
+               superman.setTargetPosition(superman.pos_prelatch, 1);
+               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
+                   if (driveForward(false, .1, .2)) {
+                       driveMixerTank(0,0);
+                       //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
+                       //{
+                           miniState = 0; //reset nested state counter for next use
+                           if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
+                           else articulation = Articulation.manual;
+                           return Articulation.deployed; // signal advance to the deployed stage
 
-                        //}
-                        //break;
-                    }
-                    break;
-                }
-                break;
+                       //}
+                       //break;
+                   }
+                   break;
+               }
+               break;
 
-            //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
-            //for now we wait on elapsed time to complete sequence
+               //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
+               //for now we wait on elapsed time to complete sequence
                /*
                articulationTimer = futureTime(2); //setup wait for completion. todo: change this to position based auto advancement
 
                */
-            case deployed:
-                //auton settled on ground - involves retracting the hook,
-                // moving forward a bit to clear lander and then
-                // lowering superman to driving position
-                if (System.nanoTime() >= articulationTimer) {
-                    switch (miniState) {
-                        case 0:  //push lightly into lander to relieve pressure on hook
-                            collector.hookOff(); //decreaseElbowAngle hook
-                            miniTimer=futureTime(1);
-                            miniState++;
-                            break;
-                        //if (driveForward(false, .2, .7)) miniState++;
-                        //miniTimer = futureTime(1); //setup wait for completion
+           case deployed:
+               //auton settled on ground - involves retracting the hook,
+               // moving forward a bit to clear lander and then
+               // lowering superman to driving position
+               if (System.nanoTime() >= articulationTimer) {
+                   switch (miniState) {
+                       case 0:  //push lightly into lander to relieve pressure on hook
+                           collector.hookOff(); //decreaseElbowAngle hook
+                           miniTimer=futureTime(1);
+                           miniState++;
+                           break;
+                           //if (driveForward(false, .2, .7)) miniState++;
+                           //miniTimer = futureTime(1); //setup wait for completion
 
-                        case 1:  //decreaseElbowAngle lander hook
-                            if (System.nanoTime() >= miniTimer) {
-                                if (rotateIMU(350, 1)) { //this turn is needed because hook doesn't clear entirely
-                                    resetMotors(true);
-                                    miniTimer = futureTime(1); //setup wait for completion
-                                    miniState++;
-                                }
-                            }
-                            break;
+                       case 1:  //decreaseElbowAngle lander hook
+                           if (System.nanoTime() >= miniTimer) {
+                               if (rotateIMU(350, 1)) { //this turn is needed because hook doesn't clear entirely
+                                   resetMotors(true);
+                                   miniTimer = futureTime(1); //setup wait for completion
+                                   miniState++;
+                               }
+                           }
+                           break;
 
-                        case 2://pull away from lander
-                            if (System.nanoTime() >= miniTimer) {
-                                if(driveForward(true, .25, .4)) {
-                                    driveMixerTank(0, 0); //stop drive motors
-                                    //miniTimer = futureTime(1); //setup wait for completion
-                                    miniState++;
-                                }
-                            }
-                            break;
-                        case 3:  //automatically transition to driving articulation
-                            if (System.nanoTime() >= miniTimer) {
-                                miniState = 0; //just being a good citizen for next user of miniState
-                                articulation = Articulation.driving; //force transition to driving articulation
-                                return Articulation.driving; //force transition to driving articulation
-                            }
+                       case 2://pull away from lander
+                           if (System.nanoTime() >= miniTimer) {
+                               if(driveForward(true, .25, .4)) {
+                                   driveMixerTank(0, 0); //stop drive motors
+                                   //miniTimer = futureTime(1); //setup wait for completion
+                                   miniState++;
+                               }
+                           }
+                           break;
+                       case 3:  //automatically transition to driving articulation
+                           if (System.nanoTime() >= miniTimer) {
+                               miniState = 0; //just being a good citizen for next user of miniState
+                               articulation = Articulation.driving; //force transition to driving articulation
+                               return Articulation.driving; //force transition to driving articulation
+                           }
 
-                            break;
-                    }
+                           break;
+                   }
 
-                }
-                else break;
-            case cratered:
-                break;
-            case preIntake:
-                goToPreIntake();
-                break;
-            case intake:
-                collector.closeGate();
-                goToIntake();
-                break;
-            case deposit:
-                //goToDeposit();
-                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
-                    case 0: //set basic speeds and start closing elbow to manage COG
-                        collector.restart(.25, 1);
-                        superman.restart(.75);
-                        if (collector.setElbowTargetPos(collector.pos_PartialDeposit,1))
-                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
-                        break;
-                    case 1: //rise up
-                        collector.extendToMid(1,15);
-                        if (superman.setTargetPosition(superman.pos_DepositPartial, 1)) miniState++; //start going really fast to interim position
-                        break;
-                    case 2:
-                        //if (collector.extendToMid(1,15))
-                        miniState++;
-                        break;
-                    case 3:
-                        if (collector.setElbowTargetPos(collector.pos_Deposit, 1)) {  //elbow back out to deposit position
-                            miniState++;
-                        }
-                        break;
-                    case 4:
-                        superman.setTargetPosition(superman.pos_Deposit, .4); //slow on remaining rotation to minimize overshoot
-                        driveForward(true,.4, 1); //drive toward lander - helps pre-position  for deposit and slightly counters the robots tendency to over-rotate toward the lander because of all of the other moves
-                        if (collector.extendToMax(1,15)) {
-                            collector.openGate(); //experimental - auto increaseElbowAngle gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
-                            miniState = 0; //just being a good citizen for next user of miniState
-                            articulation = Articulation.manual; //force end of articulation by switching to manual
-                            return Articulation.manual;
-                        }
-                        break;
-                }
+               }
+                   else break;
+           case reverseDriving:
+               collector.closeGate();
+               switch(miniState){
+                   case 0:
+                      // if(driveForward(true,.2,.7)){
+                           miniState++;
+                      // }
+                       break;
+                   case 1:
+                       collector.extendToMin(1,10);
+                       if(goToPosition(superman.pos_reverseIntake-100,collector.pose_reverseSafeDrive,.75,.3)){
+                           miniState++;
+                       }
+                       break;
+                   case 2:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
 
-                break;
-            case latchApproach://teleop endgame - driving approach for latching,
-                // expected safe to be called from manual, driving, deposit -
-                // set collector elbow for drive balance, extended to mid and superman up
-                switch (miniState) {
-                    case 0: //set superman
-                        collector.restart(.40, .5);
-                        superman.restart(.4);
-                        superman.setTargetPosition(superman.pos_prelatch-150);
-                        if(superman.nearTarget()) miniState++;
-                        break;
-                    case 1: //set collector
-                        collector.restart(.40, .5);
-                        superman.restart(.1);
-                        superman.setTargetPosition(superman.pos_prelatch-150);
-                        collector.setElbowTargetPos(collector.pos_prelatch);
-                        collector.extendToMid(1, 15);
-                        if(collector.nearTarget()) {
-                            miniState = 0;
-                            articulation = Articulation.manual;
-                            return Articulation.manual;
-                        }
-                        break;
-                }
-                break;
-            case latchPrep://teleop endgame - make sure hook is increaseElbowAngle,
-                // set drivespeed slow, extendBelt lift to mid, finalize elbow angle for latch, elbow overrideable
-                switch (miniState) {
-                    case 0:
-                        superman.restart(.60);
-                        collector.restart(.30, .75);
-                        superman.setTargetPosition(superman.pos_latched);
-                        if(superman.getCurrentPosition()>collector.pos_PartialDeposit)
-                            collector.setElbowTargetPos(collector.pos_latched);
-                        if (superman.nearTarget()){
-                            //beep();
-                            miniState++;
-                        }
-                        break;
-                    case 1:
-                        superman.restart(.60);
-                        collector.restart(.30,.75);
-                        collector.setElbowTargetPos(collector.pos_latched);
-                        if(collector.nearTarget()) {
-                            miniState = 0;
-                            articulation = Articulation.manual;
-                            return Articulation.manual;
-                        }
-                        break;
-                }
-                break;
-            case latchSet:
-                collector.restart(.40, .5);
-                superman.restart(.75);
-                if(superman.setTargetPosition(superman.pos_postlatch, 1))
-                    collector.setElbowTargetPos(collector.pos_postlatch);
-                articulation = Articulation.manual;
-                return target;
-            //break;
-            case latchHang:
-                break;
-            default:
-                return target;
+               }
+               break;
+           case cratered:
+               break;
+           case preIntake:
+               goToPreIntake();
+               break;
+           case intake:
+               collector.closeGate();
+               goToIntake();
+               break;
+           case reverseIntake:
+               collector.closeGate();
+               switch(miniState){
+                   case 0:
+                       if(collector.extendToMid(1,10)){
+                           miniState++;
+                       }
+                       break;
+                   case 1:
+                       if(goToPosition(superman.pos_reverseIntake, 80,1,.5)){
+                           miniState++;
+                       }
+                       break;
+                   case 2:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
 
-        }
-        return target;
-    }
+               }
+               break;
+           case prereversedeposit:
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+                   case 0: //set basic speeds and start closing elbow to manage COG
+                       if (collector.extendToMin(1,10))
+                           miniState++; //retractBelt elbow as fast as possible and hold state until completion
+                       break;
+                   case 1: //rise up
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reversePreDeposit,1,.7)) miniState++; //start going really fast to interim position
+                       break;
+                   case 2:
+                       miniState++;
+                       break;
+                   case 3:
+                       miniState++;
+                       break;
+                   case 4:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
+               }
+               break;
+           case reverseDeposit:
+               //goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+                   case 0: //set basic speeds and start closing elbow to manage COG
+                       if (collector.extendToMax(1,10))
+                           miniState++; //retractBelt elbow as fast as possible and hold state until completion
+                       break;
+                   case 1: //rise up
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.3)) miniState++; //start going really fast to interim position
+                       break;
+                   case 2:
+                       miniState++;
+                       break;
+                   case 3:
+                       miniState++;
+                       break;
+                   case 4:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
+               }
+               break;
+           case deposit:
+               //goToDeposit();
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+                   case 0: //set basic speeds and start closing elbow to manage COG
+                       collector.restart(.25, 1);
+                       superman.restart(.75);
+                       if (collector.setElbowTargetPos(collector.pos_PartialDeposit,1) && collector.extendToMid(1,10))
+                       miniState++; //retractBelt elbow as fast as possible and hold state until completion
+                       break;
+                   case 1: //rise up
+                       collector.extendToMin(1,15);
+                       if (superman.setTargetPosition(superman.pos_DepositPartial, 1)) miniState++; //start going really fast to interim position
+                       break;
+                   case 2:
+                       //if (collector.extendToMid(1,15))
+                       miniState++;
+                       break;
+                   case 3:
+                       if (collector.setElbowTargetPos(collector.pos_Deposit, 1)) {  //elbow back out to deposit position
+                           miniState++;
+                       }
+                       break;
+                   case 4:
+                       superman.setTargetPosition(superman.pos_Deposit, .4); //slow on remaining rotation to minimize overshoot
+                       driveForward(true,.4, 1); //drive toward lander - helps pre-position  for deposit and slightly counters the robots tendency to over-rotate toward the lander because of all of the other moves
+                       if (collector.extendToMax(1,15)) {
+                           collector.openGate(); //experimental - auto increaseElbowAngle gate requires that we are on-target side to side and in depth - not really ready for this but wanting to try it out
+                           miniState = 0; //just being a good citizen for next user of miniState
+                           articulation = Articulation.manual; //force end of articulation by switching to manual
+                           return Articulation.manual;
+                       }
+                       break;
+               }
+
+               break;
+           case latchApproach://teleop endgame - driving approach for latching,
+               // expected safe to be called from manual, driving, deposit -
+               // set collector elbow for drive balance, extended to mid and superman up
+               switch (miniState) {
+                   case 0: //set superman
+                       collector.restart(.40, .5);
+                       superman.restart(.4);
+                       superman.setTargetPosition(superman.pos_prelatch-150);
+                       if(superman.nearTarget()) miniState++;
+                       break;
+                   case 1: //set collector
+                       collector.restart(.40, .5);
+                       superman.restart(.1);
+                       superman.setTargetPosition(superman.pos_prelatch-150);
+                       collector.setElbowTargetPos(collector.pos_prelatch);
+                       collector.extendToMid(1, 15);
+                       if(collector.nearTarget()) {
+                           miniState = 0;
+                           articulation = Articulation.manual;
+                           return Articulation.manual;
+                       }
+                       break;
+               }
+               break;
+           case latchPrep://teleop endgame - make sure hook is increaseElbowAngle,
+               // set drivespeed slow, extendBelt lift to mid, finalize elbow angle for latch, elbow overrideable
+               switch (miniState) {
+                   case 0:
+                       superman.restart(.60);
+                       collector.restart(.30, .75);
+                       superman.setTargetPosition(superman.pos_latched);
+                       if(superman.getCurrentPosition()>collector.pos_PartialDeposit)
+                           collector.setElbowTargetPos(collector.pos_latched);
+                       if (superman.nearTarget()){
+                           //beep();
+                           miniState++;
+               }
+                       break;
+                   case 1:
+                       superman.restart(.60);
+                       collector.restart(.30,.75);
+                       collector.setElbowTargetPos(collector.pos_latched);
+                       if(collector.nearTarget()) {
+                           miniState = 0;
+                           articulation = Articulation.manual;
+                           return Articulation.manual;
+                       }
+                       break;
+               }
+               break;
+           case latchSet:
+               collector.restart(.40, .5);
+               superman.restart(.75);
+               if(superman.setTargetPosition(superman.pos_postlatch, 1))
+                   collector.setElbowTargetPos(collector.pos_postlatch);
+               articulation = Articulation.manual;
+               return target;
+               //break;
+           case latchHang:
+               break;
+           default:
+               return target;
+
+       }
+       return target;
+   }
 
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -946,6 +1090,16 @@ public class PoseBigWheel
     }
 
 
+    public boolean goToPosition(int supermanTargetPos, int elbowTargetPos, double supermanPower, double elbowPower){
+        collector.restart(elbowPower, 1);
+        superman.restart(supermanPower);
+        superman.setTargetPosition(supermanTargetPos);
+        collector.setElbowTargetPos(elbowTargetPos);
+
+        if(collector.nearTarget() && superman.nearTarget())  return true;
+        else return false;
+    }
+
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -954,7 +1108,25 @@ public class PoseBigWheel
     ////                                                                                  ////
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
+    public void driveMixerTankChad(double forward, double rotate){
 
+        //reset the power of all motors
+        powerRight = 0;
+        powerLeft = 0;
+
+        //set power in the forward direction
+        powerLeft = forward;
+        powerRight = forward;
+
+        //set power in the clockwise rotational direction
+        powerLeft += rotate;
+        powerRight += rotate;
+        //provide power to the motors
+        driveLeft.setPower(clampMotor(powerLeft));
+        driveRight.setPower(clampMotor(powerRight));
+
+
+    }
 
 
     /**
@@ -981,6 +1153,14 @@ public class PoseBigWheel
         driveRight.setPower(clampMotor(powerRight));
 
 
+    }
+
+    public void constMixerTank(double correction) {
+        powerLeft += correction;
+        powerRight += correction;
+
+        driveLeft.setPower(clampMotor(powerLeft));
+        driveRight.setPower(clampMotor(powerRight));
     }
 
 
