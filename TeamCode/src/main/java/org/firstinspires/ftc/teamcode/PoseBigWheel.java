@@ -133,6 +133,8 @@ public class PoseBigWheel
         hanging, //auton initial hang at the beginning of a match
         deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
         deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
+        reversedeploying,
+        reversedeployed,
         cratered, //auton arm extended over the crater - this might end up being the same as preIntake
         preIntake, //teleop mostly - collector retracted and increaseElbowAngle to almost ground level
         intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
@@ -357,9 +359,9 @@ public class PoseBigWheel
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
 
-        if(posePitch>40){
-            superman.restart(.6);
-        }
+        //if(posePitch>40){
+          //  superman.restart(.6);
+        //}
 
         articulate(articulation); //call the most recently requested articulation
         collector.update();
@@ -770,6 +772,64 @@ public class PoseBigWheel
                                miniState = 0; //just being a good citizen for next user of miniState
                                articulation = Articulation.driving; //force transition to driving articulation
                                return Articulation.driving; //force transition to driving articulation
+                           }
+
+                           break;
+                   }
+
+               }
+               break;
+           case reversedeploying:
+               collector.extendToMid(1, 15);
+               superman.setTargetPosition(superman.pos_prelatch, 1);
+               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
+                   if (driveForward(false, .1, .2)) {
+                       driveMixerTank(0,0);
+                       //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
+                       //{
+                       miniState = 0; //reset nested state counter for next use
+                       if (!isAutonSingleStep()) articulation = Articulation.reversedeployed; //auto advance to next stage
+                       else articulation = Articulation.manual;
+                       return Articulation.reversedeployed; // signal advance to the deployed stage
+
+                       //}
+                       //break;
+                   }
+                   break;
+               }
+               break;
+           case reversedeployed:
+               if (System.nanoTime() >= articulationTimer) {
+                   switch (miniState) {
+                       case 0:  //push lightly into lander to relieve pressure on hook
+                           collector.hookOff(); //decreaseElbowAngle hook
+                           miniTimer=futureTime(1);
+                           miniState++;
+                           break;
+                       case 1:  //decreaseElbowAngle lander hook
+                           if (System.nanoTime() >= miniTimer) {
+                               if (rotateIMU(350, 1)) { //this turn is needed because hook doesn't clear entirely
+                                   resetMotors(true);
+                                   miniTimer = futureTime(1); //setup wait for completion
+                                   miniState++;
+                               }
+                           }
+                           break;
+
+                       case 2://pull away from lander
+                           if (System.nanoTime() >= miniTimer) {
+                               if(driveForward(true, .25, .4)) {
+                                   driveMixerTank(0, 0); //stop drive motors
+                                   //miniTimer = futureTime(1); //setup wait for completion
+                                   miniState++;
+                               }
+                           }
+                           break;
+                       case 3:  //automatically transition to driving articulation
+                           if (System.nanoTime() >= miniTimer) {
+                               miniState = 0; //just being a good citizen for next user of miniState
+                               articulation = Articulation.reverseDriving; //force transition to driving articulation
+                               return Articulation.reverseDriving; //force transition to driving articulation
                            }
 
                            break;
