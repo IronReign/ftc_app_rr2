@@ -776,7 +776,7 @@ public class PoseBigWheel
                    }
 
                }
-                   else break;
+               break;
            case reverseDriving:
                collector.closeGate();
                switch(miniState){
