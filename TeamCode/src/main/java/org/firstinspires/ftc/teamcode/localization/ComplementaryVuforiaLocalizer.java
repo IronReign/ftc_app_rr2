@@ -122,6 +122,8 @@ public class ComplementaryVuforiaLocalizer {
             if (visionLocalizeOnly) {
                 poseEstimate = lowFreqPoseEstimate;
                 visionLocalizeOnly = false;
+            } else {
+                poseEstimate = lowFreqPoseEstimate.times(LOW_FREQ_WEIGHT).plus(highFreqPoseEstimate.times(1 - LOW_FREQ_WEIGHT));
             }
         } else {
             poseEstimate = highFreqPoseEstimate;
