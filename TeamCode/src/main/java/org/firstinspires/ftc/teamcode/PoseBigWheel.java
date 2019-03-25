@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -1467,6 +1468,12 @@ public class PoseBigWheel
         Refer here for equation:
 
      */
+
+    public void setEstimatedPose(Pose2d pose) {
+        this.estimatedPose = pose;
+    }
+
+    public Pose2d getEstimatedPose() { return  estimatedPose; }
 
     public void updatePose() {
         List<Integer> wheelPositions = getWheelPositions();

@@ -24,6 +24,6 @@ public class Pose2d {
 
     public Pose2d plus(Pose2d other) { return new Pose2d(new Vector2d(other.x() + pos.x, other.y() + pos.y), other.heading + heading);}
     public Pose2d minus(Pose2d other) { return new Pose2d(new Vector2d( pos.x - other.x(), pos.x - other.y()), heading - other.heading);}
-    public Pose2d times(Pose2d other) { return new Pose2d(new Vector2d(other.x() * pos.x, other.y() * pos.y), other.heading * heading);}
+    public Pose2d times(double scalar) { return new Pose2d(new Vector2d(scalar * pos.x, scalar * pos.y), scalar * heading);}
 
 }
