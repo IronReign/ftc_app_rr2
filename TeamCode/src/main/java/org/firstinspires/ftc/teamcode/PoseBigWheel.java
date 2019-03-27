@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
@@ -20,7 +22,9 @@ import org.firstinspires.ftc.teamcode.localization.TankKinematics;
 import org.firstinspires.ftc.teamcode.localization.Vector2d;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -42,6 +46,7 @@ public class PoseBigWheel
     //setup
     HardwareMap hwMap;
     PIDController drivePID = new PIDController(0, 0, 0);
+    private FtcDashboard dashboard;
     public double kpDrive = 0.010; //proportional constant multiplier
     public double kiDrive = 0.000; //integral constant multiplier
     public double kdDrive = 0.001; //derivative constant multiplier
@@ -53,8 +58,16 @@ public class PoseBigWheel
     public double balanceD = 3.1444;
     public boolean needsUpdate = false;
 
+    private double cachedXAcceleration = 0;
+    private double cachedYAcceleration = 0;
 
+    private double lastXAcceleration = 0;
+    private double lastYAcceleration = 0;
 
+    private double lastUpdate = 0;
+    private double loopTime = 0;
+
+    private static final double COLLISION_THRESHOLD = 0;
     //All Actuators
     DcMotor driveLeft = null;
     DcMotor driveRight = null;
@@ -130,7 +143,7 @@ public class PoseBigWheel
     private double vuAngle; //angle of the vuforia target from the center of the phone camera (degrees)
     private double vuDepth = 0; //calculated distance from the vuforia target on the z axis (mm)
     private double vuXOffset = 0; //calculated distance from the vuforia target on the x axis (mm)
-    private List<Integer> lastWheelPositions;
+    private List<Integer> lastWheelPositions = new ArrayList<>();
 
 
     public enum MoveMode{
@@ -323,6 +336,7 @@ public class PoseBigWheel
         // you can also cast this to a Rev2mDistanceSensor if you want to use added
         // methods associated with the Rev2mDistanceSensor class.
         Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)distForward;
+        dashboard = FtcDashboard.getInstance();
 
     }
 
@@ -409,6 +423,14 @@ public class PoseBigWheel
         poseX += displacement * Math.cos(poseHeadingRad);
         poseY += displacement * Math.sin(poseHeadingRad);
 
+        lastXAcceleration = cachedXAcceleration;
+        lastYAcceleration = cachedYAcceleration;
+
+        cachedXAcceleration = imu.getLinearAcceleration().xAccel;
+        cachedYAcceleration = imu.getLinearAcceleration().yAccel;
+
+        loopTime = System.currentTimeMillis() - lastUpdate;
+        lastUpdate = System.currentTimeMillis();
 
     }
 
@@ -1534,4 +1556,24 @@ public class PoseBigWheel
     private long futureTime(float seconds){
         return System.nanoTime() + (long) (seconds * 1e9);
     }
+
+    public boolean checkForCollision() {
+        double currentJerkX = (cachedXAcceleration - lastXAcceleration) / loopTime;
+        double currentJerkY = (cachedYAcceleration - lastYAcceleration) / loopTime;
+
+        TelemetryPacket packet = new TelemetryPacket();
+        Map<String, Object> data = new HashMap<>();
+        data.put("Acceleration X", cachedXAcceleration);
+        data.put("Jerk X", currentJerkX);
+        data.put("Acceleration Y", cachedYAcceleration);
+        data.put("Jerk Y", currentJerkY);
+        packet.putAll(data);
+        dashboard.sendTelemetryPacket(packet);
+
+        if (Math.abs(currentJerkX) > COLLISION_THRESHOLD || Math.abs(currentJerkY) > COLLISION_THRESHOLD)
+            return true;
+        return false;
+    }
+
+
 }

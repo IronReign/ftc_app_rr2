@@ -41,6 +41,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.localization.ComplementaryVuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.robots.handprosthetic.robopoglo;
 import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
 import org.firstinspires.ftc.teamcode.statemachine.Stage;
@@ -162,6 +163,8 @@ public class Game_6832 extends LinearOpMode {
     private double dCoeff = 0.33;
     private double targetAngle = 273;
 
+    ComplementaryVuforiaLocalizer vuforiaLocalizer;
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -169,6 +172,7 @@ public class Game_6832 extends LinearOpMode {
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+
 
         configureDashboard();
 

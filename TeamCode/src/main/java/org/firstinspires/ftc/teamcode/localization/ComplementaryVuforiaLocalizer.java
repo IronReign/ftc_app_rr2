@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.localization;
 
+import com.acmerobotics.dashboard.config.Config;
+
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -20,7 +22,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
-
+@Config
 public class ComplementaryVuforiaLocalizer {
     public static int CAMERA_FORWARD_DISPLACEMENT = 0; // displacement from center of robot in mm
     public static int CAMERA_VERTICAL_DISPLACEMENT = 0; // displacement from ground in mm
@@ -42,7 +44,11 @@ public class ComplementaryVuforiaLocalizer {
     private PoseBigWheel robot;
     private boolean visionLocalizeOnly = false;
 
-    public ComplementaryVuforiaLocalizer(VuforiaLocalizer vuforiaLocalizer, VuforiaLocalizer.CameraDirection cameraDirection) {
+    public static boolean DEBUG = false;
+    private Pose2d highFreqPoseEstimate;
+    private Pose2d lowFreqPoseEstimate;
+
+    public ComplementaryVuforiaLocalizer(VuforiaLocalizer vuforiaLocalizer, VuforiaLocalizer.CameraDirection cameraDirection, PoseBigWheel robot) {
         this.robot = robot;
 
         VuforiaTrackables targetsRoverRuckus = vuforiaLocalizer.loadTrackablesFromAsset("RoverRuckus");
@@ -98,7 +104,7 @@ public class ComplementaryVuforiaLocalizer {
         robot.setEstimatedPose(poseEstimate);
         robot.updatePose();
 
-        Pose2d highFreqPoseEstimate = robot.getEstimatedPose();
+        highFreqPoseEstimate = robot.getEstimatedPose();
 
         targetVisible = false;
         for (VuforiaTrackable trackable : allTrackables) {
@@ -130,5 +136,11 @@ public class ComplementaryVuforiaLocalizer {
         }
     }
 
+    public Pose2d getHighFreqPoseEstimate() {
+        return highFreqPoseEstimate;
+    }
 
+    public Pose2d getLowFreqPoseEstimate() {
+        return lowFreqPoseEstimate;
+    }
 }
