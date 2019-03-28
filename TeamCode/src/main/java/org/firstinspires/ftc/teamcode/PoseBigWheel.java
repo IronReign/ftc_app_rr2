@@ -42,9 +42,9 @@ public class PoseBigWheel
     public static double headingP = 0.006;
     public static double headingD = 0;
 
-    public double balanceP = .35;
-    public double balanceD = 3.1444;
-    public boolean needsUpdate = false;
+    public static double balanceP = .5;
+    public static double balanceD = 0;
+
 
 
 
@@ -563,6 +563,7 @@ public class PoseBigWheel
     }
 
     public void balance(double targetRoll) {
+
         collector.setElbowTargetPos(3738, 1);
         collector.extendToMax(1,10);
         driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);

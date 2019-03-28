@@ -7,4 +7,6 @@ dependencies {
     implementation (name: 'tfod-release', ext:'aar')
     implementation (name: 'tensorflow-lite-0.0.0-nightly', ext:'aar')
     implementation 'com.acmerobotics.dashboard:dashboard:0.2.2'
+    compile group: 'org.apache.commons', name: 'commons-math3', version: '3.2'
+
 }

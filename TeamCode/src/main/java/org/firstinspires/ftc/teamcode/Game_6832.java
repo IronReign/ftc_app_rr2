@@ -325,6 +325,8 @@ public class Game_6832 extends LinearOpMode {
                         telemetry.addData("Error: ", 90 - robot.getHeading());
                         telemetry.update();
                         */
+                        robot.balance(270);
+
                         if (toggleAllowed(gamepad1.y,y))
                             pCoeff+=.01;
                         else if (toggleAllowed(gamepad1.a, a))
