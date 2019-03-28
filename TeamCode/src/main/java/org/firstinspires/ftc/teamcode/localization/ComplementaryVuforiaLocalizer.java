@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.localization;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.PoseBigWheel;
 import org.firstinspires.ftc.teamcode.localization.Pose2d;
 import org.firstinspires.ftc.teamcode.localization.Vector2d;
+import org.firstinspires.ftc.teamcode.util.VuforiaFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +22,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGR
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
+import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 @Config
@@ -48,8 +51,9 @@ public class ComplementaryVuforiaLocalizer {
     private Pose2d highFreqPoseEstimate;
     private Pose2d lowFreqPoseEstimate;
 
-    public ComplementaryVuforiaLocalizer(VuforiaLocalizer vuforiaLocalizer, VuforiaLocalizer.CameraDirection cameraDirection, PoseBigWheel robot) {
+    public ComplementaryVuforiaLocalizer(VuforiaFactory vuforia, boolean front, PoseBigWheel robot) {
         this.robot = robot;
+        VuforiaLocalizer vuforiaLocalizer = VuforiaFactory.getVuforiaLocalizer();
 
         VuforiaTrackables targetsRoverRuckus = vuforiaLocalizer.loadTrackablesFromAsset("RoverRuckus");
         VuforiaTrackable blueRover = targetsRoverRuckus.get(0);
@@ -84,10 +88,13 @@ public class ComplementaryVuforiaLocalizer {
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90));
         backSpace.setLocation(backSpaceLocationOnField);
 
+        VuforiaLocalizer.CameraDirection cameraDirection = front ? FRONT : BACK;
+
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES,
                         cameraDirection == FRONT ? 90 : -90, 0, 0));
+
 
         for (VuforiaTrackable trackable : allTrackables) {
             ((VuforiaTrackableDefaultListener)trackable.getListener()).setPhoneInformation(phoneLocationOnRobot, cameraDirection);

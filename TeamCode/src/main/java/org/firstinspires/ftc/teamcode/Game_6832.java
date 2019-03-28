@@ -41,11 +41,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.localization.ComplementaryVuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.robots.handprosthetic.robopoglo;
 import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
 import org.firstinspires.ftc.teamcode.statemachine.Stage;
 import org.firstinspires.ftc.teamcode.statemachine.StateMachine;
+import org.firstinspires.ftc.teamcode.util.VuforiaFactory;
 import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.firstinspires.ftc.teamcode.vision.VisionProvider;
@@ -169,7 +171,7 @@ public class Game_6832 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         robot.init(this.hardwareMap, isBlue);
-
+        VuforiaFactory.init(VuforiaFactory.Robot.BigWheel);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
