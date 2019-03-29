@@ -40,33 +40,33 @@ public class Collector {
     int servoGateOpen = 900;
     int servoGateClosed = 1495;
 
-    public double intakePwr = .5;
 
+    public double intakePwr;
     //normal Teleop encoder values
-    public int pos_preIntake = 3600;
-    public int pos_Intake   = 3900;
-    public int pos_Deposit  = 1520;
-    public int pos_reverseIntake = 80;
-    public int pos_reversePreDeposit=1408;
-    public int pos_reverseDeposit = 2908;
-    public int pose_reverseSafeDrive = 1000;
-    public int pos_PartialDeposit = 1700;
-    public int pos_SafeDrive = 800;
+    public int pos_preIntake;
+    public int pos_Intake ;
+    public int pos_Deposit;
+    public int pos_reverseIntake;
+    public int pos_reversePreDeposit;
+    public int pos_reverseDeposit;
+    public int pos_reverseSafeDrive;
+    public int pos_PartialDeposit;
+    public int pos_SafeDrive;
 
     //autonomous encoder values
-    public int pos_AutoPark = pos_SafeDrive + 500;
-    public int pos_autonPrelatch = 2950;
+    public int pos_AutoPark;
+    public int pos_autonPrelatch;
 
     //end game encoder values
-    public int pos_prelatch = 2558;
-    public int pos_latched = 3023;
-    public int pos_postlatch = 1240;
+    public int pos_prelatch;
+    public int pos_latched;
+    public int pos_postlatch;
 
     //belt extension encoder values
-    public static int extendMax = 2500;
-    public static int extendMid= 980;
-    public static int extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
-    public static int extendMin = 300;  //prevent crunching collector tray
+    public static int extendMax;
+    public static int extendMid;
+    public static int extendLow; //clears hook and good for retracting prior to deposit without tipping robot
+    public static int extendMin;  //prevent crunching collector tray
     public static int extendPreLatch = extendMax;
 
     //filler value; needs to be updated to reflect actual ratio
@@ -74,7 +74,7 @@ public class Collector {
 
     public boolean active = true;
 
-    public Collector(DcMotor elbowLeft, DcMotor elbowRight, DcMotor extendABobLeft, DcMotor extendABobRight, Servo intakeRight, Servo intakeLeft, Servo hook, Servo intakeGate){
+    public Collector(PoseBigWheel.RobotType robotType, DcMotor elbowLeft, DcMotor elbowRight, DcMotor extendABobLeft, DcMotor extendABobRight, Servo intakeRight, Servo intakeLeft, Servo hook, Servo intakeGate){
 
         elbowLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elbowRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -94,6 +94,66 @@ public class Collector {
         this.intakeLeft = intakeLeft;
         this.hook = hook;
         this.intakeGate = intakeGate;
+
+
+        switch (robotType){
+            case BigWheel:
+                intakePwr = .5;
+                //normal Teleop encoder values
+                pos_preIntake = 3600;
+                pos_Intake   = 3900;
+                pos_Deposit  = 1520;
+                pos_reverseIntake = 80;
+                pos_reversePreDeposit=1408;
+                pos_reverseDeposit = 2908;
+                pos_reverseSafeDrive = 1000;
+                pos_PartialDeposit = 1700;
+                pos_SafeDrive = 800;
+
+                //autonomous encoder values
+                pos_AutoPark = pos_SafeDrive + 500;
+                pos_autonPrelatch = 2950;
+
+                //end game encoder values
+                pos_prelatch = 2558;
+                pos_latched = 3023;
+                pos_postlatch = 1240;
+
+                //belt extension encoder values
+                extendMax = 2500;
+                extendMid= 980;
+                extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
+                extendMin = 300;  //prevent crunching collector tray
+                break;
+            case Icarus:
+                intakePwr = .35;
+                //normal Teleop encoder values
+                pos_preIntake = 3600;
+                pos_Intake   = 3900;
+                pos_Deposit  = 1520;
+                pos_reverseIntake = 80;
+                pos_reversePreDeposit=1408;
+                pos_reverseDeposit = 2908;
+                pos_reverseSafeDrive = 1000;
+                pos_PartialDeposit = 1700;
+                pos_SafeDrive = 800;
+
+                //autonomous encoder values
+                pos_AutoPark = pos_SafeDrive + 500;
+                pos_autonPrelatch = 2950;
+
+                //end game encoder values
+                pos_prelatch = 2558;
+                pos_latched = 3023;
+                pos_postlatch = 1240;
+
+                //belt extension encoder values
+                extendMax = 2500;
+                extendMid= 980;
+                extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
+                extendMin = 300;  //prevent crunching collector tray
+                break;
+        }
 
     }
 

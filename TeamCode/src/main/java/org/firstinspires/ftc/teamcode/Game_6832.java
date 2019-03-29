@@ -63,7 +63,9 @@ public class Game_6832 extends LinearOpMode {
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private PoseBigWheel robot = new PoseBigWheel();
+    private PoseBigWheel.RobotType currentBot;
+
+    private PoseBigWheel robot;
 
     private boolean active = true;
     private boolean joystickDriveStarted = false;
@@ -98,7 +100,7 @@ public class Game_6832 extends LinearOpMode {
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
-    private double testableDouble = robot.kpDrive;
+    //private double testableDouble = robot.kpDrive;
     private double testableHeading = 0;
     private boolean testableDirection = true;
 
@@ -162,9 +164,22 @@ public class Game_6832 extends LinearOpMode {
     private double dCoeff = 0.33;
     private double targetAngle = 273;
 
+
     @Override
     public void runOpMode() throws InterruptedException {
+        telemetry.log().add("Select robot -- (A) Icarus (Y)  Big Wheel");
+        while (currentBot == null) {
+            if (toggleAllowed(gamepad1.a, a)) {
+                currentBot = PoseBigWheel.RobotType.Icarus;
+                telemetry.log().add("Robot type: Icarus");
+            }
+            else if (toggleAllowed(gamepad1.y, y)) {
+                currentBot = PoseBigWheel.RobotType.BigWheel;
+                telemetry.log().add("Robot type:  Big Wheel");
+            }
+        }
 
+        robot = new PoseBigWheel(currentBot);
         robot.init(this.hardwareMap, isBlue);
 
         telemetry.addData("Status", "Initialized");
@@ -217,6 +232,21 @@ public class Game_6832 extends LinearOpMode {
                     robot.collector.hookOn();
             }
 
+            if (toggleAllowed(gamepad1.y, y)) {
+                autoDelay++;
+                if (autoDelay > 20) autoDelay = 0;
+            }
+
+            /*if(toggleAllowed(gamepad1.a,a)){
+                if(currentBot == PoseBigWheel.RobotType.Icarus){
+                    currentBot = PoseBigWheel.RobotType.BigWheel;
+                }else{
+                    currentBot = PoseBigWheel.RobotType.Icarus;
+                }
+                stop();
+
+            }*/
+
             if (toggleAllowed(gamepad1.left_stick_button, left_stick_button))
                 enableHookSensors = !enableHookSensors;
 
@@ -232,10 +262,7 @@ public class Game_6832 extends LinearOpMode {
 //                autoDelay--;
 //                if(autoDelay < 0) autoDelay = 20;
 //            }
-            if (toggleAllowed(gamepad1.y, y)) {
-                autoDelay++;
-                if (autoDelay > 20) autoDelay = 0;
-            }
+
 
             if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)) {
                 visionProviderState = (visionProviderState + 1) % visionProviders.length; //switch vision provider

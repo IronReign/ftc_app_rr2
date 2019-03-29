@@ -147,6 +147,13 @@ public class PoseBigWheel
         latchSet, //teleop endgame - retractBelt the latch
         latchHang; //teleop endgame - retractBelt collector elbow to final position, set locks if implemented
     }
+
+    public enum RobotType{
+        BigWheel,
+        Icarus;
+    }
+    public RobotType currentBot;
+
     public Articulation getArticulation() {
         return articulation;
     }
@@ -217,7 +224,7 @@ public class PoseBigWheel
      * Creates a base Pose instance at the origin, (_0,_0), with _0 speed and _0 vuAngle.
      * Useful for determining the Pose of the robot relative to the origin.
      */
-    public PoseBigWheel()
+    public PoseBigWheel(RobotType name)
     {
 
         poseX     = 0;
@@ -226,6 +233,8 @@ public class PoseBigWheel
         poseSpeed = 0;
         posePitch=0;
         poseRoll=0;
+
+        currentBot = name;
 
     }
 
@@ -278,9 +287,9 @@ public class PoseBigWheel
         driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
 
         //setup subsystems
-        collector = new Collector(elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook, intakeGate);
+        collector = new Collector(currentBot, elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook, intakeGate);
         collector.setElbowPwr(.5);
-        superman = new Superman(supermanMotor);
+        superman = new Superman(currentBot, supermanMotor);
         ledSystem = new LEDSystem(blinkin);
 
 
@@ -847,7 +856,7 @@ public class PoseBigWheel
                        break;
                    case 1:
                        collector.extendToMin(1,10);
-                       if(goToPosition(superman.pos_reverseIntake-100,collector.pose_reverseSafeDrive,.75,.3)){
+                       if(goToPosition(superman.pos_reverseIntake-100,collector.pos_reverseSafeDrive,.75,.3)){
                            miniState++;
                        }
                        break;

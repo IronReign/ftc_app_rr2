@@ -11,18 +11,18 @@ public class Superman {
     int supermanPos = 0;
 
     //Positions for moving superman during articulations
-    public int pos_Intake = 10;
-    public int pos_reverseIntake = 452;
-    public int pos_reverseDeposit = 343;
-    public int pos_Deposit = 354;
-    public int pos_DepositPartial = 200;
-    public int pos_Maximum = 500;
-    public int pos_autonPrelatch = 400;
-    public int pos_prelatch = 500;
-    public int pos_latched = 500;
-    public int pos_postlatch = 0;
-    public int pos_stowed = 0;
-    public int pos_driving = 0; //todo - experiment with driving with superman set around 100 (slightly angled) to see if it is more responsive - higher battery drain because superman is straining, but less actual downforce on omni
+    public int pos_Intake;
+    public int pos_reverseIntake;
+    public int pos_reverseDeposit;
+    public int pos_Deposit;
+    public int pos_DepositPartial;
+    public int pos_Maximum;
+    public int pos_autonPrelatch;
+    public int pos_prelatch;
+    public int pos_latched;
+    public int pos_postlatch;
+    public int pos_stowed;
+    public int pos_driving; //todo - experiment with driving with superman set around 100 (slightly angled) to see if it is more responsive - higher battery drain because superman is straining, but less actual downforce on omni
 
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 5;
@@ -31,10 +31,41 @@ public class Superman {
 
 
 
-    public Superman(DcMotor superman) {
+    public Superman(PoseBigWheel.RobotType currentBot, DcMotor superman) {
         superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         superman.setDirection(DcMotor.Direction.REVERSE);
         this.superman = superman;
+
+        switch (currentBot){
+            case BigWheel:
+                pos_Intake = 10;
+                pos_reverseIntake = 452;
+                pos_reverseDeposit = 343;
+                pos_Deposit = 354;
+                pos_DepositPartial = 200;
+                pos_Maximum = 500;
+                pos_autonPrelatch = 400;
+                pos_prelatch = 500;
+                pos_latched = 500;
+                pos_postlatch = 0;
+                pos_stowed = 0;
+                pos_driving = 0;
+                break;
+            case Icarus:
+                pos_Intake = 10;
+                pos_reverseIntake = 452;
+                pos_reverseDeposit = 343;
+                pos_Deposit = 354;
+                pos_DepositPartial = 200;
+                pos_Maximum = 500;
+                pos_autonPrelatch = 400;
+                pos_prelatch = 500;
+                pos_latched = 500;
+                pos_postlatch = 0;
+                pos_stowed = 0;
+                pos_driving = 0;
+                break;
+        }
     }
 
 
