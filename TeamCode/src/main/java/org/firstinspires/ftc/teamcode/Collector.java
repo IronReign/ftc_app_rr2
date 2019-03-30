@@ -70,7 +70,7 @@ public class Collector {
     public static int extendPreLatch = extendMax;
 
     //filler value; needs to be updated to reflect actual ratio
-    public double ticksPerDegree = 5;
+    public double ticksPerDegree = 22.3296703;
 
     public boolean active = true;
 
@@ -234,6 +234,7 @@ public class Collector {
     public int getElbowCurrentPos2(){
         return elbowRight.getCurrentPosition();
     }
+    public double getCurrentAngle(){return  elbowRight.getCurrentPosition()/ticksPerDegree;}
     public void setElbowPwr(double pwr){ elbowPwr = pwr; }
 
     public void kill(){

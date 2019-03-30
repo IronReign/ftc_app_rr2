@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
@@ -67,6 +69,7 @@ public class PoseBigWheel
     Collector collector = null;
     Superman superman;
     LEDSystem ledSystem;
+    CenterOfGravityCalculator cog;
 
     //All sensors
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
@@ -99,6 +102,11 @@ public class PoseBigWheel
     private double displacementPrev;
     private double odometer;
 
+    private double cachedXAcceleration;
+    private double lastXAcceleration;
+
+    private double lastUpdateTimestamp = 0;
+    private double loopTime = 0;
 
     private long turnTimer = 0;
     private boolean turnTimerInit = false;
@@ -106,7 +114,7 @@ public class PoseBigWheel
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
     int balanceState = 1;
-
+    private FtcDashboard dashboard;
 
     SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
 
@@ -291,6 +299,7 @@ public class PoseBigWheel
         collector.setElbowPwr(.5);
         superman = new Superman(currentBot, supermanMotor);
         ledSystem = new LEDSystem(blinkin);
+        cog = new CenterOfGravityCalculator(currentBot);
 
 
         moveMode = MoveMode.still;
@@ -316,6 +325,7 @@ public class PoseBigWheel
         // you can also cast this to a Rev2mDistanceSensor if you want to use added
         // methods associated with the Rev2mDistanceSensor class.
         Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)distForward;
+        dashboard = FtcDashboard.getInstance();
 
     }
 
@@ -368,9 +378,40 @@ public class PoseBigWheel
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
 
-        //if(posePitch>40){
-          //  superman.restart(.6);
-        //}
+        double jerkX = (cachedXAcceleration - lastXAcceleration) / loopTime;
+        TelemetryPacket packet = new TelemetryPacket();
+        packet.put("Jerk X", jerkX);
+        dashboard.sendTelemetryPacket(packet);
+
+        boolean correct = false;
+        if (Math.abs(jerkX) > 0.1) {
+            driveMixerTank(1, 0);
+            correct = true;
+        }
+        int correctionswitch = 0;
+        double correctionTime = 0;
+        if(correct){
+            switch (correctionswitch){
+                case 0:
+                    correctionTime = futureTime(2);
+                    correctionswitch++;
+                    break;
+                case 1:
+                    driveMixerTank(1,0);
+                    if(System.nanoTime()>correctionTime){
+                        correctionswitch++;
+                    }
+                    break;
+                default:
+                    correctionswitch = 0;
+                    correct= false;
+
+            }
+        }
+        /*
+        if(posePitch<300 && posePitch >10 imu.getAcceleration().xAccel > ){
+          driveMixerTank(-1,0);
+        }*/
 
         articulate(articulation); //call the most recently requested articulation
         collector.update();
@@ -401,6 +442,12 @@ public class PoseBigWheel
 
         poseX += displacement * Math.cos(poseHeadingRad);
         poseY += displacement * Math.sin(poseHeadingRad);
+
+        lastXAcceleration = cachedXAcceleration;
+        cachedXAcceleration = imu.getLinearAcceleration().xAccel;
+
+        loopTime = System.currentTimeMillis() - lastUpdateTimestamp;
+        lastUpdateTimestamp = System.currentTimeMillis();
 
 
     }

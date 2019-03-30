@@ -25,7 +25,7 @@ public class Superman {
     public int pos_driving; //todo - experiment with driving with superman set around 100 (slightly angled) to see if it is more responsive - higher battery drain because superman is straining, but less actual downforce on omni
 
     //filler value; needs to be updated to reflect actual ratio
-    public double ticksPerDegree = 5;
+    public double ticksPerDegree = 6.44705882;
     public boolean active = true;
 
 
@@ -138,6 +138,7 @@ public class Superman {
     public int getCurrentPosition() {
         return superman.getCurrentPosition();
     }
+    public double getCurrentAngle(){return  superman.getCurrentPosition()/ticksPerDegree;}
     public boolean nearTarget(){
         if ((Math.abs(getCurrentPosition()-getTargetPosition()))<15) return true;
         else return false;

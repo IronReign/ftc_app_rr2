@@ -15,6 +15,10 @@ public class CenterOfGravityCalculator {
             Wi, // weight of intake (lbs)
             Wa; // weight of arm (lbs)
 
+    public  double pitchOffset,
+                elbowoffset,
+                supermanoffset;
+
     public CenterOfGravityCalculator (PoseBigWheel.RobotType robotType) {
         switch (robotType) {
             case BigWheel:
@@ -29,6 +33,10 @@ public class CenterOfGravityCalculator {
                 Ws = 2;   // weight of superman arm (lbs)
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
+
+                pitchOffset = 10;
+                elbowoffset=15;
+                supermanoffset=5;
                 break;
             case Icarus:
                 // length constants
@@ -42,6 +50,10 @@ public class CenterOfGravityCalculator {
                 Ws = 2;   // weight of superman arm (lbs)
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
+
+                pitchOffset = 10;
+                elbowoffset=15;
+                supermanoffset=5;
                 break;
             default:
                 c=r=s=m=Wc=Ww=Ws=Wi=Wa=0; //should never happen, also will give divide by 0 error
