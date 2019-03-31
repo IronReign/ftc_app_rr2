@@ -66,7 +66,9 @@ public class Game_6832 extends LinearOpMode {
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private PoseBigWheel robot = new PoseBigWheel();
+    private PoseBigWheel.RobotType currentBot;
+
+    private PoseBigWheel robot;
 
     private boolean active = true;
     private boolean joystickDriveStarted = false;
@@ -101,7 +103,7 @@ public class Game_6832 extends LinearOpMode {
 
     //these are meant as short term testing variables, don't expect their usage
     //to be consistent across development sessions
-    private double testableDouble = robot.kpDrive;
+    //private double testableDouble = robot.kpDrive;
     private double testableHeading = 0;
     private boolean testableDirection = true;
 
@@ -165,11 +167,32 @@ public class Game_6832 extends LinearOpMode {
     private double dCoeff = 0.33;
     private double targetAngle = 273;
 
+
+  
+
     ComplementaryVuforiaLocalizer vuforiaLocalizer;
 
+  
+  
+  
+  
+  
+  
     @Override
     public void runOpMode() throws InterruptedException {
+        telemetry.log().add("Select robot -- (A) Icarus (Y)  Big Wheel");
+        while (currentBot == null) {
+            if (toggleAllowed(gamepad1.a, a)) {
+                currentBot = PoseBigWheel.RobotType.Icarus;
+                telemetry.log().add("Robot type: Icarus");
+            }
+            else if (toggleAllowed(gamepad1.y, y)) {
+                currentBot = PoseBigWheel.RobotType.BigWheel;
+                telemetry.log().add("Robot type:  Big Wheel");
+            }
+        }
 
+        robot = new PoseBigWheel(currentBot);
         robot.init(this.hardwareMap, isBlue);
         VuforiaFactory.init(VuforiaFactory.Robot.BigWheel);
         telemetry.addData("Status", "Initialized");
@@ -223,6 +246,21 @@ public class Game_6832 extends LinearOpMode {
                     robot.collector.hookOn();
             }
 
+            if (toggleAllowed(gamepad1.y, y)) {
+                autoDelay++;
+                if (autoDelay > 20) autoDelay = 0;
+            }
+
+            /*if(toggleAllowed(gamepad1.a,a)){
+                if(currentBot == PoseBigWheel.RobotType.Icarus){
+                    currentBot = PoseBigWheel.RobotType.BigWheel;
+                }else{
+                    currentBot = PoseBigWheel.RobotType.Icarus;
+                }
+                stop();
+
+            }*/
+
             if (toggleAllowed(gamepad1.left_stick_button, left_stick_button))
                 enableHookSensors = !enableHookSensors;
 
@@ -238,10 +276,7 @@ public class Game_6832 extends LinearOpMode {
 //                autoDelay--;
 //                if(autoDelay < 0) autoDelay = 20;
 //            }
-            if (toggleAllowed(gamepad1.y, y)) {
-                autoDelay++;
-                if (autoDelay > 20) autoDelay = 0;
-            }
+
 
             if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)) {
                 visionProviderState = (visionProviderState + 1) % visionProviders.length; //switch vision provider
@@ -359,7 +394,7 @@ public class Game_6832 extends LinearOpMode {
                         demo();
                         break;
                     case 9:
-                        if (delatch())
+                        if (auto_craterSide_extend_reverse.execute()) active = false;
                             break;
                     case 10:
                         if (auto_craterSide_extend.execute()) active = false;
@@ -477,6 +512,64 @@ public class Game_6832 extends LinearOpMode {
             .addState(() -> auto_sample()) //detect the mineral
             .addState(() -> robot.driveForward(true, .05, DRIVE_POWER)) //move forward again
             .build();
+
+    private StateMachine auto_setupReverse = getStateMachine(autoSetupStage)
+            .addTimedState(autoDelay, () -> telemetry.addData("DELAY", "STARTED"), () -> telemetry.addData("DELAY", "DONE"))
+            .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
+            //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
+            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.reversedeploying)) //start deploy
+            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.reverseDriving) //wait until done
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
+            //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
+            .addState(() -> robot.rotatePIDIMU(0, 1)) //turn back to center
+            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
+            //.addState(() -> robot.driveForward(false, .05, DRIVE_POWER)) //move back to see everything
+            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
+            .addState(() -> auto_sample()) //detect the mineral
+            //.addState(() -> robot.driveForward(true, .05, DRIVE_POWER)) //move forward again
+            .build();
+
+    private StateMachine auto_craterSide_extend_reverse = getStateMachine(autoStage)
+            .addNestedStateMachine(auto_setupReverse)
+            .addMineralState(mineralStateProvider, //turn to mineral
+                    () -> robot.rotatePIDIMU(39+180, TURN_TIME),
+                    () -> true,
+                    () -> robot.rotatePIDIMU(321+180, TURN_TIME))
+
+            .addMineralState(mineralStateProvider, //move to mineral
+                    () -> robot.driveForward(true, .580, DRIVE_POWER),
+                    () -> robot.driveForward(true, .50, DRIVE_POWER),
+                    () -> robot.driveForward(true, .590, DRIVE_POWER))
+            .addTimedState(.5f, () -> {}, () -> {})
+            .addMineralState(mineralStateProvider, //move back
+                    () -> robot.driveForward(false, .440, DRIVE_POWER),
+                    () -> robot.driveForward(false, .45, DRIVE_POWER),
+                    () -> robot.driveForward(false, .445, DRIVE_POWER))
+            .addState(() -> robot.rotatePIDIMU(90, 3)) //turn parallel to minerals
+            .addMineralState(mineralStateProvider, //move to wall
+                    () -> robot.driveForward(true, 0.9, DRIVE_POWER),
+                    () -> robot.driveForward(true, 1.1, DRIVE_POWER),
+                    () -> robot.driveForward(true, 1.3, DRIVE_POWER))
+            .addState(() -> robot.rotatePIDIMU(130, 3)) //turn to depot
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
+            .addState(() -> robot.collector.setElbowTargetPos(10,1))
+            .addState(() -> robot.driveForward(true, .5, DRIVE_POWER))
+            .addState(() -> robot.collector.extendToMax(1,10))
+            .addTimedState(DUCKY_TIME, //yeet ducky
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
+            .addState(() -> robot.collector.extendToMid(1,10))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
+            .addState(() -> robot.driveForward(false, .5, DRIVE_POWER))
+            .addState(() -> robot.collector.nearTargetElbow())
+            .addState(() -> robot.rotatePIDIMU(222, 0.6))
+            .addState(() -> robot.rotatePIDIMU(315, 3))
+            .addState(() -> robot.driveForward(true, .5, DRIVE_POWER))
+            //.addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
+            //.addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
+            .build();
+
 
     private StateMachine auto_depotSide = getStateMachine(autoStage)
             .addNestedStateMachine(auto_setup)
@@ -689,11 +782,11 @@ public class Game_6832 extends LinearOpMode {
         pwrFwdR = direction * pwrDamper * gamepad1.right_stick_y;
         pwrStfR = direction * pwrDamper * gamepad1.right_stick_x;
 
-        if ((robot.getRoll() > 300) && robot.getRoll() < 350)
+       /* if ((robot.getRoll() > 300) && robot.getRoll() < 350)
             //todo - needs improvement - should be enabling slowmo mode, not setting the damper directly
             //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
             pwrDamper = .33;
-        else
+        else*/
             pwrDamper = 1.0;
 
 
@@ -1063,7 +1156,8 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("supermanPos", () -> robot.superman.getCurrentPosition())
                 .addData("liftPos", () -> robot.collector.getExtendABobCurrentPos());
-
+        telemetry.addLine()
+                .addData("COG: ", () -> robot.cog.getCenterOfGravity(robot.getRoll() +robot.cog.pitchOffset,robot.superman.getCurrentAngle() + robot.cog.supermanoffset, robot.collector.getCurrentAngle()+robot.cog.elbowoffset, .382).toString());
         telemetry.addLine()
                 .addData("roll", () -> robot.getRoll())
                 .addData("pitch", () -> robot.getPitch())
