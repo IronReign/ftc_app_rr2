@@ -1143,7 +1143,7 @@ public class Game_6832 extends LinearOpMode {
                 .addData("supermanPos", () -> robot.superman.getCurrentPosition())
                 .addData("liftPos", () -> robot.collector.getExtendABobCurrentPos());
         telemetry.addLine()
-                .addData("COG: ", () -> robot.cog.getCenterOfGravity(robot.getRoll() +robot.cog.pitchOffset,robot.superman.getCurrentAngle() + robot.cog.supermanoffset, robot.collector.getCurrentAngle()+robot.cog.elbowoffset, .382).toString());
+                .addData("COG: ", () -> robot.cog.getCenterOfGravity(robot.getRoll() +robot.cog.pitchOffset,180-(robot.superman.getCurrentAngle() + robot.cog.supermanoffset), robot.collector.getCurrentAngle()+robot.cog.elbowoffset, .382).toString());
         telemetry.addLine()
                 .addData("roll", () -> robot.getRoll())
                 .addData("pitch", () -> robot.getPitch())
