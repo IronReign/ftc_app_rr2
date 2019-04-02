@@ -289,10 +289,19 @@ public class PoseBigWheel
         this.distLeft           = this.hwMap.get(DistanceSensor.class, "distLeft");
 
         //behaviors of motors
-        driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
         driveLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        if (this.currentBot == RobotType.BigWheel) {
+            driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+            driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
+            else
+            {
+                driveLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+                driveRight.setDirection(DcMotorSimple.Direction.FORWARD);
+            }
+
 
         //setup subsystems
         collector = new Collector(currentBot, elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook, intakeGate);

@@ -33,11 +33,12 @@ public class Superman {
 
     public Superman(PoseBigWheel.RobotType currentBot, DcMotor superman) {
         superman.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        superman.setDirection(DcMotor.Direction.REVERSE);
+
         this.superman = superman;
 
         switch (currentBot){
             case BigWheel:
+                superman.setDirection(DcMotor.Direction.REVERSE);
                 pos_Intake = 10;
                 pos_reverseIntake = 452;
                 pos_reverseDeposit = 343;

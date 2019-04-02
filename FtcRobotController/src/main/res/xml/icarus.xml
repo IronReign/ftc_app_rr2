@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <Robot type="FirstInspires-FTC">
-	<LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ184H4S" parentModuleAddress="1">
+	<LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2A8JYC" parentModuleAddress="1">
 		<LynxModule name="Expansion Hub 1" port="1">
-			<NeveRest60Gearmotor name="driveRight" port="0" />
-			<NeveRest60Gearmotor name="driveLeft" port="1" />
+			<NeveRest20Gearmotor name="driveRight" port="0" />
+			<NeveRest20Gearmotor name="driveLeft" port="1" />
 			<Motor name="lampCam" port="2" />
 			<RevRoboticsCoreHexMotor name="supermanMotor" port="3" />
 
@@ -30,5 +30,5 @@
 		</LynxModule>
 	</LynxUsbDevice>
 	
-	<Webcam serialNumber="BFD5985F" name="Webcam 1"/>
+	<Webcam serialNumber="2DBCD15F" name="Webcam 1"/>
 </Robot>
