@@ -34,12 +34,11 @@ public class Collector {
     double extendABobPwr = 1;
 
 
-    int servoHooked = 1560;
-    int servoUnhooked = 2060;
+    int servoHooked;
+    int servoUnhooked;
 
-    int servoGateOpen = 900;
-    int servoGateClosed = 1495;
-
+    int servoGateOpen;
+    int servoGateClosed;
 
     public double intakePwr;
     //normal Teleop encoder values
@@ -120,6 +119,12 @@ public class Collector {
                 pos_latched = 3023;
                 pos_postlatch = 1240;
 
+                servoGateOpen = 900;
+                servoGateClosed = 1495;
+
+                servoHooked = 1560;
+                servoUnhooked = 2060;
+
                 //belt extension encoder values
                 extendMax = 2500;
                 extendMid= 980;
@@ -147,6 +152,12 @@ public class Collector {
                 pos_prelatch = 2558;
                 pos_latched = 3023;
                 pos_postlatch = 1240;
+
+                servoGateOpen = 900;
+                servoGateClosed = 1495;
+
+                servoHooked = 2105;
+                servoUnhooked = 900;
 
                 //belt extension encoder values
                 extendMax = 2500;
