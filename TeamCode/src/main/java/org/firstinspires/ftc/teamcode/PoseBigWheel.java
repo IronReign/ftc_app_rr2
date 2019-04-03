@@ -296,11 +296,11 @@ public class PoseBigWheel
             driveLeft.setDirection(DcMotorSimple.Direction.FORWARD);
             driveRight.setDirection(DcMotorSimple.Direction.REVERSE);
         }
-            else
-            {
+        else
+           {
                 driveLeft.setDirection(DcMotorSimple.Direction.REVERSE);
                 driveRight.setDirection(DcMotorSimple.Direction.FORWARD);
-            }
+           }
 
 
         //setup subsystems

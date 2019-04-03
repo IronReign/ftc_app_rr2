@@ -81,8 +81,8 @@ public class Collector {
 
         extendABobLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         extendABobRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //extendABobLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        extendABobRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        extendABobLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        //extendABobRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         intakeLeft.setDirection(Servo.Direction.REVERSE);
 
