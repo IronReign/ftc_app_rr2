@@ -160,7 +160,7 @@ public class Collector {
                 servoUnhooked = 900;
 
                 //belt extension encoder values
-                extendMax = 2500;
+                extendMax = 2960;
                 extendMid= 980;
                 extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
                 extendMin = 300;  //prevent crunching collector tray

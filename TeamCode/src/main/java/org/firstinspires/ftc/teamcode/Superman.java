@@ -54,7 +54,7 @@ public class Superman {
                 break;
             case Icarus:
                 pos_Intake = 10;
-                pos_reverseIntake = 452;
+                pos_reverseIntake = 360;
                 pos_reverseDeposit = 343;
                 pos_Deposit = 354;
                 pos_DepositPartial = 200;

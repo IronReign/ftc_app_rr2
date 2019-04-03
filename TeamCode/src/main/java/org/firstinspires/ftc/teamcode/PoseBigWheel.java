@@ -386,7 +386,7 @@ public class PoseBigWheel
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
-
+/*
         double jerkX = (cachedXAcceleration - lastXAcceleration) / loopTime;
         TelemetryPacket packet = new TelemetryPacket();
         packet.put("Jerk X", jerkX);
@@ -417,6 +417,7 @@ public class PoseBigWheel
 
             }
         }
+        */
         /*
         if(posePitch<300 && posePitch >10 imu.getAcceleration().xAccel > ){
           driveMixerTank(-1,0);
