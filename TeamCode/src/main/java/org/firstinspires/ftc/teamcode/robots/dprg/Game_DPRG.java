@@ -9,10 +9,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "Game_DPRG", group = "Challenge")  // @Autonomous(...) is the other common choice
 public class Game_DPRG extends LinearOpMode {
+
     Pose_DPRG robot = new Pose_DPRG();
     double pwrFwd = 0;
     double pwrRot = 0;
 
+    long lastLoop = 0;
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -21,7 +23,6 @@ public class Game_DPRG extends LinearOpMode {
         robot.init(this.hardwareMap);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
 
 
 
@@ -46,7 +47,8 @@ public class Game_DPRG extends LinearOpMode {
         while (opModeIsActive()) {
             telemetry.update();
             joystickDrive();
-
+            while (System.currentTimeMillis() < lastLoop+40);
+            lastLoop = System.currentTimeMillis();
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 

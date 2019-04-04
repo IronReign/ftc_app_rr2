@@ -73,6 +73,11 @@ public class Game_6832 extends LinearOpMode {
     private int state = 0;
     private boolean isBlue = false;
 
+    //loop time profile
+    long lastLoopClockTime;
+    double loopAvg = 0;
+    private static final double loopWeight = .1;
+
     //drive train control variables
     private double pwrDamper = 1;
     private double pwrFwd = 0;
@@ -139,7 +144,7 @@ public class Game_6832 extends LinearOpMode {
     //game mode configuration
     private int gameMode = 0;
     private static final int NUM_MODES = 4;
-    private static final String[] GAME_MODES = {"REGULAR", "ENDGAME", "PRE-GAME", "REVERE-REGULAR"};
+    private static final String[] GAME_MODES = {"REVERSE", "ENDGAME", "PRE-GAME", "REGULAR"};
 
     //vision-related configuration
     private VisionProvider vp;
@@ -167,22 +172,24 @@ public class Game_6832 extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        telemetry.log().add("Select robot -- (A) Icarus (Y)  Big Wheel");
         while (currentBot == null) {
+            telemetry.addData("Select robot","(A) Icarus (Y)  Big Wheel");
+            telemetry.update();
             if (toggleAllowed(gamepad1.a, a)) {
                 currentBot = PoseBigWheel.RobotType.Icarus;
-                telemetry.log().add("Robot type: Icarus");
             }
             else if (toggleAllowed(gamepad1.y, y)) {
                 currentBot = PoseBigWheel.RobotType.BigWheel;
-                telemetry.log().add("Robot type:  Big Wheel");
             }
         }
+
+        telemetry.addData("Status", "Initializing "+currentBot+"...");
+        telemetry.update();
 
         robot = new PoseBigWheel(currentBot);
         robot.init(this.hardwareMap, isBlue);
 
-        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Status", "Initialized "+currentBot);
         telemetry.update();
 
         configureDashboard();
@@ -302,6 +309,8 @@ public class Game_6832 extends LinearOpMode {
 
             robot.updateSensors();
 
+
+
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
@@ -312,9 +321,9 @@ public class Game_6832 extends LinearOpMode {
         vp.reset();
 
         robot.superman.restart(.75);
-                robot.collector.restart(.4, .5);
+        robot.collector.restart(.4, .5);
 
-
+        lastLoopClockTime = System.nanoTime();
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetry.update();
@@ -395,6 +404,13 @@ public class Game_6832 extends LinearOpMode {
                 robot.stopAll();
             }
 
+            long loopClockTime = System.nanoTime();
+            long loopTime = loopClockTime - lastLoopClockTime;
+            if (loopAvg == 0)
+                loopAvg = loopTime;
+            else
+                loopAvg = loopWeight*loopTime + (1-loopWeight)*loopAvg;
+            lastLoopClockTime = loopClockTime;
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
     }
@@ -473,9 +489,12 @@ public class Game_6832 extends LinearOpMode {
 
     }
 
-    private StateMachine auto_turn = getStateMachine(autoStage)
-            .addState(() -> robot.rotatePIDIMU(90, 3))
-            .addTimedState(3, () -> {}, () -> {})
+    private StateMachine auto_test = getStateMachine(autoStage)
+            .addState(() -> {
+                robot.driveMixerTank(.65,0);
+                return gamepad1.a;
+            })
+            .addState(() -> robot.driveForward(false, 1, .65))
             .addState(() -> resetIMUBool())
             .build();
 
@@ -777,8 +796,8 @@ public class Game_6832 extends LinearOpMode {
 
 
         switch (gameMode) {
-            case 0: //regular teleop mineral cycle
-                joystickDriveRegularMode();
+            case 0: //regular (reverse) mode
+                joystickDriveRegularModeReverse();
                 break;
             case 1: //endgame mode
                 joystickDriveEndgameMode();
@@ -786,8 +805,9 @@ public class Game_6832 extends LinearOpMode {
             case 2: //pre-game = testing auton deploying functions
                 joystickDrivePregameMode();
                 break;
-            case 3:
-                joystickDriveRegularModeReverse();
+            case 3: //regular mode
+                joystickDriveRegularMode();
+
                 break;
         }
 
@@ -1133,7 +1153,8 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("active", () -> active)
                 .addData("state", () -> state)
-                .addData("autoStage", () -> autoStage);
+                .addData("autoStage", () -> autoStage)
+                .addData("Game Mode", () -> GAME_MODES[gameMode]);
         telemetry.addLine()
                 .addData("elbowA", () -> robot.collector.isActive())
                 .addData("elbowC", () -> robot.collector.getElbowCurrentPos())
@@ -1155,12 +1176,13 @@ public class Game_6832 extends LinearOpMode {
                 .addData("status", () -> robot.imu.getSystemStatus().toShortString())
                 .addData("Pos", () -> robot.intakeGate.getPosition())
                 .addData("mineralState", () -> mineralState)
-                .addData("Game Mode", () -> GAME_MODES[gameMode])
                 .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))
                 .addData("distLeft", () -> robot.distLeft.getDistance(DistanceUnit.METER))
                 .addData("distRight", () -> robot.distRight.getDistance(DistanceUnit.METER));
-//        telemetry.addData("TOFID", () -> String.format("%x", robot.sensorTimeOfFlight.getModelID()));
-//        telemetry.addData("TOF did time out", () -> Boolean.toString(robot.sensorTimeOfFlight.didTimeoutOccur()));
+
+        telemetry.addLine()
+                .addData("Loop time", "%.0fms", () -> loopAvg/1000000)
+                .addData("Loop time", "%.0fHz", () -> 1000000000/loopAvg);
     }
 
     int testDeLatch = 0;
