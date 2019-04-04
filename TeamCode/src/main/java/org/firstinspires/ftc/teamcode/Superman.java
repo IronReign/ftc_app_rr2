@@ -60,8 +60,8 @@ public class Superman {
                 pos_DepositPartial = 200;
                 pos_Maximum = 500;
                 pos_autonPrelatch = 400;
-                pos_prelatch = 500;
-                pos_latched = 500;
+                pos_prelatch = 335;
+                pos_latched = 335;
                 pos_postlatch = 0;
                 pos_stowed = 0;
                 pos_driving = 0;

@@ -62,6 +62,7 @@ public class Collector {
     public int pos_postlatch;
 
     //belt extension encoder values
+    public static int extendDeposit;
     public static int extendMax;
     public static int extendMid;
     public static int extendLow; //clears hook and good for retracting prior to deposit without tipping robot
@@ -116,7 +117,7 @@ public class Collector {
 
                 //end game encoder values
                 pos_prelatch = 2558;
-                pos_latched = 3023;
+                pos_latched = 2700;
                 pos_postlatch = 1240;
 
                 servoGateOpen = 900;
@@ -139,7 +140,7 @@ public class Collector {
                 pos_Deposit  = 1520;
                 pos_reverseIntake = 80;
                 pos_reversePreDeposit=1408;
-                pos_reverseDeposit = 2908;
+                pos_reverseDeposit = 3400;
                 pos_reverseSafeDrive = 1000;
                 pos_PartialDeposit = 1700;
                 pos_SafeDrive = 800;
@@ -160,6 +161,7 @@ public class Collector {
                 servoUnhooked = 900;
 
                 //belt extension encoder values
+                extendDeposit = 1650;
                 extendMax = 2960;
                 extendMid= 980;
                 extendLow = 650; //clears hook and good for retracting prior to deposit without tipping robot
@@ -311,6 +313,18 @@ public class Collector {
     public boolean extendToMax(double speed, int range){
         setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMax);
+        if((Math.abs(getExtendABobCurrentPos()-getExtendABobTargetPos()))<range){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean extendToReverseDeposit(){
+        return extendToMax(extendABobPwr, 15);
+    }
+    public boolean extendToReverseDeposit(double speed, int range){
+        setExtendABobPwr(speed);
+        setExtendABobTargetPos(extendDeposit);
         if((Math.abs(getExtendABobCurrentPos()-getExtendABobTargetPos()))<range){
             return true;
         }
