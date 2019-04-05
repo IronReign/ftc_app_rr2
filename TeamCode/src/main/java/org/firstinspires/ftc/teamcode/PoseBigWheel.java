@@ -41,6 +41,7 @@ public class PoseBigWheel
 
     public static double headingP = 0.006;
     public static double headingD = 0;
+    //public static int forwardTPM = (int) (1078);
 
     public double balanceP = .35;
     public double balanceD = 3.1444;
@@ -83,7 +84,7 @@ public class PoseBigWheel
     private double powerRight = 0;
 
     //PID values
-    private int forwardTPM = (int) (1078); //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    private int forwardTPM = (int) (1070); //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
     private double poseX;
     private double poseY;
     private double poseHeading; //current heading in degrees. Might be rotated by 90 degrees from imu's heading when strafing

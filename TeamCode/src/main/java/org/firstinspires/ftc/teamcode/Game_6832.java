@@ -351,6 +351,12 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 6:
                         if(driveStraight()) active = false;
+                        if(toggleAllowed(gamepad1.right_bumper,right_bumper)){
+                            robot.setForwardTPM(robot.getForwardTPM()+10);
+                        }else if(toggleAllowed(gamepad1.left_bumper,left_bumper)){
+                            robot.setForwardTPM(robot.getForwardTPM()-10);
+                        }
+
                         break;
                     case 7:
 //
@@ -409,7 +415,7 @@ public class Game_6832 extends LinearOpMode {
     }
 
     public boolean driveStraight(){
-        return robot.driveIMUDistance(0.01, 1, 0, false, 3.0);
+        return robot.driveForward(true,2,.5);
     }
 
     int tpmtuningstage = 0;
@@ -420,12 +426,16 @@ public class Game_6832 extends LinearOpMode {
                 if(robot.goToPosition(robot.superman.pos_reverseIntake-100,robot.collector.pos_reverseSafeDrive,.75,.3)){
                 }
 
+                if(toggleAllowed(gamepad1.y,y)){
+                    robot.resetMotors(true);
+                }
+
                 if(toggleAllowed(gamepad1.a,a)){
                     tpmtuningstage++;
                 }
                 break;
             case 1:
-                if(robot.driveForward(true,1,1)){
+                if(robot.driveForward(true,.2,1)){
                     tpmtuningstage = 0;
                 }
                 break;
@@ -1199,7 +1209,8 @@ public class Game_6832 extends LinearOpMode {
                 .addData("yaw", () -> robot.getHeading());
         telemetry.addLine()
                 .addData("calib", () -> robot.imu.getCalibrationStatus().toString());
-
+        telemetry.addLine()
+                .addData("drivedistance", () -> robot.driveLeft.getCurrentPosition());
         telemetry.addLine()
                 .addData("status", () -> robot.imu.getSystemStatus().toShortString())
                 .addData("Pos", () -> robot.intakeGate.getPosition())
