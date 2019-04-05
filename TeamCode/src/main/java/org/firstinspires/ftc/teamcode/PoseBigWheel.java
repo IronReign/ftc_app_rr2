@@ -383,6 +383,9 @@ public class PoseBigWheel
         poseHeading = wrapAngle(imuAngles.firstAngle, offsetHeading);
         posePitch = wrapAngle(imuAngles.thirdAngle, offsetPitch);
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
+
+
+
 /*
         double jerkX = (cachedXAcceleration - lastXAcceleration) / loopTime;
         boolean correct = false;
@@ -1105,6 +1108,15 @@ public class PoseBigWheel
        return target;
    }
 
+
+
+    public int elbowToBelt(int elbow, int offset){
+        return (int)(4.5*(elbow+ offset)) +620;
+    }
+
+    public int beltToElbow(int belt, int offset){
+        return (int)(2.0/9 * ((belt+offset)-620)) ;
+    }
 
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////

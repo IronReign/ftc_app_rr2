@@ -412,6 +412,28 @@ public class Game_6832 extends LinearOpMode {
         return robot.driveIMUDistance(0.01, 1, 0, false, 3.0);
     }
 
+    int tpmtuningstage = 0;
+    public void tpmtuning(){
+
+        switch (tpmtuningstage){
+            case 0:
+                if(robot.goToPosition(robot.superman.pos_reverseIntake-100,robot.collector.pos_reverseSafeDrive,.75,.3)){
+                }
+
+                if(toggleAllowed(gamepad1.a,a)){
+                    tpmtuningstage++;
+                }
+                break;
+            case 1:
+                if(robot.driveForward(true,1,1)){
+                    tpmtuningstage = 0;
+                }
+                break;
+        }
+    }
+
+
+
     private void initialization_initSound() {
         telemetry.addData("Please wait", "Initializing Sound");
         //telemetry.update();
@@ -760,6 +782,8 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
+    int reverse = 1;
+
     private void joystickDrive() {
 
         if (!joystickDriveStarted) {
@@ -769,7 +793,14 @@ public class Game_6832 extends LinearOpMode {
             joystickDriveStarted = true;
         }
 
-        pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
+        if(robot.getArticulation() == PoseBigWheel.Articulation.intake){
+            reverse = -1;
+        }else if(robot.getArticulation() != PoseBigWheel.Articulation.intake && robot.getArticulation() != PoseBigWheel.Articulation.manual){
+            reverse = 1;
+        }
+
+
+        pwrFwd = reverse*direction * pwrDamper * gamepad1.left_stick_y;
         pwrRot = -pwrDamper * .75 * gamepad1.right_stick_x;
 
         pwrFwdL = direction * pwrDamper * gamepad1.left_stick_y;
@@ -838,8 +869,10 @@ public class Game_6832 extends LinearOpMode {
         if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
             if (currTarget == robot.collector.extendMid) {
                 currTarget = robot.collector.extendMax;
+                robot.collector.setElbowTargetPos(robot.beltToElbow(robot.collector.getExtendABobCurrentPos(),0));
             } else {
                 currTarget = robot.collector.extendMid;
+                robot.collector.setElbowTargetPos(robot.beltToElbow(robot.collector.getExtendABobCurrentPos(),0));
             }
 
         }
