@@ -190,7 +190,7 @@ public class Game_6832 extends LinearOpMode {
         robot.init(this.hardwareMap, isBlue);
 
         telemetry.addData("Status", "Initialized "+currentBot);
-        telemetry.update();
+        //telemetry.update();
 
         configureDashboard();
 
@@ -226,7 +226,6 @@ public class Game_6832 extends LinearOpMode {
                     robot.setAutonomousIMUOffset(-45); //against field perimeter, facing left
                 else
                     robot.setAutonomousIMUOffset(0); //against lander
-                robot.collector.setElbowTargetPos(10, 1);
                 robot.articulate(PoseBigWheel.Articulation.hanging);
                 robot.collector.extendToMin();
             }
@@ -354,13 +353,7 @@ public class Game_6832 extends LinearOpMode {
                         if(driveStraight()) active = false;
                         break;
                     case 7:
-//                        ledTest();
-                        //servoTest();
-                        /*
-                        if (auto_turn.execute()) active = false;
-                        telemetry.addData("Error: ", 90 - robot.getHeading());
-                        telemetry.update();
-                        */
+//
                         if (toggleAllowed(gamepad1.y,y))
                             pCoeff+=.01;
                         else if (toggleAllowed(gamepad1.a, a))
@@ -421,7 +414,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void initialization_initSound() {
         telemetry.addData("Please wait", "Initializing Sound");
-        telemetry.update();
+        //telemetry.update();
         robot.ledSystem.setColor(LEDSystem.Color.STRESS);
         soundID = hardwareMap.appContext.getResources().getIdentifier("gracious", "raw", hardwareMap.appContext.getPackageName());
         boolean success = SoundPlayer.getInstance().preload(hardwareMap.appContext, soundID);
@@ -433,7 +426,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void initialization_deinitVisionProvider() {
         telemetry.addData("Please wait", "Deinitializing vision");
-        telemetry.update();
+        //telemetry.update();
         robot.ledSystem.setColor(LEDSystem.Color.STRESS);
         vp.shutdownVision();
         vp = null;
@@ -443,7 +436,7 @@ public class Game_6832 extends LinearOpMode {
     private void initialization_initVisionProvider() {
         try {
             telemetry.addData("Please wait", "Initializing vision");
-            telemetry.update();
+            //telemetry.update();
             robot.ledSystem.setColor(LEDSystem.Color.STRESS);
             vp = visionProviders[visionProviderState].newInstance();
             vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
@@ -456,7 +449,7 @@ public class Game_6832 extends LinearOpMode {
     private void initialization_initDummyVisionProvider() {
         try {
             telemetry.addData("Please wait", "Initializing vision");
-            telemetry.update();
+            //telemetry.update();
             robot.ledSystem.setColor(LEDSystem.Color.STRESS);
             vp = VisionProviders.defaultProvider.newInstance();
             vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
@@ -777,9 +770,7 @@ public class Game_6832 extends LinearOpMode {
         }
 
         pwrFwd = direction * pwrDamper * gamepad1.left_stick_y;
-        pwrStf = direction * pwrDamper * gamepad1.left_stick_x;
         pwrRot = -pwrDamper * .75 * gamepad1.right_stick_x;
-
 
         pwrFwdL = direction * pwrDamper * gamepad1.left_stick_y;
         pwrStfL = direction * pwrDamper * gamepad1.left_stick_x;
@@ -792,7 +783,9 @@ public class Game_6832 extends LinearOpMode {
             //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
             pwrDamper = .33;
         else*/
-            pwrDamper = 1.0;
+       pwrDamper = .5;
+
+
 
 
         switch (gameMode) {
@@ -863,13 +856,16 @@ public class Game_6832 extends LinearOpMode {
 
         //intake code
         double triggers = gamepad1.left_trigger - gamepad1.right_trigger;
-        if (triggers > 0.1)
+        if(robot.getArticulation() == PoseBigWheel.Articulation.reverseIntake || robot.getArticulation() == PoseBigWheel.Articulation.reverseDeposit){
             robot.collector.collect();
-        else if (triggers < -0.1)
-            robot.collector.eject();
-        else
-            robot.collector.stopIntake();
-
+        }else {
+            if (triggers > 0.1)
+                robot.collector.collect();
+            else if (triggers < -0.1)
+                robot.collector.eject();
+            else
+                robot.collector.stopIntake();
+        }
         //Gracious Professionalism!
         if (soundState == 1 && toggleAllowed(gamepad1.right_stick_button, right_stick_button)) {
             SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, soundID);
@@ -914,7 +910,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void logTurns(double target) {
         telemetry.addData("Error: ", target - robot.getHeading());
-        telemetry.update();
+        //telemetry.update();
     }
 
     private void joystickDriveEndgameMode() {
@@ -1070,7 +1066,6 @@ public class Game_6832 extends LinearOpMode {
                     break;
             }
         }
-
 
         if (isIntakeClosed) {
             robot.collector.closeGate();

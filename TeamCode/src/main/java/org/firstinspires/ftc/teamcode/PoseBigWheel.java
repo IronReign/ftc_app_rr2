@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
@@ -12,7 +11,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -180,7 +178,6 @@ public class PoseBigWheel
     boolean autonSingleStep = false; //single step through auton deploying stages to facilitate testing and demos
 
 
-    private Telemetry telemetry;
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
     ////                                                                                  ////
@@ -388,11 +385,8 @@ public class PoseBigWheel
         poseRoll = wrapAngle(imuAngles.secondAngle, offsetRoll);
 /*
         double jerkX = (cachedXAcceleration - lastXAcceleration) / loopTime;
-        TelemetryPacket packet = new TelemetryPacket();
-        packet.put("Jerk X", jerkX);
-        dashboard.sendTelemetryPacket(packet);
-
         boolean correct = false;
+
         if (Math.abs(jerkX) > 0.1) {
             driveMixerTank(1, 0);
             correct = true;
@@ -769,8 +763,7 @@ public class PoseBigWheel
            case hanging: //todo: fixup comments for deploy actions - moved stuff around
                //auton initial hang at the beginning of a match
                 collector.setExtendABobTargetPos(0);
-                //collector.hookOn();
-                collector.setElbowTargetPos(10,1);
+                collector.setElbowTargetPos(collector.stow,1);
                break;
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
@@ -907,15 +900,13 @@ public class PoseBigWheel
                collector.closeGate();
                switch(miniState){
                    case 0:
-                      // if(driveForward(true,.2,.7)){
-                           miniState++;
-                      // }
-                       break;
-                   case 1:
-                       collector.extendToMin(1,10);
                        if(goToPosition(superman.pos_reverseIntake-100,collector.pos_reverseSafeDrive,.75,.3)){
                            miniState++;
                        }
+                       break;
+                   case 1:
+                       collector.extendToMin(1,10);
+                       miniState++;
                        break;
                    case 2:
                        miniState = 0; //just being a good citizen for next user of miniState
@@ -979,14 +970,16 @@ public class PoseBigWheel
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        //if (collector.setElbowTargetPos(collector.pos_reverseDeposit,1))
-                       if (collector.extendToReverseDeposit(1,15))
+                       if (collector.extendToMid(1,15))
                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up
-                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.3))
+                       collector.extendToReverseDeposit(1,15);
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.27))
                            miniState++; //start going really fast to interim position
                        break;
                    case 2:
+                       collector.collect();
                        miniState++;
                        break;
                    case 3:
@@ -1084,12 +1077,24 @@ public class PoseBigWheel
                }
                break;
            case latchSet:
-               collector.restart(.40, .5);
-               superman.restart(.75);
-               if(superman.setTargetPosition(superman.pos_postlatch, 1))
-                   collector.setElbowTargetPos(collector.pos_postlatch);
-               articulation = Articulation.manual;
-               return target;
+               switch (miniState) {
+                   case 0:
+                       collector.restart(.40, .5);
+                       superman.restart(.75);
+                       if(superman.setTargetPosition(superman.pos_postlatch, 1)){
+                           miniState++;
+                       }
+                       break;
+                   case 1:
+
+                       if(collector.setElbowTargetPos(collector.pos_postlatch, 1)) {
+                           miniState = 0;
+                           articulation = Articulation.manual;
+                           return Articulation.manual;
+                       }
+                       break;
+               }
+               break;
                //break;
            case latchHang:
                break;

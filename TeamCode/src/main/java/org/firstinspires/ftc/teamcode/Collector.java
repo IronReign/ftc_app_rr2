@@ -69,6 +69,8 @@ public class Collector {
     public static int extendMin;  //prevent crunching collector tray
     public static int extendPreLatch = extendMax;
 
+    public static int stow = 225;
+
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 22.3296703;
 
@@ -150,8 +152,8 @@ public class Collector {
                 pos_autonPrelatch = 2950;
 
                 //end game encoder values
-                pos_prelatch = 2558;
-                pos_latched = 3023;
+                pos_prelatch = 2000;
+                pos_latched = 2764;
                 pos_postlatch = 1240;
 
                 servoGateOpen = 900;
