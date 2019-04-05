@@ -41,7 +41,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.robots.handprosthetic.robopoglo;
 import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
 import org.firstinspires.ftc.teamcode.statemachine.Stage;
 import org.firstinspires.ftc.teamcode.statemachine.StateMachine;
@@ -128,12 +127,6 @@ public class Game_6832 extends LinearOpMode {
     private int left_stick_button = 14;
     private int right_stick_button = 15; //sound player
 
-    private boolean butY = false;
-    private boolean butA = false;
-    private boolean butX = false;
-    private boolean butB = false;
-    private int targetPos = 0;
-
     int stateLatched = -1;
     int stateIntake = -1;
     int stateDelatch = -1;
@@ -162,7 +155,7 @@ public class Game_6832 extends LinearOpMode {
     private int soundID = -1;
 
     //auto constants
-    private static final double DRIVE_POWER = .95;
+    private static final double DRIVE_POWER = .65;
     private static final float TURN_TIME = 2;
     private static final float DUCKY_TIME = 0.5f;
     private double pCoeff = 0.26;
@@ -242,16 +235,6 @@ public class Game_6832 extends LinearOpMode {
                 autoDelay++;
                 if (autoDelay > 20) autoDelay = 0;
             }
-
-            /*if(toggleAllowed(gamepad1.a,a)){
-                if(currentBot == PoseBigWheel.RobotType.Icarus){
-                    currentBot = PoseBigWheel.RobotType.BigWheel;
-                }else{
-                    currentBot = PoseBigWheel.RobotType.Icarus;
-                }
-                stop();
-
-            }*/
 
             if (toggleAllowed(gamepad1.left_stick_button, left_stick_button))
                 enableHookSensors = !enableHookSensors;
@@ -350,16 +333,17 @@ public class Game_6832 extends LinearOpMode {
                             robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
                         break;
                     case 6:
-                        if(driveStraight()) active = false;
-                        if(toggleAllowed(gamepad1.right_bumper,right_bumper)){
-                            robot.setForwardTPM(robot.getForwardTPM()+10);
-                        }else if(toggleAllowed(gamepad1.left_bumper,left_bumper)){
-                            robot.setForwardTPM(robot.getForwardTPM()-10);
-                        }
+//                        if(driveStraight()) active = false;
+//                        if(toggleAllowed(gamepad1.right_bumper,right_bumper)){
+//                            robot.setForwardTPM(robot.getForwardTPM()+10);
+//                        }else if(toggleAllowed(gamepad1.left_bumper,left_bumper)){
+//                            robot.setForwardTPM(robot.getForwardTPM()-10);
+//                        }
+                        turnTest();
+
 
                         break;
                     case 7:
-//
                         if (toggleAllowed(gamepad1.y,y))
                             pCoeff+=.01;
                         else if (toggleAllowed(gamepad1.a, a))
@@ -415,7 +399,7 @@ public class Game_6832 extends LinearOpMode {
     }
 
     public boolean driveStraight(){
-        return robot.driveForward(true,2,.5);
+        return robot.driveForward(true,1,.5);
     }
 
     int tpmtuningstage = 0;
@@ -565,7 +549,6 @@ public class Game_6832 extends LinearOpMode {
                     () -> robot.rotatePIDIMU(39+180, TURN_TIME),
                     () -> true,
                     () -> robot.rotatePIDIMU(321+180, TURN_TIME))
-
             .addMineralState(mineralStateProvider, //move to mineral
                     () -> robot.driveForward(true, .580, DRIVE_POWER),
                     () -> robot.driveForward(true, .50, DRIVE_POWER),
@@ -879,10 +862,10 @@ public class Game_6832 extends LinearOpMode {
         if (toggleAllowed(gamepad1.left_bumper, left_bumper)) {
             if (currTarget == robot.collector.extendMid) {
                 currTarget = robot.collector.extendMax;
-                robot.collector.setElbowTargetPos(robot.beltToElbow(robot.collector.getExtendABobCurrentPos(),0));
+                //robot.collector.setElbowTargetPos(robot.beltToElbow(robot.collector.getExtendABobCurrentPos(),0));
             } else {
                 currTarget = robot.collector.extendMid;
-                robot.collector.setElbowTargetPos(robot.beltToElbow(robot.collector.getExtendABobCurrentPos(),0));
+                //robot.collector.setElbowTargetPos(robot.beltToElbow(robot.collector.getExtendABobCurrentPos(),0));
             }
 
         }
@@ -899,8 +882,8 @@ public class Game_6832 extends LinearOpMode {
 
         //intake code
         double triggers = gamepad1.left_trigger - gamepad1.right_trigger;
-        if(robot.getArticulation() == PoseBigWheel.Articulation.reverseIntake || robot.getArticulation() == PoseBigWheel.Articulation.reverseDeposit){
-            robot.collector.collect();
+        if(false){//robot.getArticulation() == PoseBigWheel.Articulation.reverseIntake || robot.getArticulation() == PoseBigWheel.Articulation.reverseDeposit){
+           // robot.collector.collect();
         }else {
             if (triggers > 0.1)
                 robot.collector.collect();
@@ -999,8 +982,15 @@ public class Game_6832 extends LinearOpMode {
         }
     }
 
-    private boolean turnTest(double angle, double maxTime) {
-        return robot.rotatePIDIMU(angle, maxTime);
+    private void turnTest() {
+        if (robot.rotatePIDIMU(90, 3)) {
+            telemetry.addData("Angle Error: ", 90 - robot.getHeading());
+            telemetry.addData("Final Test Heading: ", robot.getHeading());
+            robot.setZeroHeading();
+            active = false;
+        }
+        telemetry.addData("Current Angle: ", robot.getHeading());
+        telemetry.addData("Angle Error: ", 90 - robot.getHeading());
     }
 
     private void joystickDriveRegularMode() {

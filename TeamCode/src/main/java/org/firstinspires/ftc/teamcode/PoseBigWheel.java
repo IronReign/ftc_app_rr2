@@ -39,13 +39,11 @@ public class PoseBigWheel
     public double kiDrive = 0.000; //integral constant multiplier
     public double kdDrive = 0.001; //derivative constant multiplier
 
-    public static double headingP = 0.006;
+    public static double headingP = 0.007;
     public static double headingD = 0;
-    //public static int forwardTPM = (int) (1078);
 
     public double balanceP = .35;
     public double balanceD = 3.1444;
-    public boolean needsUpdate = false;
 
 
 
@@ -72,19 +70,16 @@ public class PoseBigWheel
 
     //All sensors
     BNO055IMU imu; //Inertial Measurement Unit: Accelerometer and Gyroscope combination sensor
-//    Orientation angles; //feedback from the IMU
     DistanceSensor distForward;
     DistanceSensor distLeft;
     DistanceSensor distRight;
-    Rev2mDistanceSensor sensorTimeOfFlight;
-    static  int ticksPerRot        = 1680;
 
     //drive train power values
     private double powerLeft = 0;
     private double powerRight = 0;
 
     //PID values
-    private int forwardTPM = (int) (1070); //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
+    public static int forwardTPM = 1060; //measurement was for the original 42 tooth driven sprocket, since replaced by a 32 tooth sprocket
     private double poseX;
     private double poseY;
     private double poseHeading; //current heading in degrees. Might be rotated by 90 degrees from imu's heading when strafing
@@ -112,11 +107,6 @@ public class PoseBigWheel
     private double minTurnError = 1.0;
     public boolean maintainHeadingInit = false;;
     private double poseSavedHeading = 0.0;
-    int balanceState = 1;
-    private FtcDashboard dashboard;
-
-    SoundPlayer robotSays = SoundPlayer.getInstance(); //plays audio feedback from the robot controller phone
-
 
     public int servoTesterPos = 1600;
     public double autonomousIMUOffset = 0;
@@ -326,13 +316,6 @@ public class PoseBigWheel
 
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parametersIMU);
-
-
-
-        // you can also cast this to a Rev2mDistanceSensor if you want to use added
-        // methods associated with the Rev2mDistanceSensor class.
-        Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)distForward;
-        dashboard = FtcDashboard.getInstance();
 
     }
 
