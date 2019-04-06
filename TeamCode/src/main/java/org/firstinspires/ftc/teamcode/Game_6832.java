@@ -336,11 +336,10 @@ public class Game_6832 extends LinearOpMode {
                         break;
                     case 9:
                         if (auto.craterSide_extend_reverse.execute()) active = false;
-                            break;
-                    case 10:
-                        if (auto.craterSide_extend.execute()) active = false;
                         break;
-
+                    case 10:
+                        if (auto.depotSide_reverse.execute()) active = false;
+                        break;
                     default:
                         robot.stopAll();
                         break;
@@ -910,13 +909,6 @@ public class Game_6832 extends LinearOpMode {
         int idx = (int) ((System.currentTimeMillis() / 2000) % LEDSystem.Color.values().length);
         robot.ledSystem.setColor(LEDSystem.Color.values()[idx]);
         telemetry.addData("Color", LEDSystem.Color.values()[idx].name());
-    }
-
-    private StateMachine.Builder getStateMachine(Stage stage) {
-        return StateMachine.builder()
-                .stateSwitchAction(() -> robot.resetMotors(true))
-                .stateEndAction(() -> {})
-                .stage(stage);
     }
 
 }

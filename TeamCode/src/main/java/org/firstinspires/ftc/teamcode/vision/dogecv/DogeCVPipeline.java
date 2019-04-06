@@ -42,8 +42,8 @@ public class DogeCVPipeline {
     private double maxDifference = 10;
 
     // Cropping (Iron Reign Addition)
-    private static double minY = 0, maxY = 0;
-    private static boolean enableYCrop = false;
+    public static double minY = 0, maxY = 0;
+    public static boolean enableYCrop = false;
 
     private Size adjustedSize = new Size(640, 480);
 
