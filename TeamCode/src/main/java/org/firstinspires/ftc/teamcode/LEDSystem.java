@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class LEDSystem {
 
-    public static boolean ENABLED = false;
+    public static boolean ENABLED = true;
 
     Servo movement;
 
