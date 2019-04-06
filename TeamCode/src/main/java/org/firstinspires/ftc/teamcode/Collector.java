@@ -196,7 +196,7 @@ public class Collector {
 
     public void updateBeltToElbow() {
         if(beltToElbowEnabled) {
-            setElbowTargetPos(beltToElbow(getExtendABobCurrentPos(), 0));
+            setElbowTargetPos(beltToElbow(getExtendABobCurrentPos(), 0)-40);
         }
     }
 

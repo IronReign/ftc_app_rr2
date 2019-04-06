@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vision.dogecv;
 
+import com.acmerobotics.dashboard.config.Config;
+
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -14,6 +16,7 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
+@Config
 public class DogeCVPipeline {
 
     //Create the scorers used for the detector
@@ -37,6 +40,10 @@ public class DogeCVPipeline {
     private Mat hiarchy     = new Mat();
 
     private double maxDifference = 10;
+
+    // Cropping (Iron Reign Addition)
+    private static double minY = 0, maxY = 0;
+    private static boolean enableYCrop = false;
 
     private Size adjustedSize = new Size(640, 480);
 
@@ -85,6 +92,20 @@ public class DogeCVPipeline {
             // Get bounding rect of contour
             Rect rect = Imgproc.boundingRect(points);
 
+            double area = Imgproc.contourArea(c);
+            double x = rect.x;
+            double y = rect.y;
+            double w = rect.width;
+            double h = rect.height;
+            Point centerPoint = new Point(x + ( w/2), y + (h/2));
+            if (enableYCrop && !(centerPoint.y < maxY && centerPoint.y > minY))
+                continue;
+            if( area > 500){
+                Imgproc.circle(displayMat,centerPoint,3,new Scalar(0,255,255),3);
+                Imgproc.putText(displayMat,"Area: " + area,centerPoint,0,0.5,new Scalar(0,255,255));
+            }
+
+
             double diffrenceScore = calculateScore(points);
 
             if(diffrenceScore < chosenYellowScore && diffrenceScore < maxDifference){
@@ -92,16 +113,6 @@ public class DogeCVPipeline {
                 chosenYellowRect = rect;
             }
 
-            double area = Imgproc.contourArea(c);
-            double x = rect.x;
-            double y = rect.y;
-            double w = rect.width;
-            double h = rect.height;
-            Point centerPoint = new Point(x + ( w/2), y + (h/2));
-            if( area > 500){
-                Imgproc.circle(displayMat,centerPoint,3,new Scalar(0,255,255),3);
-                Imgproc.putText(displayMat,"Area: " + area,centerPoint,0,0.5,new Scalar(0,255,255));
-            }
         }
 
         // Prepare to find best white (silver) results
@@ -134,6 +145,8 @@ public class DogeCVPipeline {
             double w = rect.width;
             double h = rect.height;
             Point centerPoint = new Point(x + ( w/2), y + (h/2));
+            if (enableYCrop && !(centerPoint.y < maxY && centerPoint.y > minY))
+                continue;
             if( area > 1000){
                 Imgproc.circle(displayMat,centerPoint,3,new Scalar(0,255,255),3);
                 Imgproc.putText(displayMat,"Area: " + area,centerPoint,0,0.5,new Scalar(0,255,255));
@@ -190,6 +203,12 @@ public class DogeCVPipeline {
                         2);
             }
 
+
+        }
+
+        if (enableYCrop) {
+            Imgproc.rectangle(displayMat, new Point(0, maxY), new Point(displayMat.width(), maxY), new Scalar(225, 225, 0), 4);
+            Imgproc.rectangle(displayMat, new Point(0, minY), new Point(displayMat.width(), minY), new Scalar(225, 225, 0), 4);
 
         }
 
