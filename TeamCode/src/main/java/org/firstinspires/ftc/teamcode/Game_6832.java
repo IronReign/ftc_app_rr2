@@ -66,6 +66,8 @@ public class Game_6832 extends LinearOpMode {
 
     private PoseBigWheel robot;
 
+    private Autonomous auto;
+
     private boolean active = true;
     private boolean joystickDriveStarted = false;
 
@@ -92,12 +94,6 @@ public class Game_6832 extends LinearOpMode {
     private long damperTimer = 0;
     private int direction = 1;  //-1 to reverse direction
     private int currTarget = 0;
-
-    //staging and timer variables
-    private long autoTimer = 0;
-    private long autoDelay = 0;
-    private Stage autoStage = new Stage();
-    private Stage autoSetupStage = new Stage();
 
     //sensors/sensing-related variables
     private Orientation angles;
@@ -139,29 +135,15 @@ public class Game_6832 extends LinearOpMode {
     private static final int NUM_MODES = 4;
     private static final String[] GAME_MODES = {"REVERSE", "ENDGAME", "PRE-GAME", "REGULAR"};
 
-    //vision-related configuration
-    private VisionProvider vp;
-    private int visionProviderState;
-    private boolean visionProviderFinalized;
-    private boolean enableTelemetry = false;
-    private static final Class<? extends VisionProvider>[] visionProviders = VisionProviders.visionProviders;
-    private static final Viewpoint viewpoint = Viewpoint.WEBCAM;
-    private GoldPos initGoldPosTest = null;
-    private int mineralState = 0;
-    private MineralStateProvider mineralStateProvider = () -> mineralState;
-
     //sound related configuration
     private int soundState = 0;
     private int soundID = -1;
 
-    //auto constants
-    private static final double DRIVE_POWER = .65;
-    private static final float TURN_TIME = 2;
-    private static final float DUCKY_TIME = 0.5f;
+    //auto stuff
+    private GoldPos initGoldPosTest;
     private double pCoeff = 0.26;
     private double dCoeff = 0.33;
     private double targetAngle = 273;
-
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -182,6 +164,8 @@ public class Game_6832 extends LinearOpMode {
         robot = new PoseBigWheel(currentBot);
         robot.init(this.hardwareMap, isBlue);
 
+        auto = new Autonomous(robot, telemetry, gamepad1);
+
         telemetry.addData("Status", "Initialized "+currentBot);
         //telemetry.update();
 
@@ -195,7 +179,7 @@ public class Game_6832 extends LinearOpMode {
         robot.collector.hookOn();
         robot.collector.closeGate();
 
-        visionProviderFinalized = false;
+        auto.visionProviderFinalized = false;
 
 
         while (!isStarted()) {    // Wait for the game to start (driver presses PLAY)
@@ -232,8 +216,8 @@ public class Game_6832 extends LinearOpMode {
             }
 
             if (toggleAllowed(gamepad1.y, y)) {
-                autoDelay++;
-                if (autoDelay > 20) autoDelay = 0;
+                auto.autoDelay++;
+                if (auto.autoDelay > 20) auto.autoDelay = 0;
             }
 
             if (toggleAllowed(gamepad1.left_stick_button, left_stick_button))
@@ -244,28 +228,19 @@ public class Game_6832 extends LinearOpMode {
             if (enableHookSensors && robot.distRight.getDistance(DistanceUnit.METER) < .08)
                 robot.collector.hookOff();
 
-//            if(toggleAllowed(gamepad1.x,x)) {
-//                isBlue = !isBlue;
-//            }
-//            if(toggleAllowed(gamepad1.a,a)){
-//                autoDelay--;
-//                if(autoDelay < 0) autoDelay = 20;
-//            }
-
-
-            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)) {
-                visionProviderState = (visionProviderState + 1) % visionProviders.length; //switch vision provider
+            if (!auto.visionProviderFinalized && toggleAllowed(gamepad1.dpad_left, dpad_left)) {
+                auto.visionProviderState = (auto.visionProviderState + 1) % auto.visionProviders.length; //switch vision provider
             }
-            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
-                initialization_initVisionProvider(); //this is blocking
-            } else if (visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
-                initialization_deinitVisionProvider(); //also blocking, but should be very quick
+            if (!auto.visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
+                auto.initVisionProvider(); //this is blocking
+            } else if (auto.visionProviderFinalized && toggleAllowed(gamepad1.dpad_up, dpad_up)) {
+                auto.deinitVisionProvider(); //also blocking, but should be very quick
             }
-            if (!visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)) {
-                enableTelemetry = !enableTelemetry; //enable/disable FtcDashboard telemetry
+            if (!auto.visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)) {
+                auto.enableTelemetry = !auto.enableTelemetry; //enable/disable FtcDashboard telemetry
             }
-            if (visionProviderFinalized && gamepad1.left_trigger > 0.3) {
-                GoldPos gp = vp.detect();
+            if (auto.visionProviderFinalized && gamepad1.left_trigger > 0.3) {
+                GoldPos gp = auto.vp.detect();
                 if (gp != GoldPos.HOLD_STATE)
                     initGoldPosTest = gp;
                 telemetry.addData("Vision", "Prep detection: %s%s", initGoldPosTest, gp == GoldPos.HOLD_STATE ? " (HOLD_STATE)" : "");
@@ -275,14 +250,14 @@ public class Game_6832 extends LinearOpMode {
                 initialization_initSound();
             }
 
-            telemetry.addData("Vision", "Backend: %s (%s)", visionProviders[visionProviderState].getSimpleName(), visionProviderFinalized ? "finalized" : System.currentTimeMillis() / 500 % 2 == 0 ? "**NOT FINALIZED**" : "  NOT FINALIZED  ");
-            telemetry.addData("Vision", "FtcDashboard Telemetry: %s", enableTelemetry ? "Enabled" : "Disabled");
-            telemetry.addData("Vision", "Viewpoint: %s", viewpoint);
+            telemetry.addData("Vision", "Backend: %s (%s)", auto.visionProviders[auto.visionProviderState].getSimpleName(), auto.visionProviderFinalized ? "finalized" : System.currentTimeMillis() / 500 % 2 == 0 ? "**NOT FINALIZED**" : "  NOT FINALIZED  ");
+            telemetry.addData("Vision", "FtcDashboard Telemetry: %s", auto.enableTelemetry ? "Enabled" : "Disabled");
+            telemetry.addData("Vision", "Viewpoint: %s", auto.viewpoint);
 
             telemetry.addData("Sound", soundState == 0 ? "off" : soundState == 1 ? "on" : soundState == 2 ? "file not found" : "other");
 
             telemetry.addData("Status", "Initialized");
-            telemetry.addData("Status", "Auto Delay: " + Long.toString(autoDelay) + "seconds");
+            telemetry.addData("Status", "Auto Delay: " + Long.toString(auto.autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
             telemetry.addData("Status", "Hook sensors: " + enableHookSensors);
             telemetry.update();
@@ -296,11 +271,11 @@ public class Game_6832 extends LinearOpMode {
             idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
         }
 
-        if (vp == null) {
-            initialization_initDummyVisionProvider(); //this is blocking
+        if (auto.vp == null) {
+            auto.initDummyVisionProvider(); //this is blocking
         }
 
-        vp.reset();
+        auto.vp.reset();
 
         robot.superman.restart(.75);
         robot.collector.restart(.4, .5);
@@ -316,16 +291,16 @@ public class Game_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 1: //autonomous that goes to opponent's crater
-                        if (auto_depotSide.execute()) active = false;
+                        if (auto.depotSide.execute()) active = false;
                         break;
                     case 2: //autonomous that only samples
-                        if (auto_depotSample.execute()) active = false;
+                        if (auto.depotSample.execute()) active = false;
                         break;
                     case 3: //autonomous that starts in our crater
-                        if (auto_craterSide.execute()) active = false;
+                        if (auto.craterSide.execute()) active = false;
                         break;
                     case 4:
-                        if (auto_driveStraight.execute()) active = false;
+                        if (auto.driveStraight.execute()) active = false;
                         break;
                     case 5:
                         robot.setAutonSingleStep(false);
@@ -372,10 +347,10 @@ public class Game_6832 extends LinearOpMode {
                         demo();
                         break;
                     case 9:
-                        if (auto_craterSide_extend_reverse.execute()) active = false;
+                        if (auto.craterSide_extend_reverse.execute()) active = false;
                             break;
                     case 10:
-                        if (auto_craterSide_extend.execute()) active = false;
+                        if (auto.craterSide_extend.execute()) active = false;
                         break;
 
                     default:
@@ -440,40 +415,7 @@ public class Game_6832 extends LinearOpMode {
             soundState = 2;
     }
 
-    private void initialization_deinitVisionProvider() {
-        telemetry.addData("Please wait", "Deinitializing vision");
-        //telemetry.update();
-        robot.ledSystem.setColor(LEDSystem.Color.STRESS);
-        vp.shutdownVision();
-        vp = null;
-        visionProviderFinalized = false;
-    }
 
-    private void initialization_initVisionProvider() {
-        try {
-            telemetry.addData("Please wait", "Initializing vision");
-            //telemetry.update();
-            robot.ledSystem.setColor(LEDSystem.Color.STRESS);
-            vp = visionProviders[visionProviderState].newInstance();
-            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
-        } catch (IllegalAccessException | InstantiationException e) {
-            throw new RuntimeException(e);
-        }
-        visionProviderFinalized = true;
-    }
-
-    private void initialization_initDummyVisionProvider() {
-        try {
-            telemetry.addData("Please wait", "Initializing vision");
-            //telemetry.update();
-            robot.ledSystem.setColor(LEDSystem.Color.STRESS);
-            vp = VisionProviders.defaultProvider.newInstance();
-            vp.initializeVision(hardwareMap, telemetry, enableTelemetry, viewpoint);
-        } catch (IllegalAccessException | InstantiationException e) {
-            throw new RuntimeException(e);
-        }
-        visionProviderFinalized = true;
-    }
 
     private void demo() {
         if (gamepad1.x)
@@ -496,282 +438,6 @@ public class Game_6832 extends LinearOpMode {
             robot.collector.retractBelt();
         }
 
-    }
-
-    private StateMachine auto_test = getStateMachine(autoStage)
-            .addState(() -> {
-                robot.driveMixerTank(.65,0);
-                return gamepad1.a;
-            })
-            .addState(() -> robot.driveForward(false, 1, .65))
-            .addState(() -> resetIMUBool())
-            .build();
-
-    private StateMachine auto_setup = getStateMachine(autoSetupStage)
-            .addTimedState(autoDelay, () -> telemetry.addData("DELAY", "STARTED"), () -> telemetry.addData("DELAY", "DONE"))
-            .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
-            //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
-            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.deploying)) //start deploy
-            /*.addState(() -> {
-                auto_sample();
-                return  robot.getArticulation() == PoseBigWheel.Articulation.driving);
-            })*/
-            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.driving) //wait until done
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.driving, true))
-            //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
-            .addState(() -> robot.rotatePIDIMU(0, 1)) //turn back to center
-            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
-            .addState(() -> robot.driveForward(false, .05, DRIVE_POWER)) //move back to see everything
-            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
-            .addState(() -> auto_sample()) //detect the mineral
-            .addState(() -> robot.driveForward(true, .05, DRIVE_POWER)) //move forward again
-            .build();
-
-    private StateMachine auto_setupReverse = getStateMachine(autoSetupStage)
-            .addTimedState(autoDelay, () -> telemetry.addData("DELAY", "STARTED"), () -> telemetry.addData("DELAY", "DONE"))
-            .addSingleState(() -> robot.setAutonSingleStep(false)) //turn off autonSingleState
-            //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.RED)) //red color
-            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.reversedeploying)) //start deploy
-            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.reverseDriving) //wait until done
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
-            //.addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE)) //purple color
-            .addState(() -> robot.rotatePIDIMU(0, 1)) //turn back to center
-            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
-            //.addState(() -> robot.driveForward(false, .05, DRIVE_POWER)) //move back to see everything
-            //.addTimedState(0.5f, () -> {}, () -> {}) //wait for the robot to settle down
-            .addState(() -> auto_sample()) //detect the mineral
-            //.addState(() -> robot.driveForward(true, .05, DRIVE_POWER)) //move forward again
-            .build();
-
-    private StateMachine auto_craterSide_extend_reverse = getStateMachine(autoStage)
-            .addNestedStateMachine(auto_setupReverse)
-            .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotatePIDIMU(39+180, TURN_TIME),
-                    () -> true,
-                    () -> robot.rotatePIDIMU(321+180, TURN_TIME))
-            .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .580, DRIVE_POWER),
-                    () -> robot.driveForward(true, .50, DRIVE_POWER),
-                    () -> robot.driveForward(true, .590, DRIVE_POWER))
-            .addTimedState(.5f, () -> {}, () -> {})
-            .addMineralState(mineralStateProvider, //move back
-                    () -> robot.driveForward(false, .440, DRIVE_POWER),
-                    () -> robot.driveForward(false, .45, DRIVE_POWER),
-                    () -> robot.driveForward(false, .445, DRIVE_POWER))
-            .addState(() -> robot.rotatePIDIMU(90, 3)) //turn parallel to minerals
-            .addMineralState(mineralStateProvider, //move to wall
-                    () -> robot.driveForward(true, 0.9, DRIVE_POWER),
-                    () -> robot.driveForward(true, 1.1, DRIVE_POWER),
-                    () -> robot.driveForward(true, 1.3, DRIVE_POWER))
-            .addState(() -> robot.rotatePIDIMU(130, 3)) //turn to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
-            .addState(() -> robot.collector.setElbowTargetPos(10,1))
-            .addState(() -> robot.driveForward(true, .5, DRIVE_POWER))
-            .addState(() -> robot.collector.extendToMax(1,10))
-            .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
-                    () -> robot.collector.stopIntake())
-            .addState(() -> robot.collector.extendToMid(1,10))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
-            .addState(() -> robot.driveForward(false, .5, DRIVE_POWER))
-            .addState(() -> robot.collector.nearTargetElbow())
-            .addState(() -> robot.rotatePIDIMU(222, 0.6))
-            .addState(() -> robot.rotatePIDIMU(315, 3))
-            .addState(() -> robot.driveForward(true, .5, DRIVE_POWER))
-            //.addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
-            //.addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
-            .build();
-
-
-    private StateMachine auto_depotSide = getStateMachine(autoStage)
-            .addNestedStateMachine(auto_setup)
-            .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotateIMU(39, TURN_TIME),
-                    () -> true,
-                    () -> robot.rotateIMU(321, TURN_TIME))
-            .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .604, DRIVE_POWER),
-                    () -> robot.driveForward(true, .47, DRIVE_POWER),
-                    () -> robot.driveForward(true, .604, DRIVE_POWER))
-            .addMineralState(mineralStateProvider, //turn to depot
-                    () -> robot.rotateIMU(345, TURN_TIME),
-                    () -> true,
-                    () -> robot.rotateIMU(15, TURN_TIME))
-            .addMineralState(mineralStateProvider, //move to depot
-                    () -> robot.driveForward(true, .880, DRIVE_POWER),
-                    () -> robot.driveForward(true, .762, DRIVE_POWER),
-                    () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
-            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
-            .addState(() -> robot.collector.extendToMid(1, 15))
-            .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
-                    () -> robot.collector.stopIntake())
-            .addMineralState(mineralStateProvider, //turn to wall
-                    () -> true,
-                    () -> robot.rotateIMU(225, 4),
-                    () -> robot.rotateIMU(225, 4))
-            .addMineralState(mineralStateProvider, //move forward a little
-                    () -> true,
-                    () -> robot.driveForward(false, .090, DRIVE_POWER),
-                    () -> robot.driveForward(false, .160, DRIVE_POWER))
-            .addState(() -> robot.rotateIMU(303, 5)) //turn to crater
-            .addState(() -> robot.driveForward(false, 1.05, DRIVE_POWER)) //go to crater
-            .addState(() -> robot.rotateIMU(310, 1.5)) //turn to crater
-            .addState(() -> robot.driveForward(false, .80, DRIVE_POWER)) //go to grater
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
-            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
-            .build();
-
-    private StateMachine auto_depotSample = getStateMachine(autoStage)
-            .addNestedStateMachine(auto_setup)
-            .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotateIMU(39, TURN_TIME),
-                    () -> true,
-                    () -> robot.rotateIMU(321, TURN_TIME))
-            .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .604, DRIVE_POWER),
-                    () -> robot.driveForward(true, .47, DRIVE_POWER),
-                    () -> robot.driveForward(true, .604, DRIVE_POWER))
-            .addMineralState(mineralStateProvider, //turn to depot
-                    () -> robot.rotateIMU(345, TURN_TIME),
-                    () -> true,
-                    () -> robot.rotateIMU(15, TURN_TIME))
-            .addMineralState(mineralStateProvider, //move to depot
-                    () -> robot.driveForward(true, .880, DRIVE_POWER),
-                    () -> robot.driveForward(true, .762, DRIVE_POWER),
-                    () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
-            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
-            .addState(() -> robot.collector.extendToMid(1, 15))
-            .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
-                    () -> robot.collector.stopIntake())
-            .build();
-
-    private StateMachine auto_craterSide_extend = getStateMachine(autoStage)
-            .addNestedStateMachine(auto_setup)
-            .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotatePIDIMU(39, TURN_TIME),
-                    () -> true,
-                    () -> robot.rotatePIDIMU(321, TURN_TIME))
-            .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .880, DRIVE_POWER),
-                    () -> robot.driveForward(true, .70, DRIVE_POWER),
-                    () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addMineralState(mineralStateProvider, //move back
-                    () -> robot.driveForward(false, .440, DRIVE_POWER),
-                    () -> robot.driveForward(false, .35, DRIVE_POWER),
-                    () -> robot.driveForward(false, .445, DRIVE_POWER))
-            .addState(() -> robot.rotatePIDIMU(270, 3)) //turn parallel to minerals
-            .addMineralState(mineralStateProvider, //move to wall
-                    () -> robot.driveForward(false, 1.43344, DRIVE_POWER),
-                    () -> robot.driveForward(false, 1.48988, DRIVE_POWER),
-                    () -> robot.driveForward(false, 1.9, DRIVE_POWER))
-            .addState(() -> robot.rotatePIDIMU(310, 3)) //turn to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
-            .addState(() -> robot.collector.extendToMax(1,10))
-            .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
-                    () -> robot.collector.stopIntake())
-            .addState(() -> robot.collector.extendToMid(1,10))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.driving, true))
-            .addState(() -> robot.collector.nearTargetElbow())
-            .addState(() -> robot.rotatePIDIMU(100, 0.6))
-            .addState(() -> robot.rotatePIDIMU(130, 3))
-            .addState(() -> robot.driveForward(false, .5, DRIVE_POWER))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
-
-
-            /*.addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
-            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
-            .addState(() -> robot.collector.extendToMid(1, 15))
-            .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
-                    () -> robot.collector.stopIntake())
-            .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
-            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done*/
-            .build();
-
-
-    private boolean resetIMUBool() {
-        robot.resetIMU();
-        return true;
-    }
-    private StateMachine auto_craterSide = getStateMachine(autoStage)
-            .addNestedStateMachine(auto_setup)
-            .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotateIMU(39, TURN_TIME),
-                    () -> true,
-                    () -> robot.rotateIMU(321, TURN_TIME))
-            .addMineralState(mineralStateProvider, //move to mineral
-                    () -> robot.driveForward(true, .880, DRIVE_POWER),
-                    () -> robot.driveForward(true, .70, DRIVE_POWER),
-                    () -> robot.driveForward(true, .890, DRIVE_POWER))
-            .addMineralState(mineralStateProvider, //move back
-                    () -> robot.driveForward(false, .440, DRIVE_POWER),
-                    () -> robot.driveForward(false, .35, DRIVE_POWER),
-                    () -> robot.driveForward(false, .445, DRIVE_POWER))
-            .addState(() -> robot.rotateIMU(80, TURN_TIME)) //turn parallel to minerals
-            .addMineralState(mineralStateProvider, //move to wall
-                    () -> robot.driveForward(true, 1.4, DRIVE_POWER),
-                    () -> robot.driveForward(true, 1.5, DRIVE_POWER),
-                    () -> robot.driveForward(true, 1.9, DRIVE_POWER))
-            .addState(() -> robot.rotateIMU(135, TURN_TIME)) //turn to depot
-            .addState(() -> robot.driveForward(true, 1.2, DRIVE_POWER)) //move to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true)) //so we can start overriding
-            .addState(() -> robot.collector.setElbowTargetPos(618, 1))
-            .addState(() -> robot.collector.extendToMid(1, 15))
-            .addTimedState(DUCKY_TIME, //yeet ducky
-                    () -> robot.collector.eject(),
-                    () -> robot.collector.stopIntake())
-            .addState(() -> robot.driveForward(false, 2, DRIVE_POWER))
-            .addSingleState(() -> robot.collector.setElbowTargetPos(robot.collector.pos_AutoPark)) //extendBelt elbow to park
-            .addState(() -> Math.abs(robot.collector.getElbowCurrentPos() - robot.collector.pos_AutoPark) < 20) //wait until done
-            .build();
-
-    private StateMachine auto_driveStraight = getStateMachine(autoStage)
-            .addState(() -> robot.driveForward(false, 4, DRIVE_POWER))
-            .build();
-
-
-
-
-    private boolean auto_sample() {
-        //Turn on camera to see which is gold
-        GoldPos gp = vp.detect();
-        // Hold state lets us know that we haven't finished looping through detection
-        if (gp != GoldPos.HOLD_STATE) {
-            switch (gp) {
-                case LEFT:
-                    mineralState = 0;
-                    break;
-                case MIDDLE:
-                    mineralState = 1;
-                    break;
-                case RIGHT:
-                    mineralState = 2;
-                    break;
-                case NONE_FOUND:
-                case ERROR1:
-                case ERROR2:
-                case ERROR3:
-                default:
-                    mineralState = 0;
-                    break;
-            }
-            telemetry.addData("Vision Detection", "GoldPos: %s", gp.toString());
-            vp.shutdownVision();
-            return true;
-        } else {
-            telemetry.addData("Vision Detection", "HOLD_STATE (still looping through internally)");
-            return false;
-        }
     }
 
 
@@ -1181,7 +847,7 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("active", () -> active)
                 .addData("state", () -> state)
-                .addData("autoStage", () -> autoStage)
+                .addData("autoStage", () -> auto.autoStage)
                 .addData("Game Mode", () -> GAME_MODES[gameMode]);
         telemetry.addLine()
                 .addData("elbowA", () -> robot.collector.isActive())
@@ -1204,7 +870,7 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("status", () -> robot.imu.getSystemStatus().toShortString())
                 .addData("Pos", () -> robot.intakeGate.getPosition())
-                .addData("mineralState", () -> mineralState)
+                .addData("mineralState", () -> auto.mineralState)
                 .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))
                 .addData("distLeft", () -> robot.distLeft.getDistance(DistanceUnit.METER))
                 .addData("distRight", () -> robot.distRight.getDistance(DistanceUnit.METER));

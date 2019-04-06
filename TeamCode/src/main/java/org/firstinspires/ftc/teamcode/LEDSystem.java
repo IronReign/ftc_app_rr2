@@ -8,6 +8,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 
 public class LEDSystem {
+
+    public static boolean ENABLED = false;
+
     Servo movement;
 
     public enum Color {
@@ -25,7 +28,8 @@ public class LEDSystem {
     }
 
     public void setColor(Color color) {
-        movement.setPosition(servoNormalize(color.pos));
+        if (ENABLED)
+            movement.setPosition(servoNormalize(color.pos));
     }
 
     public static double servoNormalize(int pulse) {
