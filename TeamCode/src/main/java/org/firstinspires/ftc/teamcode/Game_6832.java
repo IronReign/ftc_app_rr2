@@ -62,7 +62,7 @@ public class Game_6832 extends LinearOpMode {
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
 
-    private PoseBigWheel.RobotType currentBot;
+    private PoseBigWheel.RobotType currentBot = PoseBigWheel.RobotType.Icarus;
 
     private PoseBigWheel robot;
 
@@ -147,16 +147,6 @@ public class Game_6832 extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        while (currentBot == null) {
-            telemetry.addData("Select robot","(A) Icarus (Y)  Big Wheel");
-            telemetry.update();
-            if (toggleAllowed(gamepad1.a, a)) {
-                currentBot = PoseBigWheel.RobotType.Icarus;
-            }
-            else if (toggleAllowed(gamepad1.y, y)) {
-                currentBot = PoseBigWheel.RobotType.BigWheel;
-            }
-        }
 
         telemetry.addData("Status", "Initializing "+currentBot+"...");
         telemetry.update();
@@ -303,9 +293,7 @@ public class Game_6832 extends LinearOpMode {
                         if (auto.driveStraight.execute()) active = false;
                         break;
                     case 5:
-                        robot.setAutonSingleStep(false);
-                        if (robot.getArticulation() == PoseBigWheel.Articulation.hanging)
-                            robot.articulate(PoseBigWheel.Articulation.deploying); //start deploy sequence
+                        if (auto.craterSide_extend_reverse_team_marker.execute()) active = false;
                         break;
                     case 6:
 //                        if(driveStraight()) active = false;
@@ -750,17 +738,21 @@ public class Game_6832 extends LinearOpMode {
             switch (stateIntake) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.reverseIntake);
+                    robot.collector.setBeltToElbowModeEnabled();
                     isIntakeClosed = true;
                     break;
                 case 1:
                     robot.articulate(PoseBigWheel.Articulation.prereversedeposit);
+                    robot.collector.setBeltToElbowModeDisabled();
                     isIntakeClosed = true;
                     break;
                 case 2:
                     robot.articulate(PoseBigWheel.Articulation.reverseDeposit);
+                    robot.collector.setBeltToElbowModeDisabled();
                     break;
                 case 3:
                     robot.articulate(PoseBigWheel.Articulation.reverseDriving);
+                    robot.collector.setBeltToElbowModeDisabled();
                     isIntakeClosed = true;
                     break;
             }

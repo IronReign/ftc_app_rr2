@@ -1092,16 +1092,6 @@ public class PoseBigWheel
        return target;
    }
 
-
-
-    public int elbowToBelt(int elbow, int offset){
-        return (int)(4.5*(elbow+ offset)) +620;
-    }
-
-    public int beltToElbow(int belt, int offset){
-        return (int)(2.0/9 * ((belt+offset)-620)) ;
-    }
-
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
     ////                                                                                  ////

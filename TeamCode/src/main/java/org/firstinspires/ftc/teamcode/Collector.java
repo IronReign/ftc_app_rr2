@@ -33,6 +33,8 @@ public class Collector {
     int extendABobPos = 0;
     double extendABobPwr = 1;
 
+    int intakeState =3;
+    boolean beltToElbowEnabled;
 
     int servoHooked;
     int servoUnhooked;
@@ -188,6 +190,60 @@ public class Collector {
             extendABobLeft.setPower(extendABobPwr);
             extendABobRight.setPower(extendABobPwr);
         }
+        updateIntake();
+        updateBeltToElbow();
+    }
+
+    public void updateBeltToElbow() {
+        if(beltToElbowEnabled) {
+            setElbowTargetPos(beltToElbow(getExtendABobCurrentPos(), 0));
+        }
+    }
+
+    public void setBeltToElbowModeEnabled() {
+        beltToElbowEnabled = true;
+    }
+
+    public void setBeltToElbowModeDisabled() {
+        beltToElbowEnabled = false;
+    }
+
+    public int elbowToBelt(int elbow, int offset){
+        return (int)(4.5*(elbow+ offset)) +620;
+    }
+
+    public int beltToElbow(int belt, int offset){
+        return (int)(2.0/9 * ((belt+offset)-620)) ;
+    }
+
+    public void updateIntake() {
+        switch(intakeState) {
+            case 0:
+                stopIntake();
+                break;
+            case 1:
+                collect();
+                break;
+            case 2:
+                eject();
+                break;
+            default:
+                //do nothing
+                break;
+        }
+    }
+
+    public void setIntakeModeOff() {
+        intakeState = 0;
+    }
+    public void setIntakeModeIn() {
+        intakeState = 1;
+    }
+    public void setIntakeModeOut() {
+        intakeState = 2;
+    }
+    public void setIntakeModeManual() {
+        intakeState = 3;
     }
 
     public void hookOn(){
