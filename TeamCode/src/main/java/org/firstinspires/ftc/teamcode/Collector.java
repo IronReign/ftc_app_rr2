@@ -62,12 +62,12 @@ public class Collector {
     public int pos_postlatch;
 
     //belt extension encoder values
-    public static int extendDeposit;
-    public static int extendMax;
-    public static int extendMid;
-    public static int extendLow; //clears hook and good for retracting prior to deposit without tipping robot
-    public static int extendMin;  //prevent crunching collector tray
-    public static int extendPreLatch = extendMax;
+    public  int extendDeposit;
+    public  int extendMax;
+    public  int extendMid;
+    public  int extendLow; //clears hook and good for retracting prior to deposit without tipping robot
+    public  int extendMin;  //prevent crunching collector tray
+    public  int extendPreLatch = extendMax;
 
     public static int stow = 225;
 
@@ -304,6 +304,14 @@ public class Collector {
     public boolean extendToMid(double speed, int range){
         setExtendABobPwr(speed);
         setExtendABobTargetPos(extendMid);
+        if((Math.abs(getExtendABobCurrentPos()-getExtendABobTargetPos()))<range){
+            return true;
+        }
+        return false;
+    }
+    public boolean extendToPosition(int position, double speed, int range){
+        setExtendABobPwr(speed);
+        setExtendABobTargetPos(position);
         if((Math.abs(getExtendABobCurrentPos()-getExtendABobTargetPos()))<range){
             return true;
         }
