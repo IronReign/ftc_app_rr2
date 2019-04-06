@@ -95,9 +95,9 @@ public class Autonomous {
     public StateMachine craterSide_extend_reverse = getStateMachine(autoStage)
             .addNestedStateMachine(autoSetupReverse)
             .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotatePIDIMU(39+180, TURN_TIME),
+                    () -> robot.rotatePIDIMU(39, TURN_TIME),
                     () -> true,
-                    () -> robot.rotatePIDIMU(321+180, TURN_TIME))
+                    () -> robot.rotatePIDIMU(321, TURN_TIME))
 //            .addMineralState(mineralStateProvider, //move to mineral
 //                    () -> robot.driveForward(true, .580, DRIVE_POWER),
 //                    () -> robot.driveForward(true, .50, DRIVE_POWER),
@@ -108,19 +108,20 @@ public class Autonomous {
 //                    () -> robot.driveForward(false, .45, DRIVE_POWER),
 //                    () -> robot.driveForward(false, .445, DRIVE_POWER))
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseIntake,0,1,1))
-            .addState(() -> robot.collector.extendToMax(1,10))
-            .addState(() -> robot.collector.extendToMin(1,10))
+            //.addState(() -> robot.collector.extendToMid(1,10))
+            .addState(() -> robot.collector.extendToPosition(robot.collector.extendMid+300,1,10))//extendToMin(1,10))
+            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving,true))
             .addState(() -> robot.rotatePIDIMU(90, 3)) //turn parallel to minerals
             .addMineralState(mineralStateProvider, //move to wall
-                    () -> robot.driveForward(true, 0.9, DRIVE_POWER),
-                    () -> robot.driveForward(true, 1.1, DRIVE_POWER),
-                    () -> robot.driveForward(true, 1.3, DRIVE_POWER))
-            .addState(() -> robot.rotatePIDIMU(130, 3)) //turn to depot
+                    () -> robot.driveForward(true, 1.2, DRIVE_POWER),
+                    () -> robot.driveForward(true, 1.4, DRIVE_POWER),
+                    () -> robot.driveForward(true, 1.6, DRIVE_POWER))
+            .addState(() -> robot.rotatePIDIMU(128, 3)) //turn to depot
             .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
             .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
             .addState(() -> robot.collector.setElbowTargetPos(10,1))
-            .addState(() -> robot.driveForward(true, .9, DRIVE_POWER)) //drive to wall
-            .addState(() -> robot.collector.extendToMax(1,10))
+            .addState(() -> robot.driveForward(true, .4, DRIVE_POWER))
+            .addState(() -> robot.collector.extendToPosition(robot.collector.extendMid+300,1,10))//extendToMin(1,10))
             .addTimedState(DUCKY_TIME, //yeet ducky
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
@@ -130,7 +131,7 @@ public class Autonomous {
             .addState(() -> robot.collector.nearTargetElbow())
             .addState(() -> robot.rotatePIDIMU(222, 0.6))
             .addState(() -> robot.rotatePIDIMU(315, 3))
-            .addState(() -> robot.driveForward(true, .5, DRIVE_POWER))
+            .addState(() -> robot.driveForward(true, .6, DRIVE_POWER))
             //.addState(() -> robot.articulate(PoseBigWheel.Articulation.preIntake, true))
             //.addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
             .build();
