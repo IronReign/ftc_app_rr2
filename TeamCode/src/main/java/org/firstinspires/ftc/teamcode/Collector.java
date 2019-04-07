@@ -414,14 +414,14 @@ public class Collector {
         setElbowTargetPos(Math.min(getElbowCurrentPos() + 100, pos_Intake));
     }
     public void decreaseElbowAngle(){
-        setExtendABobTargetPos(Math.max(getExtendABobCurrentPos() - 100, extendMin));
+        setExtendABobTargetPos(Math.max(getExtendABobCurrentPos() - 250, extendMin));
     }
 
     public void extendBelt(){
-        setExtendABobTargetPos(Math.min(getExtendABobCurrentPos() + 100, extendMax));
+        setExtendABobTargetPos(Math.min(getExtendABobCurrentPos() + 250, extendMax));
     }
     public void retractBelt(){
-        setElbowTargetPos(Math.max(getElbowCurrentPos() - 100, 0));
+        setElbowTargetPos(Math.max(getElbowCurrentPos() - 250, 0));
     }
 
     public void runToAngle(double angle){
