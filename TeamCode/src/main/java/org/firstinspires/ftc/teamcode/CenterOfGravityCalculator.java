@@ -15,9 +15,9 @@ public class CenterOfGravityCalculator {
             Wi, // weight of intake (lbs)
             Wa; // weight of arm (lbs)
 
-    public  double pitchOffset,
-                elbowoffset,
-                supermanoffset;
+    public final double pitchOffset, //offset for theta, used externally only
+            elbowoffset, //offset for beta, used externally only
+            supermanoffset; //offset for phi, used externally only
 
     public CenterOfGravityCalculator (PoseBigWheel.RobotType robotType) {
         switch (robotType) {
@@ -33,10 +33,10 @@ public class CenterOfGravityCalculator {
                 Ws = 2;   // weight of superman arm (lbs)
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
-
+                //offsets
                 pitchOffset = 10;
-                elbowoffset=15;
-                supermanoffset=5;
+                elbowoffset = 15;
+                supermanoffset = 5;
                 break;
             case Icarus:
                 // length constants
@@ -50,42 +50,41 @@ public class CenterOfGravityCalculator {
                 Ws = 2;   // weight of superman arm (lbs)
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
-
+                //offsets
                 pitchOffset = 10;
-                elbowoffset=15;
-                supermanoffset=5;
+                elbowoffset = 15;
+                supermanoffset = 5;
                 break;
             default:
                 c=r=s=m=Wc=Ww=Ws=Wi=Wa=0; //should never happen, also will give divide by 0 error
+                pitchOffset=elbowoffset=supermanoffset=0;
         }
     }
 
     public Point getCenterOfGravity(double theta, double phi, double beta, double l) {
         double X = (
-                Wc*(r+c/2)*cos(theta)+
-                Ww*r*cos(theta)+
-                Ws*((r+s*c)*cos(theta) + (m/2)*cos(180-theta-phi))+
-                Wa*((r+c)*cos(theta)-(l/2)*cos(beta-theta))+
-                Wi*((r+c)*cos(theta)-l*cos(beta-theta))
+                Wc*(c/2)*cos(theta)+
+                Ws*((s*c)*cos(theta) + (m/2)*cos(phi-theta))+
+                Wa*(c*cos(theta)-(l/2)*cos(beta-theta))+
+                Wi*(c*cos(theta)-l*cos(beta-theta))
         )/(Wc+Ww+Ws+Wa+Wi);
 
         double Y = (
-                Wc*(r+c/2)*sin(theta)+
-                Ww*r*sin(theta)+
-                Ws*((m/2)*sin(180-theta-phi))+
-                Wa*((r+c)*sin(theta)+(l/2)*sin(beta-theta))+
-                Wi*((r+c)*sin(theta)+l*sin(beta-theta))
+                Wc*(c/2)*sin(theta)+
+                Ws*((m/2)*sin(phi-theta)-r)+
+                Wa*(   c*sin(theta)+(l/2)*sin(beta-theta))+
+                Wi*(c*sin(theta)+l*sin(beta-theta))
         )/(Wc+Ww+Ws+Wa+Wi);
 
         return new Point(X,Y);
     }
 
-    private double sin(double angleDegrees) {
-        return Math.sin(Math.PI*angleDegrees/180);
+    private double sin(double angle) {
+        return Math.sin(Math.toRadians(angle));
     }
 
-    private double cos(double angleDegrees) {
-        return Math.cos(Math.PI*angleDegrees/180);
+    private double cos(double angle) {
+        return Math.cos(Math.toRadians(angle));
     }
 
 
