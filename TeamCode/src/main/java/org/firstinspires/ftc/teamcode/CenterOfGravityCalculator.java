@@ -1,6 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
+@Config
 public class CenterOfGravityCalculator {
+
+    public static boolean drawRobotDiagram = true;
 
     //length constants
     public final double c, // length of chassis in cm
@@ -34,7 +41,7 @@ public class CenterOfGravityCalculator {
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
                 //offsets
-                pitchOffset = 10;
+                pitchOffset = -10;
                 elbowoffset = 15;
                 supermanoffset = 5;
                 break;
@@ -51,7 +58,7 @@ public class CenterOfGravityCalculator {
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
                 //offsets
-                pitchOffset = 10;
+                pitchOffset = -10;
                 elbowoffset = 15;
                 supermanoffset = 5;
                 break;
@@ -72,9 +79,12 @@ public class CenterOfGravityCalculator {
         double Y = (
                 Wc*(c/2)*sin(theta)+
                 Ws*((m/2)*sin(phi-theta)-r)+
-                Wa*(   c*sin(theta)+(l/2)*sin(beta-theta))+
+                Wa*(c*sin(theta)+(l/2)*sin(beta-theta))+
                 Wi*(c*sin(theta)+l*sin(beta-theta))
         )/(Wc+Ww+Ws+Wa+Wi);
+
+        if (drawRobotDiagram)
+            drawRobotDiagram(theta, phi, beta, l, X, Y);
 
         return new Point(X,Y);
     }
@@ -87,6 +97,24 @@ public class CenterOfGravityCalculator {
         return Math.cos(Math.toRadians(angle));
     }
 
+
+    public void drawRobotDiagram(double theta, double phi, double beta, double l, double X, double Y) {
+        TelemetryPacket p = new TelemetryPacket();
+        p.fieldOverlay().setFill("white")
+                        .setStroke("white")
+                        .fillRect(-72,-72,144,144)
+                        .setFill("black")
+                        .setStroke("black")
+                        .strokeCircle(0,0,r)
+                        .strokeLine(0,0,c*sin(theta), -c*cos(theta))
+                        .strokeLine(s*c*sin(theta), -s*c*cos(theta), -r, -s*c*cos(theta)-m*cos(phi-theta))
+                        .strokeLine(c*sin(theta), -c*cos(theta), c*sin(theta)+l*sin(beta-theta), -c*cos(theta)+l*cos(beta-theta))
+                        .strokeRect(c*sin(theta)+l*sin(beta-theta)-3, -c*cos(theta)+l*cos(beta-theta)-3,6,6)
+                        .setFill("red")
+                        .setStroke("red")
+                        .fillCircle(Y, -X, 1);
+        FtcDashboard.getInstance().sendTelemetryPacket(p);
+    }
 
     // Copied from my contests repo - https://github.com/arjvik/Contests/blob/master/TEMPLATES/Pair.java
     public static class Point {
