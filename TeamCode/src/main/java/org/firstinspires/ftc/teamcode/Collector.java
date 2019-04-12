@@ -142,7 +142,7 @@ public class Collector {
                 pos_preIntake = 3600;
                 pos_Intake   = 3900;
                 pos_Deposit  = 1520;
-                pos_reverseIntake = 80;
+                pos_reverseIntake = 1407;
                 pos_reversePreDeposit=1408;
                 pos_reverseDeposit = 3400;
                 pos_reverseSafeDrive = 1000;
@@ -161,8 +161,8 @@ public class Collector {
                 servoGateOpen = 900;
                 servoGateClosed = 1495;
 
-                servoHooked = 2105;
-                servoUnhooked = 900;
+                servoHooked = 1725;
+                servoUnhooked = 1204;
 
                 //belt extension encoder values
                 extendDeposit = 1489;

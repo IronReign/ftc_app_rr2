@@ -922,7 +922,7 @@ public class PoseBigWheel
                    case 1:
                        if(goToPosition(superman.pos_tipped, collector.pos_reverseSafeDrive,1,1)){
                            miniState++;
-                           goToPosition(superman.pos_reverseIntake, collector.pos_reverseSafeDrive,1,1);
+                           goToPosition(superman.pos_reverseIntake, collector.pos_reverseIntake,1,1);
                        }
                        break;
                    case 2:
@@ -942,7 +942,7 @@ public class PoseBigWheel
                        if (goToPosition(superman.pos_reverseDeposit, collector.pos_reversePreDeposit,1,1)) miniState++; //start going really fast to interim position
                        break;
                    case 2:
-                       collector.extendToMin(1,10) ;
+                       collector.extendToMid(1,10) ;
                        miniState++;
                        break;
                    case 3:
@@ -964,7 +964,7 @@ public class PoseBigWheel
                        break;
                    case 1: //rise up
                        collector.extendToReverseDeposit(1,15);
-                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.27))
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5))
                            miniState++; //start going really fast to interim position
                        break;
                    case 2:
