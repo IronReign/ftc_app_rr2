@@ -5,13 +5,13 @@ public class CenterOfGravityCalculator {
     //length constants
     public final double c, // length of chassis in cm
             r, // wheel radius in cm
-            s, // ratio of superman axis position on chassis (ratio)
-            m; // length of superman in cm
+            s, // ratio of supermanLeft axis position on chassis (ratio)
+            m; // length of supermanLeft in cm
 
     //weight constants
     public final double  Wc, // weight of chassis (lbs)
             Ww, // weight of wheels (lbs)
-            Ws, // weight of superman arm (lbs)
+            Ws, // weight of supermanLeft arm (lbs)
             Wi, // weight of intake (lbs)
             Wa; // weight of arm (lbs)
 
@@ -25,12 +25,12 @@ public class CenterOfGravityCalculator {
                 // length constants
                 c = 45.5; // length of chassis in cm
                 r = 7.5;  // wheel radius in cm
-                s = 0.4;  // ratio of superman axis position on chassis (ratio)
-                m = 25;   // length of superman in cm
+                s = 0.4;  // ratio of supermanLeft axis position on chassis (ratio)
+                m = 25;   // length of supermanLeft in cm
                 //weight constants
                 Wc = 15;  // weight of chassis (lbs)
                 Ww = 1;   // weight of wheels (lbs)
-                Ws = 2;   // weight of superman arm (lbs)
+                Ws = 2;   // weight of supermanLeft arm (lbs)
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
                 //offsets
@@ -42,12 +42,12 @@ public class CenterOfGravityCalculator {
                 // length constants
                 c = 45.5; // length of chassis in cm
                 r = 7.5;  // wheel radius in cm
-                s = 0.4;  // ratio of superman axis position on chassis (ratio)
-                m = 25;   // length of superman in cm
+                s = 0.4;  // ratio of supermanLeft axis position on chassis (ratio)
+                m = 25;   // length of supermanLeft in cm
                 //weight constants
                 Wc = 15;  // weight of chassis (lbs)
                 Ww = 1;   // weight of wheels (lbs)
-                Ws = 2;   // weight of superman arm (lbs)
+                Ws = 2;   // weight of supermanLeft arm (lbs)
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
                 //offsets

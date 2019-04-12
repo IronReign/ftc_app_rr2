@@ -4,11 +4,10 @@
 		<LynxModule name="Expansion Hub 1" port="1">
 			<NeveRest20Gearmotor name="driveRight" port="0" />
 			<NeveRest20Gearmotor name="driveLeft" port="1" />
-			<Motor name="lampCam" port="2" />
-			<RevRoboticsCoreHexMotor name="supermanMotor" port="3" />
+			<NeverRest60GearMotor name="supermanMotorLeft" port="3" />
+			<NeverRest60GearMotor name="supermanMotorRight" port="2" />
 
 			<Servo name="intakeGate" port="0" />
-
 
 			<LynxEmbeddedIMU name="imu" port="0" bus="0" />
 			<REV_VL53L0X_RANGE_SENSOR name="distRight" port="0" bus="2"/>

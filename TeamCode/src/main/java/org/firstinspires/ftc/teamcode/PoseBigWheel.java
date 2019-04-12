@@ -1,10 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -54,7 +51,8 @@ public class PoseBigWheel
     DcMotor elbowRight = null;
     DcMotor extendABobLeft = null;
     DcMotor extendABobRight = null;
-    DcMotor supermanMotor = null;
+    DcMotor supermanMotorLeft = null;
+    DcMotor supermanMotorRight = null;
     Servo intakeRight = null;
     Servo intakeLeft = null;
     Servo hook = null;
@@ -122,24 +120,24 @@ public class PoseBigWheel
     }
     protected MoveMode moveMode;
 
-    public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and superman
+    public enum Articulation{ //serves as a desired robot articulation which may include related complex movements of the elbow, lift and supermanLeft
         inprogress, //currently in progress to a final articulation
         manual, //target positions are all being manually overridden
         driving, //optimized for driving - elbow opened a bit, lift extended a bit - shifts weight toward drive wheels for better turn and drive traction
         reverseDriving,
         hanging, //auton initial hang at the beginning of a match
-        deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including superman, and pressure is off of the hook
-        deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering superman to driving position
+        deploying, //auton unfolding after initial hang - should only be called from the hanging position during auton - ends when wheels should be on the ground, including supermanLeft, and pressure is off of the hook
+        deployed, //auton settled on ground - involves retracting the hook, moving forward a bit to clear lander and then lowering supermanLeft to driving position
         reversedeploying,
         reversedeployed,
         cratered, //auton arm extended over the crater - this might end up being the same as preIntake
         preIntake, //teleop mostly - collector retracted and increaseElbowAngle to almost ground level
         intake,     //teleop mostly - collector extended low, intaking - intake pushing on ground, extension overrideable
         reverseIntake,
-        deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, superman up to deposit position, extendBelt collector to deposit position
+        deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, supermanLeft up to deposit position, extendBelt collector to deposit position
         prereversedeposit,
         reverseDeposit,
-        latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and superman up,
+        latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and supermanLeft up,
         latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
         latchSet, //teleop endgame - retractBelt the latch
         latchHang; //teleop endgame - retractBelt collector elbow to final position, set locks if implemented
@@ -268,7 +266,8 @@ public class PoseBigWheel
         this.intakeRight        = this.hwMap.servo.get("intakeRight");
 
         this.intakeLeft         = this.hwMap.servo.get("intakeLeft");
-        this.supermanMotor      = this.hwMap.dcMotor.get("supermanMotor");
+        this.supermanMotorLeft = this.hwMap.dcMotor.get("supermanMotorLeft");
+        this.supermanMotorRight = this.hwMap.dcMotor.get("supermanMotorRight");
         this.hook               = this.hwMap.servo.get("hook");
         this.intakeGate         = this.hwMap.servo.get("intakeGate");
         this.blinkin            = this.hwMap.servo.get("blinkin");
@@ -294,7 +293,7 @@ public class PoseBigWheel
         //setup subsystems
         collector = new Collector(currentBot, elbowLeft, elbowRight, extendABobLeft, extendABobRight, intakeRight, intakeLeft, hook, intakeGate);
         collector.setElbowPwr(.5);
-        superman = new Superman(currentBot, supermanMotor);
+        superman = new Superman(currentBot, supermanMotorLeft, supermanMotorRight);
         ledSystem = new LEDSystem(blinkin);
         cog = new CenterOfGravityCalculator(currentBot);
 
@@ -754,13 +753,13 @@ public class PoseBigWheel
                break;
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
-               // ends when wheels should be on the ground, including superman, and pressure is off of the hook
+               // ends when wheels should be on the ground, including supermanLeft, and pressure is off of the hook
                collector.extendToMid(1, 15);
                superman.setTargetPosition(superman.pos_prelatch, 1);
                if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
                    if (driveForward(false, .1, .2)) {
                        driveMixerTank(0,0);
-                       //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
+                       //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
                        //{
                            miniState = 0; //reset nested state counter for next use
                            if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
@@ -774,7 +773,7 @@ public class PoseBigWheel
                }
                break;
 
-               //wait until on floor as indicated by time or imu angle or superman position or distance sensor - whatever is reliable enough
+               //wait until on floor as indicated by time or imu angle or supermanLeft position or distance sensor - whatever is reliable enough
                //for now we wait on elapsed time to complete sequence
                /*
                articulationTimer = futureTime(2); //setup wait for completion. todo: change this to position based auto advancement
@@ -783,7 +782,7 @@ public class PoseBigWheel
            case deployed:
                //auton settled on ground - involves retracting the hook,
                // moving forward a bit to clear lander and then
-               // lowering superman to driving position
+               // lowering supermanLeft to driving position
                if (System.nanoTime() >= articulationTimer) {
                    switch (miniState) {
                        case 0:  //push lightly into lander to relieve pressure on hook
@@ -831,7 +830,7 @@ public class PoseBigWheel
                if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
                    if (driveForward(false, .1, .2)) {
                        driveMixerTank(0,0);
-                       //if (superman.setTargetPosition(superman.pos_prelatch, 1)) //lower superman so it's ready to support robot, but not pushing up on hook
+                       //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
                        //{
                        miniState = 0; //reset nested state counter for next use
                        if (!isAutonSingleStep()) articulation = Articulation.reversedeployed; //auto advance to next stage
@@ -932,7 +931,7 @@ public class PoseBigWheel
                }
                break;
            case prereversedeposit:
-               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        if (collector.extendToMin(1,10))
                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
@@ -953,8 +952,8 @@ public class PoseBigWheel
                }
                break;
            case reverseDeposit:
-               //goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
-               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+               //goToPosition(supermanLeft.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        //if (collector.setElbowTargetPos(collector.pos_reverseDeposit,1))
                        if (collector.extendToMid(1,15))
@@ -980,7 +979,7 @@ public class PoseBigWheel
                break;
            case deposit:
                //goToDeposit();
-               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by superman, followed by opening the elbow up again, all before the extendMax
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        collector.restart(.25, 1);
                        superman.restart(.75);
@@ -1015,9 +1014,9 @@ public class PoseBigWheel
                break;
            case latchApproach://teleop endgame - driving approach for latching,
                // expected safe to be called from manual, driving, deposit -
-               // set collector elbow for drive balance, extended to mid and superman up
+               // set collector elbow for drive balance, extended to mid and supermanLeft up
                switch (miniState) {
-                   case 0: //set superman
+                   case 0: //set supermanLeft
                        collector.restart(.40, .5);
                        superman.restart(.4);
                        superman.setTargetPosition(superman.pos_prelatch-150);

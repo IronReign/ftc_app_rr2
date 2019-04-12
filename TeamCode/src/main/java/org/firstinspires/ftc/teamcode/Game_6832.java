@@ -185,7 +185,7 @@ public class Game_6832 extends LinearOpMode {
             stateSwitch();
 
 
-            //reset the elbow, lift and superman motors - operator must make sure robot is in the stowed position, flat on the ground
+            //reset the elbow, lift and supermanLeft motors - operator must make sure robot is in the stowed position, flat on the ground
             if (toggleAllowed(gamepad1.b, b)) {
                 robot.resetEncoders();
                 robot.setZeroHeading();
@@ -847,6 +847,7 @@ public class Game_6832 extends LinearOpMode {
                 .addData("elbowT", () -> robot.collector.getElbowTargetPos());
         telemetry.addLine()
                 .addData("supermanPos", () -> robot.superman.getCurrentPosition())
+                .addData("supermanRight", () -> robot.superman.getCurrentPosition2())
                 .addData("liftPos", () -> robot.collector.getExtendABobCurrentPos());
         telemetry.addLine()
                 .addData("COG theta", () -> robot.getRoll() + robot.cog.pitchOffset)
