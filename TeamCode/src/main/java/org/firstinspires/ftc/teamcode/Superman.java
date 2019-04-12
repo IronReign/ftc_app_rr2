@@ -26,6 +26,8 @@ public class Superman {
     public int pos_postlatch;
     public int pos_stowed;
     public int pos_driving; //todo - experiment with driving with supermanLeft set around 100 (slightly angled) to see if it is more responsive - higher battery drain because supermanLeft is straining, but less actual downforce on omni
+    public int pos_tipped = 2142;
+
 
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 6.44705882;//23.64444444444

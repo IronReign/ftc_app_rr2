@@ -737,21 +737,21 @@ public class Game_6832 extends LinearOpMode {
             switch (stateIntake) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.reverseIntake);
-                    robot.collector.setBeltToElbowModeEnabled();
+                    //robot.collector.setBeltToElbowModeEnabled();
                     isIntakeClosed = true;
                     break;
                 case 1:
                     robot.articulate(PoseBigWheel.Articulation.prereversedeposit);
-                    robot.collector.setBeltToElbowModeDisabled();
+                    //robot.collector.setBeltToElbowModeDisabled();
                     isIntakeClosed = true;
                     break;
                 case 2:
                     robot.articulate(PoseBigWheel.Articulation.reverseDeposit);
-                    robot.collector.setBeltToElbowModeDisabled();
+                    //robot.collector.setBeltToElbowModeDisabled();
                     break;
                 case 3:
                     robot.articulate(PoseBigWheel.Articulation.reverseDriving);
-                    robot.collector.setBeltToElbowModeDisabled();
+                    //robot.collector.setBeltToElbowModeDisabled();
                     isIntakeClosed = true;
                     break;
             }
