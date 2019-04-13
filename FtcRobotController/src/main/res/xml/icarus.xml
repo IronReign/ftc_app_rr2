@@ -4,8 +4,8 @@
 		<LynxModule name="Expansion Hub 1" port="1">
 			<NeveRest20Gearmotor name="driveRight" port="0" />
 			<NeveRest20Gearmotor name="driveLeft" port="1" />
-			<NeverRest60GearMotor name="supermanMotorLeft" port="3" />
-			<NeverRest60GearMotor name="supermanMotorRight" port="2" />
+			<NeveRest60GearMotor name="supermanMotorLeft" port="3" />
+			<NeveRest60GearMotor name="supermanMotorRight" port="2" />
 
 			<Servo name="intakeGate" port="0" />
 
