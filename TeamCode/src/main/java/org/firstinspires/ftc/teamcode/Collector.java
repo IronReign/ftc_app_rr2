@@ -166,7 +166,7 @@ public class Collector {
                 servoGateOpen = 900;
                 servoGateClosed = 1495;
 
-                servoHooked = 1450;
+                servoHooked = 1600;
                 servoUnhooked = 1100;
 
                 //belt extension encoder values
