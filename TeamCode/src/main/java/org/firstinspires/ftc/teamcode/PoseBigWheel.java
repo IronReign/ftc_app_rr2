@@ -827,7 +827,7 @@ public class PoseBigWheel
            case reversedeploying:
                collector.extendToMid(1, 15);
                superman.setTargetPosition(superman.pos_prelatch, 1);
-               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
+               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85) && superman.setTargetPosition(superman.pos_prelatch, 1)) {
                    if (driveForward(false, .1, .2)) {
                        driveMixerTank(0,0);
                        //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
@@ -853,7 +853,7 @@ public class PoseBigWheel
                            break;
                        case 1:  //decreaseElbowAngle lander hook
                            if (System.nanoTime() >= miniTimer) {
-                               if (rotateIMU(350, 1)) { //this turn is needed because hook doesn't clear entirely
+                               if (rotateIMU(, 1)) { //this turn is needed because hook doesn't clear entirely
                                    resetMotors(true);
                                    miniTimer = futureTime(1); //setup wait for completion
                                    miniState++;
