@@ -63,6 +63,9 @@ public class Collector {
     public int pos_latched;
     public int pos_postlatch;
     public int glide = 80;
+    public int autodepotthingy=554;
+
+    //.374
 
     //belt extension encoder values
     public  int extendDeposit;

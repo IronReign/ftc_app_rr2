@@ -293,7 +293,7 @@ public class Game_6832 extends LinearOpMode {
                         if (auto.driveStraight.execute()) active = false;
                         break;
                     case 5:
-                        if (auto.craterSide_extend_reverse_team_marker.execute()) active = false;
+                        if (auto.depotSide_reverse.execute()) active = false;
                         break;
                     case 6:
 //                        if(driveStraight()) active = false;
