@@ -68,15 +68,15 @@ public class Superman {
                 supermanLeft.setDirection(DcMotor.Direction.REVERSE);
                 //supermanRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
-                pos_Intake = (int)multiplier*10;
-                pos_reverseIntake = (int)multiplier*360;
-                pos_reverseDeposit = (int)multiplier*343;
-                pos_Deposit = (int)multiplier*354;
-                pos_DepositPartial = (int)multiplier*200;
-                pos_Maximum = (int)multiplier*500;
+                pos_Intake = (int) (multiplier*10);
+                pos_reverseIntake = (int) (multiplier*360);
+                pos_reverseDeposit = (int) (multiplier*343);
+                pos_Deposit = (int) (multiplier*354);
+                pos_DepositPartial = (int) (multiplier*200);
+                pos_Maximum = (int) (multiplier*500);
 
-                pos_autonPrelatch = (int)multiplier*335;
-                pos_prelatch = (int)multiplier*335;
+                pos_autonPrelatch = 1390;
+                pos_prelatch = 1390; //(int) (multiplier*335);
                 pos_latched = 1370;
                 pos_postlatch = 0;
                 pos_stowed = 0;

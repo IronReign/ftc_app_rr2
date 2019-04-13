@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -33,11 +34,11 @@ public class Collector {
     int extendABobPos = 0;
     double extendABobPwr = 1;
 
-    int intakeState =3;
+    int intakeState = 3;
     boolean beltToElbowEnabled;
 
-    int servoHooked;
-    int servoUnhooked;
+    public int servoHooked;
+    public int servoUnhooked;
 
     int servoGateOpen;
     int servoGateClosed;
@@ -75,7 +76,7 @@ public class Collector {
     public  int extendMin;  //prevent crunching collector tray
     public  int extendPreLatch = extendMax;
 
-    public static int stow = 225;
+    public int stow = 225;
 
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 22.3296703;
@@ -141,7 +142,7 @@ public class Collector {
                 extendMin = 300;  //prevent crunching collector tray
                 break;
             case Icarus:
-                intakePwr = .35;
+                intakePwr = .3; //.35;
                 //normal Teleop encoder values
                 pos_preIntake = 3600;
                 pos_Intake   = 3900;
@@ -165,8 +166,8 @@ public class Collector {
                 servoGateOpen = 900;
                 servoGateClosed = 1495;
 
-                servoHooked = 1725;
-                servoUnhooked = 1204;
+                servoHooked = 1450;
+                servoUnhooked = 1100;
 
                 //belt extension encoder values
                 extendDeposit = 1489;
@@ -231,6 +232,7 @@ public class Collector {
             case 2:
                 eject();
                 break;
+            case 3:
             default:
                 //do nothing
                 break;
@@ -265,7 +267,7 @@ public class Collector {
     }
 
 
-    public void collect(){ intakeRight.setPosition(.5 + intakePwr);
+    public void collect(){
         intakeLeft.setPosition(.5 + intakePwr);
         intakeRight.setPosition(.5 + intakePwr);
     }
