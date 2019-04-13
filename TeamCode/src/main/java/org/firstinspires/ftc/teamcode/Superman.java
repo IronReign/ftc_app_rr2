@@ -77,7 +77,7 @@ public class Superman {
 
                 pos_autonPrelatch = (int)multiplier*335;
                 pos_prelatch = (int)multiplier*335;
-                pos_latched = (int)multiplier*335;
+                pos_latched = 1370;
                 pos_postlatch = 0;
                 pos_stowed = 0;
                 pos_driving = 0;

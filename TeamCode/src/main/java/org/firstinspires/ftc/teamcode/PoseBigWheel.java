@@ -886,7 +886,7 @@ public class PoseBigWheel
                collector.closeGate();
                switch(miniState){
                    case 0:
-                       if(goToPosition(superman.pos_reverseIntake-100,collector.pos_reverseSafeDrive,.75,.3)){
+                       if(goToPosition(superman.pos_reverseIntake-100,collector.pos_reverseSafeDrive,1.0,.6)){
                            miniState++;
                        }
                        break;
@@ -914,13 +914,13 @@ public class PoseBigWheel
                collector.closeGate();
                switch(miniState){
                    case 0:
-                       collector.extendToMid(1,10);
+                       collector.extendToMax(1,10);
                        //if(collector.extendToMid(1,10)){
                            miniState++;
                        //}
                        break;
                    case 1:
-                       if(goToPosition(superman.pos_tipped, collector.pos_reverseSafeDrive,1,1)){
+                       if(goToPosition(superman.pos_tipped, collector.pos_reverseIntake,1,1)){
                            miniState++;
                            goToPosition(superman.pos_reverseIntake, collector.pos_reverseIntake,1,1);
                        }
@@ -935,7 +935,8 @@ public class PoseBigWheel
            case prereversedeposit:
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
-                       if (goToPosition((int)((superman.pos_reverseDeposit+superman.pos_tipped)/2), 70,1,1))
+                       collector.extendToMid(1,10) ;
+                       if (goToPosition((int)((superman.pos_reverseDeposit+superman.pos_tipped)/2), 400,1,1))
                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up

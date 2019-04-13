@@ -107,9 +107,9 @@ public class Autonomous {
             .addState(() -> robot.rotatePIDIMU(85, 4)) //turn parallel to minerals
             .addState(() -> robot.driveForward(true, 1.3, DRIVE_POWER)) //drive to wall
             .addState(() -> robot.rotatePIDIMU(120, 3)) //turn to depot
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
+            //.addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
             .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
-            //.addState(() -> robot.collector.setElbowTargetPos(10,1))
+            .addState(() -> robot.collector.setElbowTargetPos(10,1))
 //            .addState(() -> robot.driveForward(true, .4, DRIVE_POWER))
             .addSingleState(() -> robot.collector.setBeltToElbowModeEnabled())
 //            .addState(() -> robot.collector.extendToMax(1,10))
