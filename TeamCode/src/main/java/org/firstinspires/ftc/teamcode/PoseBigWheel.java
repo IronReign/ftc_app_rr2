@@ -901,11 +901,15 @@ public class PoseBigWheel
                            miniState = 0; //just being a good citizen for next user of miniState
                            articulation = Articulation.manual; //force end of articulation by switching to manual
                            return Articulation.manual;
-
+                           break;
                    }
                }else{
                    collector.extendToMin(1,10);
-                   goToPosition(superman.pos_reverseDeposit, collector.pos_reverseSafeDrive, 1.0, .6);
+                   if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseSafeDrive, 1.0, .6)) {
+                       miniState = 0;
+                       articulation = Articulation.manual;
+                       return Articulation.manual;
+                   }
                }
                break;
            case cratered:
