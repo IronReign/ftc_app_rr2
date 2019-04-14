@@ -849,7 +849,8 @@ public class Game_6832 extends LinearOpMode {
                 .addData("active", () -> active)
                 .addData("state", () -> state)
                 .addData("autoStage", () -> auto.autoStage)
-                .addData("Game Mode", () -> GAME_MODES[gameMode]);
+                .addData("Game Mode", () -> GAME_MODES[gameMode])
+                .addData("Articulation", () -> robot.getArticulation());
         telemetry.addLine()
                 .addData("elbowA", () -> robot.collector.isActive())
                 .addData("elbowC", () -> robot.collector.getElbowCurrentPos())
@@ -893,7 +894,8 @@ public class Game_6832 extends LinearOpMode {
         telemetry.addLine()
                 .addData("active", () -> active)
                 .addData("state", () -> state)
-                .addData("Game Mode", () -> GAME_MODES[gameMode]);
+                .addData("Game Mode", () -> GAME_MODES[gameMode])
+                .addData("Articulation", () -> robot.getArticulation());
 
         telemetry.addLine()
                 .addData("Loop time", "%.0fms", () -> loopAvg/1000000)
