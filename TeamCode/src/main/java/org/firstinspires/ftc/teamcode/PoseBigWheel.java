@@ -881,23 +881,28 @@ public class PoseBigWheel
 
                }
                break;
-           case reverseDriving:
+           case reverseDriving://2821, 570
                collector.closeGate();
-               switch(miniState){
-                   case 0:
-                       if(goToPosition(superman.pos_reverseIntake-100,collector.pos_reverseSafeDrive,1.0,.6)){
+               if(collector.getElbowCurrentPos()>2821 && collector.getElbowCurrentPos()<570) {
+                   switch (miniState) {
+                       case 0:
+                           if (goToPosition(superman.pos_reverseIntake - 100, collector.pos_reverseSafeDrive, 1.0, .6)) {
+                               miniState++;
+                           }
+                           break;
+                       case 1:
+                           collector.extendToMin(1, 10);
                            miniState++;
-                       }
-                       break;
-                   case 1:
-                       collector.extendToMin(1,10);
-                       miniState++;
-                       break;
-                   case 2:
-                       miniState = 0; //just being a good citizen for next user of miniState
-                       articulation = Articulation.manual; //force end of articulation by switching to manual
-                       return Articulation.manual;
+                           break;
+                       case 2:
+                           miniState = 0; //just being a good citizen for next user of miniState
+                           articulation = Articulation.manual; //force end of articulation by switching to manual
+                           return Articulation.manual;
 
+                   }
+               }else{
+                   collector.extendToMin(1,10);
+                   goToPosition(superman.pos_reverseDeposit, collector.pos_reverseSafeDrive, 1.0, .6);
                }
                break;
            case cratered:
@@ -913,7 +918,7 @@ public class PoseBigWheel
                collector.closeGate();
                switch(miniState){
                    case 0:
-                       collector.extendToMax(1,10);
+                       collector.extendToMid(1,10);
                        //if(collector.extendToMid(1,10)){
                            miniState++;
                        //}
@@ -935,7 +940,7 @@ public class PoseBigWheel
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
                        collector.extendToMid(1,10) ;
-                       if (goToPosition((int)((superman.pos_reverseDeposit+superman.pos_tipped)/2), 400,1,1))
+                       if (goToPosition((superman.pos_reverseDeposit), 400,1,1))
                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up

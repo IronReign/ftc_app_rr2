@@ -460,7 +460,7 @@ public class Game_6832 extends LinearOpMode {
             //at least we are looking at the correct axis now - it was super janky - toggling the damper as the axis fluttered across 0 to 365
             pwrDamper = .33;
         else*/
-       pwrDamper = .5;
+       pwrDamper = .65;
 
 
 
@@ -710,7 +710,7 @@ public class Game_6832 extends LinearOpMode {
         robot.collector.hookOff();
 
         boolean doIntake = false;
-        robot.driveMixerTank(pwrFwd, pwrRot);
+
 
         if (gamepad1.y) {
             robot.articulate(PoseBigWheel.Articulation.reverseDriving);
@@ -737,6 +737,7 @@ public class Game_6832 extends LinearOpMode {
             switch (stateIntake) {
                 case 0:
                     robot.articulate(PoseBigWheel.Articulation.reverseIntake);
+                    pwrRot-=.25;
                     //robot.collector.setBeltToElbowModeEnabled();
                     isIntakeClosed = true;
                     break;
@@ -756,6 +757,7 @@ public class Game_6832 extends LinearOpMode {
                     break;
             }
         }
+        robot.driveMixerTank(pwrFwd, pwrRot);
 
         if (isIntakeClosed) {
             robot.collector.closeGate();
