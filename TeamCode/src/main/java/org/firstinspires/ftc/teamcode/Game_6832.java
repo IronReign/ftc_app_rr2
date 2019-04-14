@@ -149,6 +149,7 @@ public class Game_6832 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         telemetry.addData("Status", "Initializing "+currentBot+"...");
+        telemetry.addData("Status", "Hold right_trigger to enable debug mode");
         telemetry.update();
 
         robot = new PoseBigWheel(currentBot);
@@ -156,10 +157,16 @@ public class Game_6832 extends LinearOpMode {
 
         auto = new Autonomous(robot, telemetry, gamepad1);
 
-        telemetry.addData("Status", "Initialized "+currentBot);
-        //telemetry.update();
 
-        configureDashboard();
+        if (gamepad1.right_trigger > 0.3) {
+            telemetry.addData("Status", "Initialized " + currentBot+" (debug mode)");
+            telemetry.update();
+            configureDashboard();
+        } else {
+            telemetry.addData("Status", "Initialized " + currentBot);
+            telemetry.update();
+            configureDashboardMatch();
+        }
 
         // waitForStart();
         // this is commented out but left here to document that we are still doing the
@@ -189,9 +196,9 @@ public class Game_6832 extends LinearOpMode {
             if (toggleAllowed(gamepad1.b, b)) {
                 robot.resetEncoders();
                 robot.setZeroHeading();
-                if (gamepad1.right_trigger > 0.3)
-                    robot.setAutonomousIMUOffset(-45); //against field perimeter, facing left
-                else
+//                if (gamepad1.right_trigger > 0.3)
+//                    robot.setAutonomousIMUOffset(-45); //against field perimeter, facing left
+//                else
                     robot.setAutonomousIMUOffset(0); //against lander
                 robot.articulate(PoseBigWheel.Articulation.hanging);
                 robot.collector.extendToMin();
@@ -228,6 +235,7 @@ public class Game_6832 extends LinearOpMode {
             }
             if (!auto.visionProviderFinalized && toggleAllowed(gamepad1.dpad_down, dpad_down)) {
                 auto.enableTelemetry = !auto.enableTelemetry; //enable/disable FtcDashboard telemetry
+//                CenterOfGravityCalculator.drawRobotDiagram = !CenterOfGravityCalculator.drawRobotDiagram;
             }
             if (auto.visionProviderFinalized && gamepad1.left_trigger > 0.3) {
                 GoldPos gp = auto.vp.detect();
@@ -872,6 +880,19 @@ public class Game_6832 extends LinearOpMode {
                 .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))
                 .addData("distLeft", () -> robot.distLeft.getDistance(DistanceUnit.METER))
                 .addData("distRight", () -> robot.distRight.getDistance(DistanceUnit.METER));
+
+        telemetry.addLine()
+                .addData("Loop time", "%.0fms", () -> loopAvg/1000000)
+                .addData("Loop time", "%.0fHz", () -> 1000000000/loopAvg);
+    }
+
+    private void configureDashboardMatch() {
+        // Configure the dashboard.
+
+        telemetry.addLine()
+                .addData("active", () -> active)
+                .addData("state", () -> state)
+                .addData("Game Mode", () -> GAME_MODES[gameMode]);
 
         telemetry.addLine()
                 .addData("Loop time", "%.0fms", () -> loopAvg/1000000)

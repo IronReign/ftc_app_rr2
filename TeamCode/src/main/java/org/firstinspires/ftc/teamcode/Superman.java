@@ -69,7 +69,7 @@ public class Superman {
                 //supermanRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
                 pos_Intake = (int) (multiplier*10);
-                pos_reverseIntake = (int) (multiplier*360);
+        pos_reverseIntake = (int) (multiplier*360);
                 pos_reverseDeposit =  880;
                 pos_Deposit = 880;
                 pos_DepositPartial = 880;

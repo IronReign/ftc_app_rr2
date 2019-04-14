@@ -26,6 +26,8 @@ public class CenterOfGravityCalculator {
             elbowoffset, //offset for beta, used externally only
             supermanoffset; //offset for phi, used externally only
 
+    public Point cog, cc, cs, ca, ci;
+
     public CenterOfGravityCalculator (PoseBigWheel.RobotType robotType) {
         switch (robotType) {
             case BigWheel:
@@ -41,9 +43,9 @@ public class CenterOfGravityCalculator {
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
                 //offsets
-                pitchOffset = -10;
+                pitchOffset = 0;
                 elbowoffset = 15;
-                supermanoffset = 5;
+                supermanoffset = 0;
                 break;
             case Icarus:
                 // length constants
@@ -58,9 +60,9 @@ public class CenterOfGravityCalculator {
                 Wi = 2.5;  // weight of intake (lbs)
                 Wa = 8;   // weight of arm (lbs)
                 //offsets
-                pitchOffset = -10;
+                pitchOffset = 0;
                 elbowoffset = 15;
-                supermanoffset = 5;
+                supermanoffset = 0;
                 break;
             default:
                 c=r=s=m=Wc=Ww=Ws=Wi=Wa=0; //should never happen, also will give divide by 0 error
@@ -69,24 +71,39 @@ public class CenterOfGravityCalculator {
     }
 
     public Point getCenterOfGravity(double theta, double phi, double beta, double l) {
+
+        double  Xc = (c / 2) * cos(theta),
+                Xs = (s * c) * cos(theta) + (m / 2) * cos(phi - theta),
+                Xa = c * cos(theta) - (l / 2) * cos(beta - theta),
+                Xi = c * cos(theta) - l * cos(beta - theta);
         double X = (
-                Wc*(c/2)*cos(theta)+
-                Ws*((s*c)*cos(theta) + (m/2)*cos(phi-theta))+
-                Wa*(c*cos(theta)-(l/2)*cos(beta-theta))+
-                Wi*(c*cos(theta)-l*cos(beta-theta))
+                Wc * Xc +
+                Ws * Xs +
+                Wa * Xa +
+                Wi * Xi
         )/(Wc+Ww+Ws+Wa+Wi);
 
+        double  Yc = (c / 2) * sin(theta),
+                Ys = (m / 2) * sin(phi - theta) - r,
+                Ya = c * sin(theta) + (l / 2) * sin(beta - theta),
+                Yi = c * sin(theta) + l * sin(beta - theta);
         double Y = (
-                Wc*(c/2)*sin(theta)+
-                Ws*((m/2)*sin(phi-theta)-r)+
-                Wa*(c*sin(theta)+(l/2)*sin(beta-theta))+
-                Wi*(c*sin(theta)+l*sin(beta-theta))
+                Wc * Yc +
+                Ws * Ys +
+                Wa * Ya +
+                Wi * Yi
         )/(Wc+Ww+Ws+Wa+Wi);
+
+        cog = new Point(X,  Y);
+        cc  = new Point(Xc, Yc);
+        cs  = new Point(Xs, Ys);
+        ca  = new Point(Xa, Ya);
+        ci  = new Point(Xi, Yi);
 
         if (drawRobotDiagram)
-            drawRobotDiagram(theta, phi, beta, l, X, Y);
+            drawRobotDiagram(theta, phi, beta, l);
 
-        return new Point(X,Y);
+        return cog;
     }
 
     private double sin(double angle) {
@@ -98,7 +115,7 @@ public class CenterOfGravityCalculator {
     }
 
 
-    public void drawRobotDiagram(double theta, double phi, double beta, double l, double X, double Y) {
+    public void drawRobotDiagram(double theta, double phi, double beta, double l) {
         TelemetryPacket p = new TelemetryPacket();
         p.fieldOverlay().setFill("white")
                         .setStroke("white")
@@ -112,7 +129,8 @@ public class CenterOfGravityCalculator {
                         .strokeRect(c*sin(theta)+l*sin(beta-theta)-3, -c*cos(theta)+l*cos(beta-theta)-3,6,6)
                         .setFill("red")
                         .setStroke("red")
-                        .fillCircle(Y, -X, 1);
+                        .fillCircle(cog.y, -cog.x, 1);
+
         FtcDashboard.getInstance().sendTelemetryPacket(p);
     }
 
