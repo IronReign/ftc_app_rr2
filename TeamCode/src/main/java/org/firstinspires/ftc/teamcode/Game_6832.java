@@ -879,7 +879,8 @@ public class Game_6832 extends LinearOpMode {
                 .addData("mineralState", () -> auto.mineralState)
                 .addData("distForward", () -> robot.distForward.getDistance(DistanceUnit.METER))
                 .addData("distLeft", () -> robot.distLeft.getDistance(DistanceUnit.METER))
-                .addData("distRight", () -> robot.distRight.getDistance(DistanceUnit.METER));
+                .addData("distRight", () -> robot.distRight.getDistance(DistanceUnit.METER))
+                .addData("depositDriveDistance", () -> robot.depositDriveDistance);
 
         telemetry.addLine()
                 .addData("Loop time", "%.0fms", () -> loopAvg/1000000)

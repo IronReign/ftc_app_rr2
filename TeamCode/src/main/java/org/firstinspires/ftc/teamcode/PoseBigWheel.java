@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 
@@ -728,6 +729,8 @@ public class PoseBigWheel
    double miniTimer;
    int miniState = 0;
 
+   double depositDriveDistance;
+
    public boolean articulate(Articulation target, boolean setAndForget){
         articulate(target);
         return true;
@@ -962,24 +965,33 @@ public class PoseBigWheel
            case reverseDeposit:
                //goToPosition(supermanLeft.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
-                   case 0: //set basic speeds and start closing elbow to manage COG
+                   case 0:
+                       if (rotatePIDIMU(0, 1))
+                           miniState++; //turn to 0 again
+                       break;
+                   case 1:
+                       depositDriveDistance = distForward.getDistance(DistanceUnit.METER) - 0.34;
+                       miniState++;
+                       break;
+                   case 2:
+//                       if (driveForward(false, depositDriveDistance, .65)) //drive forward to deposit
+                           miniState++;
+                       break;
+                   case 3: //set basic speeds and start closing elbow to manage COG
                        //if (collector.setElbowTargetPos(collector.pos_reverseDeposit,1))
                        if (collector.extendToMid(1,15))
                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
-                   case 1: //rise up
+                   case 4: //rise up
                        collector.extendToReverseDeposit(1,15);
                        if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5))
                            miniState++; //start going really fast to interim position
                        break;
-                   case 2:
+                   case 5:
                        collector.collect();
                        miniState++;
                        break;
-                   case 3:
-                       miniState++;
-                       break;
-                   case 4:
+                   case 6:
                        miniState = 0; //just being a good citizen for next user of miniState
                        articulation = Articulation.manual; //force end of articulation by switching to manual
                        return Articulation.manual;
