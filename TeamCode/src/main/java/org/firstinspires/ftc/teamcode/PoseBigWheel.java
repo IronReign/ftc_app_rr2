@@ -886,7 +886,7 @@ public class PoseBigWheel
                break;
            case reverseDriving://2821, 570
                collector.closeGate();
-               if(collector.getElbowCurrentPos()>2821 && collector.getElbowCurrentPos()<570) {
+               if(collector.getElbowCurrentPos()>2700 && collector.getElbowCurrentPos()<570) {
                    switch (miniState) {
                        case 0:
                            if (goToPosition(superman.pos_reverseIntake - 100, collector.pos_reverseSafeDrive, 1.0, .6)) {
@@ -969,11 +969,10 @@ public class PoseBigWheel
                //goToPosition(supermanLeft.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0:
-                       if (rotatePIDIMU(0, 1))
-                           miniState++; //turn to 0 again
+                       miniState++;
                        break;
                    case 1:
-                       depositDriveDistance = distForward.getDistance(DistanceUnit.METER) - 0.34;
+                       //depositDriveDistance = distForward.getDistance(DistanceUnit.METER) - 0.34;
                        miniState++;
                        break;
                    case 2:
