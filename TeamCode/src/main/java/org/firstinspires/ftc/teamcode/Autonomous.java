@@ -205,15 +205,15 @@ public class Autonomous {
 
     public StateMachine depotSide_reverse = getStateMachine(autoStage)
             .addNestedStateMachine(autoSetupReverse)
-            .addState(() -> (robot.driveForward(true, .364, .40)))
-            .addState(() -> robot.collector.extendToMax(1,15))
+            .addState(() -> (robot.driveForward(true, .334, .40)))
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.autodepotthingy,1,1))
+            .addState(() -> robot.collector.extendToMax(1,15))
             .addTimedState(DUCKY_TIME, //yeet ducky
                     () -> robot.collector.collect(),
                     () -> robot.collector.stopIntake())
-            .addState(() -> (robot.driveForward(false, .364, .45)))
             .addState(() -> robot.collector.extendToMin(1,15))
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.autodepotthingy,1,1))
+            .addState(() -> (robot.driveForward(false, .324, .45)))
             .addMineralState(mineralStateProvider, //turn to mineral
                     () -> robot.rotatePIDIMU(39, TURN_TIME),
                     () -> true,
@@ -227,14 +227,16 @@ public class Autonomous {
                     () -> robot.collector.extendToPosition(robot.collector.extendMid+800, 1, 10),
                     () -> robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10))
             .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
-            .addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving,true))
-            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+            .addState(() -> robot.collector.extendToMid(1,10))
+            //.addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving,true))
+            //.addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+            .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.pos_reverseSafeDrive,1,1))
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE))
             .addState(() -> robot.rotatePIDIMU(80, 4)) //turn parallel to minerals
             .addState(() -> robot.driveForward(true, 1.3, DRIVE_POWER)) //drive to wall
             .addState(() -> robot.rotatePIDIMU(120, 3)) //turn to crater
             .addState(() -> robot.collector.extendToMax(1,10))
-            .addState(() -> robot.driveForward(true, .2, DRIVE_POWER))
+            //.addState(() -> robot.driveForward(true, .2, DRIVE_POWER))
             .build();
 
     public StateMachine depotSample = getStateMachine(autoStage)

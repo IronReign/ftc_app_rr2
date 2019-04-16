@@ -759,8 +759,7 @@ public class PoseBigWheel
                collector.extendToMid(1, 15);
                superman.setTargetPosition(superman.pos_prelatch, 1);
                if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
-                   if (driveForward(false, .1, .2)) {
-                       driveMixerTank(0,0);
+                   //if (driveForward(false, .5, .2)) {
                        //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
                        //{
                            miniState = 0; //reset nested state counter for next use
@@ -770,8 +769,8 @@ public class PoseBigWheel
 
                        //}
                        //break;
-                   }
-                   break;
+                   //}
+                   //break;
                }
                break;
 
