@@ -92,7 +92,7 @@ public class Autonomous {
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE))
             .addState(() -> robot.rotatePIDIMU(80, 4)) //turn parallel to minerals
             .addState(() -> robot.driveForward(true, 1.3, DRIVE_POWER)) //drive to wall
-            .addState(() -> robot.rotatePIDIMU(120, 3)) //turn to crater
+            .addState(() -> robot.rotatePIDIMU(135, 3)) //turn to crater
             .addState(() -> robot.collector.extendToMax(1,10))
             //.addState(() -> robot.driveForward(true, .2, DRIVE_POWER))
             .build();
@@ -159,9 +159,7 @@ public class Autonomous {
                     () -> robot.collector.collect(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.collector.extendToMin())
-            .addState(() -> robot.rotatePIDIMU(315, 3)) //turn to crater
-            .addState(() -> robot.driveForward(false, 1, DRIVE_POWER))
-            .addState(() -> robot.collector.extendToMax())
+            .addState(() -> robot.driveForward(false, .8, DRIVE_POWER))
             .build();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
