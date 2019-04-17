@@ -944,15 +944,15 @@ public class PoseBigWheel
            case prereversedeposit:
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0: //set basic speeds and start closing elbow to manage COG
-                       collector.extendToMid(1,10) ;
                        if (goToPosition((superman.pos_reverseDeposit), 400,1,1))
                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up
-                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reversePreDeposit,1,1)) miniState++; //start going really fast to interim position
+                       if (goToPosition(superman.pos_reverseDeposit, collector.autodepotthingy,1,1)) miniState++; //start going really fast to interim position
                        break;
                    case 2:
                        collector.extendToMid(1,10) ;
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reversePreDeposit,1,1)) miniState++; //start going really fast to interim position
                        miniState++;
                        break;
                    case 3:
@@ -985,7 +985,7 @@ public class PoseBigWheel
                        break;
                    case 4: //rise up
                        collector.extendToReverseDeposit(1,15);
-                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5))
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.4))
                            miniState++; //start going really fast to interim position
                        break;
                    case 5:
