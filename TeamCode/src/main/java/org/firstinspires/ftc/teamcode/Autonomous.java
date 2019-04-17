@@ -213,7 +213,7 @@ public class Autonomous {
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.collector.extendToMin(1,15))
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.autodepotthingy,1,1))
-            .addState(() -> (robot.driveForward(false, .324, .45)))
+            .addState(() -> (robot.driveForward(false, .314, .45)))
             .addMineralState(mineralStateProvider, //turn to mineral
                     () -> robot.rotatePIDIMU(39, TURN_TIME),
                     () -> true,
@@ -223,11 +223,11 @@ public class Autonomous {
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.GOLD))
             .addSingleState(() -> robot.collector.setBeltToElbowModeEnabled())
             .addMineralState(mineralStateProvider,
-                    () -> robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10),
-                    () -> robot.collector.extendToPosition(robot.collector.extendMid+800, 1, 10),
-                    () -> robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10))
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);},
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+800, 1, 10);},
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);})
             .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
-            .addState(() -> robot.collector.extendToMid(1,10))
+            .addState(() -> {robot.collector.stopIntake(); return robot.collector.extendToMid(1,10);})
             //.addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving,true))
             //.addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.pos_reverseSafeDrive,1,1))
