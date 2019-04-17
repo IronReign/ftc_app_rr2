@@ -41,13 +41,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.statemachine.MineralStateProvider;
-import org.firstinspires.ftc.teamcode.statemachine.Stage;
-import org.firstinspires.ftc.teamcode.statemachine.StateMachine;
-import org.firstinspires.ftc.teamcode.vision.Viewpoint;
 import org.firstinspires.ftc.teamcode.vision.GoldPos;
-import org.firstinspires.ftc.teamcode.vision.VisionProvider;
-import org.firstinspires.ftc.teamcode.vision.VisionProviders;
 
 import static org.firstinspires.ftc.teamcode.PoseBigWheel.servoNormalize;
 
@@ -289,13 +283,13 @@ public class Game_6832 extends LinearOpMode {
                         joystickDrive();
                         break;
                     case 1: //autonomous that goes to opponent's crater
-                        if (auto.depotSide.execute()) active = false;
+                        if (auto.depotSide_worlds.execute()) active = false;
                         break;
                     case 2: //autonomous that only samples
-                        if (auto.depotSample.execute()) active = false;
+                        if (auto.craterSide_worlds.execute()) active = false;
                         break;
                     case 3: //autonomous that starts in our crater
-                        if (auto.craterSide.execute()) active = false;
+                        if (auto.depotSample_worlds.execute()) active = false;
                         break;
                     case 4:
                         if (auto.driveStraight.execute()) active = false;
@@ -346,7 +340,7 @@ public class Game_6832 extends LinearOpMode {
                         if (auto.craterSide_extend_reverse.execute()) active = false;
                         break;
                     case 10:
-                        if (auto.depotSide_reverse.execute()) active = false;
+                        if (auto.depotSide_worlds.execute()) active = false;
                         break;
                     default:
                         robot.stopAll();
