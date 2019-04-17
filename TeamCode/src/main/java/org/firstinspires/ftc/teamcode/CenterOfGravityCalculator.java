@@ -124,7 +124,7 @@ public class CenterOfGravityCalculator {
                         .setStroke("black")
                         .strokeCircle(0,0,r)
                         .strokeLine(0,0,c*sin(theta), -c*cos(theta))
-                        .strokeLine(s*c*sin(theta), -s*c*cos(theta), -r, -s*c*cos(theta)-m*cos(phi-theta))
+                        .strokeLine(s*c*sin(theta), -s*c*cos(theta), -r /*s*c*sin(theta)-m*cos(phi-theta)*/, -s*c*cos(theta)-m*cos(phi-theta))
                         .strokeLine(c*sin(theta), -c*cos(theta), c*sin(theta)+l*sin(beta-theta), -c*cos(theta)+l*cos(beta-theta))
                         .strokeRect(c*sin(theta)+l*sin(beta-theta)-3, -c*cos(theta)+l*cos(beta-theta)-3,6,6)
                         .setFill("red")

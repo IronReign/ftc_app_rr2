@@ -313,6 +313,9 @@ public class Collector {
         return elbowRight.getCurrentPosition();
     }
     public double getCurrentAngle(){return  elbowRight.getCurrentPosition()/ticksPerDegree;}
+    public double getCurrentLength(){
+        return (107.0/2960.0)*getExtendABobCurrentPos() + 46;
+    }
     public void setElbowPwr(double pwr){ elbowPwr = pwr; }
 
     public void kill(){

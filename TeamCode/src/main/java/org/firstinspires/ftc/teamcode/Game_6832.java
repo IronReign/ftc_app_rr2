@@ -188,12 +188,11 @@ public class Game_6832 extends LinearOpMode {
 
             //reset the elbow, lift and supermanLeft motors - operator must make sure robot is in the stowed position, flat on the ground
             if (toggleAllowed(gamepad1.b, b)) {
-                robot.resetEncoders();
-                robot.setZeroHeading();
-//                if (gamepad1.right_trigger > 0.3)
-//                    robot.setAutonomousIMUOffset(-45); //against field perimeter, facing left
-//                else
+                if (gamepad1.right_trigger < 0.8) { //unless right trigger is being held very hard, encoders and heading are reset
+                    robot.resetEncoders();
+                    robot.setZeroHeading();
                     robot.setAutonomousIMUOffset(0); //against lander
+                }
                 robot.articulate(PoseBigWheel.Articulation.hanging);
                 robot.collector.extendToMin();
             }
@@ -249,7 +248,7 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Sound", soundState == 0 ? "off" : soundState == 1 ? "on" : soundState == 2 ? "file not found" : "other");
 
             telemetry.addData("Status", "Initialized");
-            telemetry.addData("Status", "Auto Delay: " + Long.toString(auto.autoDelay) + "seconds");
+            telemetry.addData("Status", "Auto Delay: " + Integer.toString((int) auto.autoDelay) + "seconds");
             telemetry.addData("Status", "Side: " + getAlliance());
             telemetry.addData("Status", "Hook sensors: " + enableHookSensors);
             telemetry.update();
@@ -859,7 +858,7 @@ public class Game_6832 extends LinearOpMode {
                 .addData("COG phi", () -> robot.superman.getCurrentAngle() + robot.cog.supermanoffset)
                 .addData("COG beta", () -> robot.collector.getCurrentAngle()+robot.cog.elbowoffset)
                 .addData("COG arm length", 38.2)
-                .addData("COG", () -> robot.cog.getCenterOfGravity(-robot.getRoll() + robot.cog.pitchOffset,robot.superman.getCurrentAngle() + robot.cog.supermanoffset, robot.collector.getCurrentAngle()+robot.cog.elbowoffset, 38.2).toString());
+                .addData("COG", () -> robot.cog.getCenterOfGravity(-robot.getRoll() + robot.cog.pitchOffset,robot.superman.getCurrentAngle() + robot.cog.supermanoffset, robot.collector.getCurrentAngle()+robot.cog.elbowoffset, robot.collector.getCurrentLength()).toString());
         telemetry.addLine()
                 .addData("roll", () -> robot.getRoll())
                 .addData("pitch", () -> robot.getPitch())
@@ -890,6 +889,8 @@ public class Game_6832 extends LinearOpMode {
                 .addData("state", () -> state)
                 .addData("Game Mode", () -> GAME_MODES[gameMode])
                 .addData("Articulation", () -> robot.getArticulation());
+
+        telemetry.addAction(() -> robot.cog.getCenterOfGravity(-robot.getRoll() + robot.cog.pitchOffset,robot.superman.getCurrentAngle() + robot.cog.supermanoffset, robot.collector.getCurrentAngle()+robot.cog.elbowoffset, robot.collector.getCurrentLength()));
 
         telemetry.addLine()
                 .addData("Loop time", "%.0fms", () -> loopAvg/1000000)

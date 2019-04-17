@@ -31,7 +31,7 @@ public class Autonomous {
     private MineralStateProvider mineralStateProvider = () -> mineralState;
 
     //staging and timer variables
-    public long autoDelay = 0;
+    public float autoDelay = 0;
     public Stage autoStage = new Stage();
     public Stage autoSetupStage = new Stage();
 
@@ -148,8 +148,8 @@ public class Autonomous {
             .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE))
             .addState(() -> robot.rotatePIDIMU(85, 4)) //turn parallel to minerals
-            .addState(() -> robot.driveForward(true, 1.1, DRIVE_POWER)) //drive to wall
-            .addState(() -> robot.rotatePIDIMU(120, 3)) //turn to depot
+            .addState(() -> robot.driveForward(true, 1.5, DRIVE_POWER)) //drive to wall
+            .addState(() -> robot.rotatePIDIMU(135, 3)) //turn to depot
             //.addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving, true))
             .addState(() -> robot.articulate(PoseBigWheel.Articulation.manual, true))
             .addState(() -> robot.collector.setElbowTargetPos(10,1))
@@ -168,14 +168,14 @@ public class Autonomous {
             .addState(() -> robot.driveForward(false, .4, DRIVE_POWER))
             .addState(() -> robot.collector.nearTargetElbow())
             .addState(() -> robot.rotatePIDIMU(34, 0.6))
-            .addState(() -> robot.rotatePIDIMU(310, 4))
+            .addState(() -> robot.rotatePIDIMU(315, 4))
             .addState(() -> robot.driveForward(true, 0.2, .8))
             .addState(() -> robot.collector.extendToMax())
             .build();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //                                                                                            //
-    //                               Old Autonomous Routines                                     //
+    //                                  Old Autonomous Routines                                   //
     //                                                                                            //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 

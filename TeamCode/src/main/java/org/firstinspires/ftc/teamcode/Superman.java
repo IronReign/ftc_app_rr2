@@ -26,7 +26,7 @@ public class Superman {
     public int pos_postlatch;
     public int pos_stowed;
     public int pos_driving; //todo - experiment with driving with supermanLeft set around 100 (slightly angled) to see if it is more responsive - higher battery drain because supermanLeft is straining, but less actual downforce on omni
-    public int pos_tipped = 2142;
+    public int pos_tipped;
 
 
     //filler value; needs to be updated to reflect actual ratio
@@ -63,24 +63,25 @@ public class Superman {
                 pos_postlatch = 0;
                 pos_stowed = 0;
                 pos_driving = 0;
+                pos_tipped = 2142;
                 break;
             case Icarus:
                 supermanLeft.setDirection(DcMotor.Direction.REVERSE);
                 //supermanRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
                 pos_Intake = (int) (multiplier*10);
-        pos_reverseIntake = (int) (multiplier*360);
+                pos_reverseIntake = (int) (multiplier*360);
                 pos_reverseDeposit =  880;
                 pos_Deposit = 880;
                 pos_DepositPartial = 880;
-                pos_Maximum = (int) (multiplier*500);
-
                 pos_autonPrelatch = 1390;
                 pos_prelatch = 1390; //(int) (multiplier*335);
                 pos_latched = 1370;
                 pos_postlatch = 0;
                 pos_stowed = 0;
                 pos_driving = 0;
+                pos_tipped = 2142;
+                pos_Maximum = pos_tipped;
                 break;
         }
     }
@@ -174,10 +175,10 @@ public class Superman {
 
 
     public void raise() {
-        setTargetPosition(Math.min(getCurrentPosition() + 30, 4000));
+        setTargetPosition(Math.min(getCurrentPosition() + 100, 4000));
     }
     public void lower() {
-        setTargetPosition(Math.max(getCurrentPosition() -30 , 0));
+        setTargetPosition(Math.max(getCurrentPosition() - 100 , 0));
     }
     public void runToAngle(double angle) {
         setTargetPosition((int) (angle * ticksPerDegree));
