@@ -752,6 +752,8 @@ public class PoseBigWheel
                //auton initial hang at the beginning of a match
                 collector.setExtendABobTargetPos(0);
                 collector.setElbowTargetPos(collector.stow,1);
+                superman.setPower(0);
+                superman.setTargetPosition(302,1);
                break;
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton

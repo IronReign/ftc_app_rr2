@@ -76,7 +76,7 @@ public class Collector {
     public  int extendMin;  //prevent crunching collector tray
     public  int extendPreLatch = extendMax;
 
-    public int stow = 225;
+    public int stow = 650;
 
     //filler value; needs to be updated to reflect actual ratio
     public double ticksPerDegree = 22.3296703;
