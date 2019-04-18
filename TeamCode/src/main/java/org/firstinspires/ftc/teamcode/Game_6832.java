@@ -32,6 +32,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -291,10 +293,9 @@ public class Game_6832 extends LinearOpMode {
                         if (auto.depotSample_worlds.execute()) active = false;
                         break;
                     case 4:
-                        if (auto.driveStraight.execute()) active = false;
                         break;
                     case 5:
-                        if (auto.depotSide_reverse.execute()) active = false;
+                        if (auto.depotSide_deposit.execute()) active = false;
                         break;
                     case 6:
 //                        if(driveStraight()) active = false;
