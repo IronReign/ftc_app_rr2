@@ -174,9 +174,9 @@ public class Autonomous {
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.autodepotthingy,1,1))
             .addState(() -> (robot.driveForward(false, .214, .45)))
             .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotatePIDIMU(39, TURN_TIME),
+                    () -> robot.rotatePIDIMU(37, TURN_TIME),
                     () -> true,
-                    () -> robot.rotatePIDIMU(321, TURN_TIME))
+                    () -> robot.rotatePIDIMU(323, TURN_TIME))
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseIntake,0,1,1))
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.GOLD))
             .addSingleState(() -> robot.collector.setBeltToElbowModeEnabled())
@@ -185,11 +185,12 @@ public class Autonomous {
                     () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+800, 1, 10);},
                     () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);})
             .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
-            .addState(() -> {robot.collector.stopIntake(); return robot.collector.extendToMid(1,10);})
+            .addState(() -> robot.collector.extendToMid(1,10))
+            .addSingleState(() -> robot.collector.stopIntake())
             .addState(() -> {robot.articulate(PoseBigWheel.Articulation.reverseDeposit); return robot.rotatePIDIMU(0, 3);})
             .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
             .addTimedState(2,
-                    () -> robot.collector.collect(),
+                    () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.pos_reverseSafeDrive,1,1))
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE))
