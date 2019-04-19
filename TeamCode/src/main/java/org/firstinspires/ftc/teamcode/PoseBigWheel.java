@@ -835,15 +835,16 @@ public class PoseBigWheel
            case reversedeploying:
                switch (miniState) {
                    case 0:
-                       articulationTimer = futureTime(3);
+                       articulationTimer = futureTime(2);
                        miniState++;
                        break;
                    case 1:
                        collector.extendToMid(1, 15);
                        superman.setTargetPosition(1340, 1);
-                       if (collector.setElbowTargetPos(collector.pos_autonPrelatch, .85) && superman.setTargetPosition(1340, 1) || articulationTimer < System.nanoTime()) {
+                       if ((collector.setElbowTargetPos(collector.pos_autonPrelatch, .85) && superman.setTargetPosition(1340, 1)) || articulationTimer < System.nanoTime()) {
                            if (true || driveForward(false, .1, .2)) {
                                driveMixerTank(0, 0);
+                               articulationTimer = 0;
                                //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
                                //{
                                miniState = 0; //reset nested state counter for next use
