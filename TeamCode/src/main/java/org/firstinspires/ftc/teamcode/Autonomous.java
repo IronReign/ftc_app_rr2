@@ -187,7 +187,8 @@ public class Autonomous {
             .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
             .addState(() -> robot.collector.extendToMid(1,10))
             .addSingleState(() -> robot.collector.stopIntake())
-            .addState(() -> {robot.articulate(PoseBigWheel.Articulation.reverseDeposit); return robot.rotatePIDIMU(0, 3);})
+            .addState(() -> {robot.articulate(PoseBigWheel.Articulation.reverseDeposit); robot.collector.extendToMin(1,15); return robot.rotatePIDIMU(0, 3);})
+            .addState(() -> robot.collector.extendToPosition(robot.collector.extendMid-50, 1, 10))
             .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
             .addTimedState(2,
                     () -> robot.collector.eject(),

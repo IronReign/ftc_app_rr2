@@ -759,21 +759,25 @@ public class PoseBigWheel
            case deploying:
                //auton unfolding after initial hang - should only be called from the hanging position during auton
                // ends when wheels should be on the ground, including supermanLeft, and pressure is off of the hook
-               collector.extendToMid(1, 15);
-               superman.setTargetPosition(superman.pos_prelatch, 1);
-               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85)) {
-                   //if (driveForward(false, .5, .2)) {
-                       //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
-                       //{
+               switch (miniState) {
+                   case 0:
+                       articulationTimer = futureTime(3);
+                       miniState++;
+                       break;
+                   case 1:
+                       collector.extendToMid(1, 15);
+                       superman.setTargetPosition(superman.pos_prelatch - 190, 1);
+                       if (collector.setElbowTargetPos(collector.pos_autonPrelatch, .85) || articulationTimer < System.nanoTime()) {
+                           //if (driveForward(false, .5, .2)) {
+                           //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
+                           //{
                            miniState = 0; //reset nested state counter for next use
-                           if (!isAutonSingleStep()) articulation = Articulation.deployed; //auto advance to next stage
+                           if (!isAutonSingleStep())
+                               articulation = Articulation.deployed; //auto advance to next stage
                            else articulation = Articulation.manual;
                            return Articulation.deployed; // signal advance to the deployed stage
-
-                       //}
-                       //break;
-                   //}
-                   //break;
+                       }
+                       break;
                }
                break;
 
@@ -829,22 +833,30 @@ public class PoseBigWheel
                }
                break;
            case reversedeploying:
-               collector.extendToMid(1, 15);
-               superman.setTargetPosition(superman.pos_autonPrelatch, 1);
-               if(collector.setElbowTargetPos(collector.pos_autonPrelatch, .85) && superman.setTargetPosition(superman.pos_autonPrelatch, 1)) {
-                   if (driveForward(false, .1, .2)) {
-                       driveMixerTank(0,0);
-                       //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
-                       //{
-                       miniState = 0; //reset nested state counter for next use
-                       if (!isAutonSingleStep()) articulation = Articulation.reversedeployed; //auto advance to next stage
-                       else articulation = Articulation.manual;
-                       return Articulation.reversedeployed; // signal advance to the deployed stage
+               switch (miniState) {
+                   case 0:
+                       articulationTimer = futureTime(3);
+                       miniState++;
+                       break;
+                   case 1:
+                       collector.extendToMid(1, 15);
+                       superman.setTargetPosition(1340, 1);
+                       if (collector.setElbowTargetPos(collector.pos_autonPrelatch, .85) && superman.setTargetPosition(1340, 1) || articulationTimer < System.nanoTime()) {
+                           if (true || driveForward(false, .1, .2)) {
+                               driveMixerTank(0, 0);
+                               //if (supermanLeft.setTargetPosition(supermanLeft.pos_prelatch, 1)) //lower supermanLeft so it's ready to support robot, but not pushing up on hook
+                               //{
+                               miniState = 0; //reset nested state counter for next use
+                               if (!isAutonSingleStep())
+                                   articulation = Articulation.reversedeployed; //auto advance to next stage
+                               else articulation = Articulation.manual;
+                               return Articulation.reversedeployed; // signal advance to the deployed stage
 
-                       //}
-                       //break;
-                   }
-                   break;
+                               //}
+                               //break;
+                           }
+                           break;
+                       }
                }
                break;
            case reversedeployed:
