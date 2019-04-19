@@ -1018,7 +1018,7 @@ public class PoseBigWheel
                //goToPosition(supermanLeft.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
                switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
                    case 0:
-                       if (rotatePIDIMU(0, 3)) miniState++;
+                       miniState++;
                        break;
                    case 1:
                        //depositDriveDistance = distForward.getDistance(DistanceUnit.METER) - 0.34;
@@ -1030,7 +1030,7 @@ public class PoseBigWheel
                        break;
                    case 3: //set basic speeds and start closing elbow to manage COG
                        //if (collector.setElbowTargetPos(collector.pos_reverseDeposit,1))
-                       if (collector.extendToMid(1,15))
+                       if (collector.extendToMin(1,15))
                            miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 4: //rise up
