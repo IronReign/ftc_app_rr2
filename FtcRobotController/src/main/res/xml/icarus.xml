@@ -14,10 +14,10 @@
 		</LynxModule>
 
 		<LynxModule name="Expansion Hub 2" port="2">
-			<NeveRest20Gearmotor name="liftRight" port="0" />
-			<NeveRest20Gearmotor name="liftLeft" port="1" />
-			<RevRobotics40HDHexMotor name="elbowLeft" port="2" />
-			<RevRobotics40HDHexMotor name="elbowRight" port="3" />
+			<RevRobotics40HDHexMotor name="elbowLeft" port="0" />
+			<RevRobotics40HDHexMotor name="elbowRight" port="1" />
+			<NeveRest20Gearmotor name="liftRight" port="2" />
+			<NeveRest20Gearmotor name="liftLeft" port="3" />
 
 			<Servo name="intakeRight" port="1" />
 			<Servo name="intakeLeft" port="2" />

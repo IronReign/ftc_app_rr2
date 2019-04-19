@@ -144,7 +144,7 @@ public class Autonomous {
                     () -> robot.collector.extendToPosition(robot.collector.extendMid+800, 1, 10),
                     () -> robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10))
             .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
-            .addState(() -> {robot.collector.stopIntake(); return robot.collector.extendToMid(1,10);})
+            .addState(() -> {robot.collector.stopIntake(); return robot.collector.extendToMin(1,10);})
             //.addState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving,true))
             //.addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.pos_reverseSafeDrive,1,1))

@@ -849,6 +849,7 @@ public class Game_6832 extends LinearOpMode {
                 .addData("elbowA", () -> robot.collector.isActive())
                 .addData("elbowC", () -> robot.collector.getElbowCurrentPos())
                 .addData("elbowC2", () -> robot.collector.getElbowCurrentPos2())
+                .addData("elbowDiff", () -> robot.collector.getElbowCurrentPos() - robot.collector.getElbowCurrentPos2())
                 .addData("elbowT", () -> robot.collector.getElbowTargetPos());
         telemetry.addLine()
                 .addData("supermanPos", () -> robot.superman.getCurrentPosition())
