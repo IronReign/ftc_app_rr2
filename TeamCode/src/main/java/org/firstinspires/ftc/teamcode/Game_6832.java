@@ -32,8 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -255,7 +253,7 @@ public class Game_6832 extends LinearOpMode {
             telemetry.addData("Status", "Hook sensors: " + enableHookSensors);
             telemetry.update();
 
-            robot.ledSystem.setColor(LEDSystem.Color.CALM);
+            robot.ledSystem.setColor(LEDSystem.Color.GAME_OVER);
 
             robot.updateSensors();
 
@@ -293,6 +291,7 @@ public class Game_6832 extends LinearOpMode {
                         if (auto.depotSample_worlds.execute()) active = false;
                         break;
                     case 4:
+                        if (auto.craterSide_cycle.execute()) active = false;
                         break;
                     case 5:
                         if (auto.depotSide_deposit.execute()) active = false;
@@ -337,10 +336,12 @@ public class Game_6832 extends LinearOpMode {
                         demo();
                         break;
                     case 9:
-                        if (auto.craterSide_extend_reverse.execute()) active = false;
+//                        if (auto.craterSide_extend_reverse.execute()) active = false;
+                        ledTest();
                         break;
                     case 10:
-                        if (auto.depotSide_worlds.execute()) active = false;
+//                        if (auto.depotSide_worlds.execute()) active = false;
+                        servoTest();
                         break;
                     default:
                         robot.stopAll();
@@ -365,6 +366,12 @@ public class Game_6832 extends LinearOpMode {
     public boolean driveStraight(){
         return robot.driveForward(true,1,.5);
     }
+
+
+    public void LEDColors(){
+
+    }
+
 
     int tpmtuningstage = 0;
     public void tpmtuning(){
@@ -395,7 +402,7 @@ public class Game_6832 extends LinearOpMode {
     private void initialization_initSound() {
         telemetry.addData("Please wait", "Initializing Sound");
         //telemetry.update();
-        robot.ledSystem.setColor(LEDSystem.Color.STRESS);
+        robot.ledSystem.setColor(LEDSystem.Color.CALM);
         soundID = hardwareMap.appContext.getResources().getIdentifier("gracious", "raw", hardwareMap.appContext.getPackageName());
         boolean success = SoundPlayer.getInstance().preload(hardwareMap.appContext, soundID);
         if (success)
@@ -479,7 +486,6 @@ public class Game_6832 extends LinearOpMode {
                 break;
             case 3: //regular mode
                 joystickDriveRegularMode();
-
                 break;
         }
 
@@ -557,7 +563,7 @@ public class Game_6832 extends LinearOpMode {
     private void joystickDrivePregameMode() {
         robot.setAutonSingleStep(true); //single step through articulations having to do with deploying
 
-        robot.ledSystem.setColor(LEDSystem.Color.GOLD);
+        robot.ledSystem.setColor(LEDSystem.Color.CALM);
 
         boolean doDelatch = false;
         if (toggleAllowed(gamepad1.b, b)) {
@@ -596,7 +602,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void joystickDriveEndgameMode() {
 
-        robot.ledSystem.setColor(LEDSystem.Color.BLUE);
+        robot.ledSystem.setColor(LEDSystem.Color.SHOT);
 
         boolean doLatchStage = false;
         robot.driveMixerTank(pwrFwd, pwrRot);
@@ -650,7 +656,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void joystickDriveRegularMode() {
 
-        robot.ledSystem.setColor(LEDSystem.Color.GAME_OVER);
+        robot.ledSystem.setColor(LEDSystem.Color.CALM);
 
         robot.collector.hookOff();
 
@@ -707,7 +713,7 @@ public class Game_6832 extends LinearOpMode {
 
     private void joystickDriveRegularModeReverse() {
 
-        robot.ledSystem.setColor(LEDSystem.Color.GAME_OVER);
+        robot.ledSystem.setColor(LEDSystem.Color.PARTY_MODE_SMOOTH);
 
         robot.collector.hookOff();
 
@@ -922,14 +928,14 @@ public class Game_6832 extends LinearOpMode {
         return false;
     }
 
-    private int servoTest = 900;
+    private int servoTest = 1005;
 
     private void servoTest() {
         robot.ledSystem.movement.setPosition(servoNormalize(servoTest));
         if (toggleAllowed(gamepad1.a, a))
-            servoTest -= 20;
+            servoTest -= 10;
         else if (toggleAllowed(gamepad1.y, y))
-            servoTest += 20;
+            servoTest += 10;
         telemetry.addData("Pulse width", servoTest);
     }
 

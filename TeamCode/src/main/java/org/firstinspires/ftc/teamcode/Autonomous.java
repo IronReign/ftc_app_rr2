@@ -206,6 +206,56 @@ public class Autonomous {
     //                                                                                            //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public StateMachine craterSide_cycle = getStateMachine(autoStage)
+            .addNestedStateMachine(autoSetupReverse)
+            .addState(() -> (robot.driveForward(true, .020, .40)))
+            .addMineralState(mineralStateProvider, //turn to mineral
+                    () -> robot.rotatePIDIMU(37, TURN_TIME),
+                    () -> true,
+                    () -> robot.rotatePIDIMU(323, TURN_TIME))
+            .addState(() -> robot.goToPosition(robot.superman.pos_reverseIntake,0,1,1))
+            .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.GOLD))
+            .addSingleState(() -> robot.collector.setBeltToElbowModeEnabled())
+            .addMineralState(mineralStateProvider,
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);},
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+800, 1, 10);},
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);})
+            .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
+            .addState(() -> robot.collector.extendToMid(1,10))
+            .addSingleState(() -> robot.collector.stopIntake())
+            .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE))
+            .addState(() -> robot.rotatePIDIMU(0, 1)) //turn to crater
+            .addSingleState(() -> robot.collector.eject())
+            .addState(() -> robot.driveForward(true, .1, DRIVE_POWER))
+            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.reverseIntake))
+            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+            .addState(() -> robot.collector.extendToMax())
+            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation. prereversedeposit))
+            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+            .addState(() -> robot.rotatePIDIMU(345, 3))
+            .addState(() -> robot.driveForward(false, .1, DRIVE_POWER))
+            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDeposit))
+            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+            .addTimedState(2,
+                    () -> robot.collector.eject(),
+                    () -> robot.collector.stopIntake())
+            .addState(() -> robot.rotatePIDIMU(0, 1)) //turn to crater
+            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDriving))
+//            .addSingleState(() -> robot.collector.eject())
+//            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.reverseIntake))
+//            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+//            .addState(() -> robot.collector.extendToMax())
+//            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation. prereversedeposit))
+//            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+//            .addSingleState(() -> robot.articulate(PoseBigWheel.Articulation.reverseDeposit))
+//            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
+//            .addState(() -> robot.rotatePIDIMU(345, 3))
+//            .addTimedState(2,
+//                    () -> robot.collector.eject(),
+//                    () -> robot.collector.stopIntake())
+//            .addState(() -> robot.rotatePIDIMU(0, 4)) //turn to crater
+            .build();
+
 
     public StateMachine lagTest = getStateMachine(autoStage)
             .addState(() -> {
@@ -621,7 +671,7 @@ public class Autonomous {
     public void deinitVisionProvider() {
         telemetry.addData("Please wait", "Deinitializing vision");
         //telemetry.update();
-        robot.ledSystem.setColor(LEDSystem.Color.STRESS);
+        robot.ledSystem.setColor(LEDSystem.Color.CALM);
         vp.shutdownVision();
         vp = null;
         visionProviderFinalized = false;
@@ -631,7 +681,7 @@ public class Autonomous {
         try {
             telemetry.addData("Please wait", "Initializing vision");
             //telemetry.update();
-            robot.ledSystem.setColor(LEDSystem.Color.STRESS);
+            robot.ledSystem.setColor(LEDSystem.Color.CALM);
             vp = visionProviders[visionProviderState].newInstance();
             vp.initializeVision(robot.hwMap, telemetry, enableTelemetry, viewpoint);
         } catch (IllegalAccessException | InstantiationException e) {
@@ -644,7 +694,7 @@ public class Autonomous {
         try {
             telemetry.addData("Please wait", "Initializing vision");
             //telemetry.update();
-            robot.ledSystem.setColor(LEDSystem.Color.STRESS);
+            robot.ledSystem.setColor(LEDSystem.Color.CALM);
             vp = VisionProviders.defaultProvider.newInstance();
             vp.initializeVision(robot.hwMap, telemetry, enableTelemetry, viewpoint);
         } catch (IllegalAccessException | InstantiationException e) {

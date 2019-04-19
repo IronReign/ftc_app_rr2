@@ -138,6 +138,7 @@ public class PoseBigWheel
         deposit, //teleop mostly - transition from intake to deposit - decreaseElbowAngle collector to low position waiting on completion, retractBelt elbow to deposit position, supermanLeft up to deposit position, extendBelt collector to deposit position
         prereversedeposit,
         reverseDeposit,
+        reverseDepositAssisted,
         latchApproach, //teleop endgame - driving approach for latching, expected safe to be called from manual, driving, deposit - set collector elbow for drive balance, extended to max and supermanLeft up,
         latchPrep, //teleop endgame - make sure hook is increaseElbowAngle, set drivespeed slow, extendBelt lift to max, finalize elbow angle for latch, elbow overrideable
         latchSet, //teleop endgame - retractBelt the latch
@@ -978,7 +979,41 @@ public class PoseBigWheel
                        break;
                    case 2:
 //                       if (driveForward(false, depositDriveDistance, .65)) //drive forward to deposit
-                           miniState++;
+                       miniState++;
+                       break;
+                   case 3: //set basic speeds and start closing elbow to manage COG
+                       //if (collector.setElbowTargetPos(collector.pos_reverseDeposit,1))
+                       if (collector.extendToMid(1,15))
+                           miniState++; //retractBelt elbow as fast as possible and hold state until completion
+                       break;
+                   case 4: //rise up
+                       collector.extendToReverseDeposit(1,15);
+                       if (goToPosition(superman.pos_reverseDeposit, collector.pos_reverseDeposit,1,.4))
+                           miniState++; //start going really fast to interim position
+                       break;
+                   case 5:
+                       collector.collect();
+                       miniState++;
+                       break;
+                   case 6:
+                       miniState = 0; //just being a good citizen for next user of miniState
+                       articulation = Articulation.manual; //force end of articulation by switching to manual
+                       return Articulation.manual;
+               }
+               break;
+           case reverseDepositAssisted:
+               //goToPosition(supermanLeft.pos_reverseDeposit, collector.pos_reverseDeposit,1,.5);
+               switch (miniState) { //todo: this needs to be more ministages - need an interim aggressive retractBelt of the elbow followed by supermanLeft, followed by opening the elbow up again, all before the extendMax
+                   case 0:
+                       if (rotatePIDIMU(0, 3)) miniState++;
+                       break;
+                   case 1:
+                       //depositDriveDistance = distForward.getDistance(DistanceUnit.METER) - 0.34;
+                       miniState++;
+                       break;
+                   case 2:
+//                       if (driveForward(false, depositDriveDistance, .65)) //drive forward to deposit
+                       miniState++;
                        break;
                    case 3: //set basic speeds and start closing elbow to manage COG
                        //if (collector.setElbowTargetPos(collector.pos_reverseDeposit,1))
@@ -1007,7 +1042,7 @@ public class PoseBigWheel
                        collector.restart(.25, 1);
                        superman.restart(.75);
                        if (collector.setElbowTargetPos(collector.pos_PartialDeposit,1) && collector.extendToMid(1,10))
-                       miniState++; //retractBelt elbow as fast as possible and hold state until completion
+                           miniState++; //retractBelt elbow as fast as possible and hold state until completion
                        break;
                    case 1: //rise up
                        collector.extendToMin(1,15);
