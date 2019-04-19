@@ -174,21 +174,22 @@ public class Autonomous {
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.autodepotthingy,1,1))
             .addState(() -> (robot.driveForward(false, .224, .45)))
             .addMineralState(mineralStateProvider, //turn to mineral
-                    () -> robot.rotatePIDIMU(37, TURN_TIME),
-                    () -> true,
+                    () -> robot.rotatePIDIMU(36, TURN_TIME),
+                    () -> robot.rotatePIDIMU(354, TURN_TIME),
                     () -> robot.rotatePIDIMU(318, TURN_TIME))
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseIntake,0,1,1))
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.GOLD))
             .addSingleState(() -> robot.collector.setBeltToElbowModeEnabled())
             .addMineralState(mineralStateProvider,
                     () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);},
-                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+800, 1, 10);},
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+900, 1, 10);},
                     () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);})
             .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
             .addState(() -> robot.collector.extendToMid(1,10))
             .addSingleState(() -> robot.collector.stopIntake())
             .addState(() -> robot.collector.extendToMin(1,10))
             .addState(() -> {robot.articulate(PoseBigWheel.Articulation.reverseDepositAssisted); return robot.rotatePIDIMU(0, 3);})
+            .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
             .addState(() -> robot.collector.extendToPosition(robot.collector.extendMid-50, 1, 10))
             .addState(() -> robot.getArticulation() == PoseBigWheel.Articulation.manual)
             .addState(() -> robot.goToPosition(robot.superman.pos_reverseDeposit, robot.collector.pos_reverseSafeDrive,1,1))
@@ -196,6 +197,7 @@ public class Autonomous {
                     () -> robot.collector.eject(),
                     () -> robot.collector.stopIntake())
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE))
+            .addSingleState(() -> robot.collector.extendToMin(1,10))
             .addState(() -> robot.rotatePIDIMU(80, 4)) //turn parallel to minerals
             .addState(() -> robot.driveForward(true, 1.3, .8)) //drive to wall
             .addState(() -> robot.rotatePIDIMU(135, 3)) //turn to crater
