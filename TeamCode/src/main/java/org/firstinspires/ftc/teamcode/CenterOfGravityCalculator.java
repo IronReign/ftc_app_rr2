@@ -7,7 +7,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 @Config
 public class CenterOfGravityCalculator {
 
-    public static boolean drawRobotDiagram = true;
+    public static boolean drawRobotDiagram = false;
 
     //length constants
     public final double c, // length of chassis in cm

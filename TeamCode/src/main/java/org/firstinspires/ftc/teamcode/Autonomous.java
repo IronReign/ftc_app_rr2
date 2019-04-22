@@ -181,7 +181,7 @@ public class Autonomous {
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.GOLD))
             .addSingleState(() -> robot.collector.setBeltToElbowModeEnabled())
             .addMineralState(mineralStateProvider,
-                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);},
+                    () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1350, 1, 10);},
                     () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+900, 1, 10);},
                     () -> { robot.collector.eject(); return robot.collector.extendToPosition(robot.collector.extendMid+1300, 1, 10);})
             .addSingleState(() -> robot.collector.setBeltToElbowModeDisabled())
@@ -198,9 +198,9 @@ public class Autonomous {
                     () -> robot.collector.stopIntake())
             .addSingleState(() -> robot.ledSystem.setColor(LEDSystem.Color.PURPLE))
             .addSingleState(() -> robot.collector.extendToMin(1,10))
-            .addState(() -> robot.rotatePIDIMU(80, 4)) //turn parallel to minerals
+            .addState(() -> robot.rotatePIDIMU(80, 3)) //turn parallel to minerals
             .addState(() -> robot.driveForward(true, 1.3, .8)) //drive to wall
-            .addState(() -> robot.rotatePIDIMU(135, 3)) //turn to crater
+            .addState(() -> robot.rotatePIDIMU(135, 2)) //turn to crater
             .addState(() -> robot.collector.extendToMax(1,10))
             .build();
 

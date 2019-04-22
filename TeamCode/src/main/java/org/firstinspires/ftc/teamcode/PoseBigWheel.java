@@ -1039,7 +1039,7 @@ public class PoseBigWheel
                            miniState++; //start going really fast to interim position
                        break;
                    case 5:
-                       collector.collect();
+                       collector.eject();
                        miniState++;
                        break;
                    case 6:

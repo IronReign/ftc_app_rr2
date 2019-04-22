@@ -32,11 +32,14 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -135,9 +138,9 @@ public class Game_6832 extends LinearOpMode {
 
     //auto stuff
     private GoldPos initGoldPosTest;
-    private double pCoeff = 0.26;
-    private double dCoeff = 0.33;
-    private double targetAngle = 273;
+    private double pCoeff = 0.14;
+    private double dCoeff = 1.31;
+    private double targetAngle = 287.25;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -152,7 +155,7 @@ public class Game_6832 extends LinearOpMode {
         auto = new Autonomous(robot, telemetry, gamepad1);
 
 
-        if (gamepad1.right_trigger > 0.3) {
+        if (gamepad1.right_trigger < 0.3) {
             telemetry.addData("Status", "Initialized " + currentBot+" (debug mode)");
             telemetry.update();
             configureDashboard();
@@ -308,28 +311,7 @@ public class Game_6832 extends LinearOpMode {
 
                         break;
                     case 7:
-                        if (toggleAllowed(gamepad1.y,y))
-                            pCoeff+=.01;
-                        else if (toggleAllowed(gamepad1.a, a))
-                            pCoeff-=.01;
-                        if (toggleAllowed(gamepad1.dpad_down, dpad_down))
-                            dCoeff-=.005;
-                        else if (toggleAllowed(gamepad1.dpad_up, dpad_down))
-                            dCoeff+=.005;
-                        if (toggleAllowed(gamepad1.right_bumper,right_bumper))
-                            targetAngle+=.25;
-                        else if (toggleAllowed(gamepad1.left_bumper, left_bumper))
-                            targetAngle-=.25;
-                        robot.balanceP = pCoeff;
-                        robot.balanceD = dCoeff;
-                        telemetry.addData("P Coeff: ", pCoeff);
-                        telemetry.addData("D Coeff: ", dCoeff);
-                        telemetry.addData("Target Ange: ", targetAngle);
-                        telemetry.update();
-                        robot.balance(targetAngle);
-
-
-
+                        balance();
                         break;
                     case 8: //turn to IMU
                         robot.setAutonSingleStep(true);
@@ -368,7 +350,35 @@ public class Game_6832 extends LinearOpMode {
     }
 
 
-    public void LEDColors(){
+    public void balance(){
+        robot.collector.extendToMax();
+        robot.collector.setElbowTargetPos(3734);
+        if (toggleAllowed(gamepad1.y,y))
+            pCoeff+=.01;
+        else if (toggleAllowed(gamepad1.a, a))
+            pCoeff-=.01;
+        if (toggleAllowed(gamepad1.dpad_down, dpad_down))
+            dCoeff-=.005;
+        else if (toggleAllowed(gamepad1.dpad_up, dpad_down))
+            dCoeff+=.005;
+        if (toggleAllowed(gamepad1.right_bumper,right_bumper))
+            targetAngle+=.25;
+        else if (toggleAllowed(gamepad1.left_bumper, left_bumper))
+            targetAngle-=.25;
+        robot.balanceP = pCoeff;
+        robot.balanceD = dCoeff;
+
+        telemetry.addData("P Coeff: ", pCoeff);
+        telemetry.addData("D Coeff: ", dCoeff);
+        telemetry.addData("Target Angle: ", targetAngle);
+        telemetry.update();
+
+        TelemetryPacket tp = new TelemetryPacket();
+        tp.put("Current Angle", robot.getRoll());
+        tp.put("Target Angle", targetAngle);
+        FtcDashboard.getInstance().sendTelemetryPacket(tp);
+
+        robot.balance(targetAngle);
 
     }
 
