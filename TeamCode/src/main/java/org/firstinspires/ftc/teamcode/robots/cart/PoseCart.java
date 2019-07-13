@@ -45,6 +45,8 @@ public class PoseCart
 
     public Servo driveLeft = null;
     public Servo driveRight = null;
+    private DcMotor cannonLeft = null;
+    private DcMotor cannonRight = null;
     private Servo cannon = null;
     private int drive = 1500;
     private long damperTimer = 0;
@@ -229,6 +231,9 @@ public class PoseCart
         this.driveLeft = this.hwMap.servo.get("leftDrive");
         this.driveRight = this.hwMap.servo.get("rightDrive");
 
+        cannonLeft = hwMap.get(DcMotor.class, "cannonLeft");
+        cannonRight = hwMap.get(DcMotor.class, "cannonRight");
+
         driveLeft.setDirection(Servo.Direction.FORWARD);
         driveRight.setDirection(Servo.Direction.REVERSE);
 
@@ -357,6 +362,20 @@ public class PoseCart
     //////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+    public void intake(){
+        cannonLeft.setPower(-1);
+        cannonRight.setPower(-1);
+    }
+
+    public void shoot(){
+        cannonLeft.setPower(1);
+        cannonRight.setPower(1);
+    }
+    public void stopcannon(){
+        cannonLeft.setPower(0);
+        cannonRight.setPower(0);
+    }
 
     /**
      * Moves the mecanum platform under PID control applied to the rotation of the robot. This version can either drive forwards/backwards or strafe.

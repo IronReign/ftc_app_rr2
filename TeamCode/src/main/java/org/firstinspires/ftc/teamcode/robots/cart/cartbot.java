@@ -52,14 +52,15 @@ import com.qualcomm.robotcore.util.Range;
  */
 
 @TeleOp(name="CartBot", group="Linear Opmode")
-@Disabled
+//@Disabled
 public class cartbot extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private Servo leftDrive = null;
     private Servo rightDrive = null;
-    private Servo cannon = null;
+    private DcMotor cannonLeft = null;
+    private DcMotor cannonRight = null;
     private int drive = 1500;
     private long damperTimer = 0;
     private float spindownTime = 3f;
@@ -75,9 +76,10 @@ public class cartbot extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftDrive  = hardwareMap.get(Servo.class, "left_drive");
-        rightDrive = hardwareMap.get(Servo.class, "right_drive");
-        cannon = hardwareMap.get(Servo.class, "cannon");
+        leftDrive  = hardwareMap.get(Servo.class, "leftDrive");
+        rightDrive = hardwareMap.get(Servo.class, "rightDrive");
+        cannonLeft = hardwareMap.get(DcMotor.class, "cannonLeft");
+        cannonRight = hardwareMap.get(DcMotor.class, "cannonRight");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(Servo.Direction.FORWARD);
@@ -101,12 +103,17 @@ public class cartbot extends LinearOpMode {
             // - This uses basic math to combine motions and is easier to drive straight.
 
             if(gamepad1.right_trigger > .5){
-                cannon.setPosition(1);
+                cannonLeft.setPower(1);
+                cannonRight.setPower(1);
             }
             else if(gamepad1.left_trigger > .5){
-                cannon.setPosition(0);
+                cannonLeft.setPower(-1);
+                cannonRight.setPower(-1);
             }
-            else cannon.setPosition(.5);
+            else {
+                cannonLeft.setPower(0);
+                cannonRight.setPower(0);
+            }
 
             if(gamepad1.right_bumper) pwrFactor = 800;
             else pwrFactor = 150;

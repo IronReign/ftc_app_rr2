@@ -314,6 +314,16 @@ public class Cart extends LinearOpMode {
 
         robot.driveMixerTank(pwrFwd, pwrRot, gamepad1.right_bumper);
 
+        if(gamepad1.right_trigger > .5){
+            robot.shoot();
+        }
+        else if(gamepad1.left_trigger > .5) {
+            robot.intake();
+        }
+        else {
+            robot.stopcannon();
+        }
+
     }
 
     //the method that controls the main state of the robot; must be called in the main loop outside of the main switch
