@@ -329,34 +329,34 @@ public class PoseArgos
 
 
         // Acquire a reference to the system Location Manager
-        LocationManager locationManager = (LocationManager) RC.a().getSystemService(Context.LOCATION_SERVICE);
-
-        // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                NewGPSLocation(location);
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-            public void onProviderEnabled(String provider) {}
-
-            public void onProviderDisabled(String provider) {}
-        };
-
-        HandlerThread handler = new HandlerThread("gpsHandler");
-        handler.start();
-        Looper looper = handler.getLooper();
-
-        // Register the listener with the Location Manager to receive location updates
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener,looper);
-
-        // get last known so we have a valid location until we get a fresh fix
-        String locationProvider = LocationManager.GPS_PROVIDER;
-        poseLocation = locationManager.getLastKnownLocation(locationProvider);
-
-        HeadLampOn();
+//        LocationManager locationManager = (LocationManager) RC.a().getSystemService(Context.LOCATION_SERVICE);
+//
+//        // Define a listener that responds to location updates
+//        LocationListener locationListener = new LocationListener() {
+////            public void onLocationChanged(Location location) {
+////                // Called when a new location is found by the network location provider.
+////                NewGPSLocation(location);
+////            }
+////
+////            public void onStatusChanged(String provider, int status, Bundle extras) {}
+////
+////            public void onProviderEnabled(String provider) {}
+////
+////            public void onProviderDisabled(String provider) {}
+////        };
+//
+//        HandlerThread handler = new HandlerThread("gpsHandler");
+//        handler.start();
+//        Looper looper = handler.getLooper();
+//
+//        // Register the listener with the Location Manager to receive location updates
+//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener,looper);
+//
+//        // get last known so we have a valid location until we get a fresh fix
+//        String locationProvider = LocationManager.GPS_PROVIDER;
+//        poseLocation = locationManager.getLastKnownLocation(locationProvider);
+//
+//        HeadLampOn();
 
 
 
@@ -376,17 +376,17 @@ public class PoseArgos
     }*/
 
 //should only be called from the new location callback
-public void NewGPSLocation(Location location){
-    if (isBetterLocation(location, poseLocation)) {
-        poseLocation = location;
-        if (poseLocation.hasBearing())poseBearing = poseLocation.getBearing();
-        if (poseLocation.hasSpeed())poseGPSspeed = poseLocation.getSpeed();
-        poseLong = poseLocation.getLongitude();
-        poseLat=poseLocation.getLatitude();
-
-    }
-
-}
+//public void NewGPSLocation(Location location){
+//    if (isBetterLocation(location, poseLocation)) {
+//        poseLocation = location;
+//        if (poseLocation.hasBearing())poseBearing = poseLocation.getBearing();
+//        if (poseLocation.hasSpeed())poseGPSspeed = poseLocation.getSpeed();
+//        poseLong = poseLocation.getLongitude();
+//        poseLat=poseLocation.getLatitude();
+//
+//    }
+//
+//}
 
 
     public int getNumTimesBalanced() {

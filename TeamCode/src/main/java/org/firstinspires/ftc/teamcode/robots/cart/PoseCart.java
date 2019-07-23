@@ -531,11 +531,11 @@ public class PoseCart
             drivingForward = false;
             damperTimer = futureTime(spindownTime);
         }
-        if(damperTimer < System.nanoTime() && !drivingForward) {turnDamper = .6;}
+        if(damperTimer < System.nanoTime() && !drivingForward) {turnDamper = .8;}
         if(forward > .05 || forward < -.05) {
             drive += forward * pwrFactor;
             drivingForward = true;
-            turnDamper = .35;
+            turnDamper = .55   ;
         }
         int turn  =  (int)(pwrFactor*turnDamper*rotate);
         int leftPower    = Range.clip(drive + turn, 700, 2100) ;

@@ -580,21 +580,21 @@ public class Argos extends LinearOpMode {
 //                    }
 //                });
         telemetry.addLine()
-                .addData("Lat", new Func<String>() {
-                    @Override public String value() {
-                        return "" + location.getLatitude();
-                    }
-                })
-                .addData("Long", new Func<String>() {
-                    @Override public String value() {
-                        return "" + location.getLongitude();
-                    }
-                })
-                .addData("Accuracy", new Func<String>() {
-                    @Override public String value() {
-                        return "" + location.getAccuracy();
-                    }
-                })
+//                .addData("Lat", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + location. itude();
+//                    }
+//                })
+//                .addData("Long", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + location.getLongitude();
+//                    }
+//                })
+//                .addData("Accuracy", new Func<String>() {
+//                    @Override public String value() {
+//                        return "" + location.getAccuracy();
+//                    }
+//                })
                 .addData("Speed", new Func<String>() {
                     @Override public String value() {
                         return "" + robot.getSpeed();
